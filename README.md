@@ -100,3 +100,17 @@ $ vagrant up PLATFORM
 
 The complete list of valid platform names can be viewed with the
 `vagrant status` command.
+
+We've also defined a custom instance that uses the official Vagrant Ubuntu
+Precise (12.04) box:
+
+``` shell
+$ vagrant up ubuntu-precise64
+```
+
+To rebuild the omnibus package without destroying the instance, you can do this:
+
+``` shell
+$ vagrant provision ubuntu-precise64
+```
+
