@@ -1,0 +1,9 @@
+#!/bin/bash
+#
+# Perform necessary flapjack removal steps
+# after package is uninstalled.
+#
+
+echo "flapjack has been uninstalled!"
+
+exit 0
