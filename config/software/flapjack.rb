@@ -1,5 +1,7 @@
 name "flapjack"
-version "v0.7.16"
+
+version = ENV['VERSION'] || '0.7.16'
+version "v#{version}"
 
 dependency "ruby"
 dependency "rubygems"
