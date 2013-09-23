@@ -1,7 +1,7 @@
 
-name "flapjack"
+name       "flapjack"
 maintainer "Lindsay Holmwood <lindsay@holmwood.id.au>"
-homepage "http://flapjack-project.com"
+homepage   "http://flapjack.io"
 
 replaces        "flapjack"
 install_path    "/opt/flapjack"
