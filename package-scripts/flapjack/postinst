@@ -14,6 +14,4 @@ function error_exit
 
 echo "Thank you for installing flapjack!"
 
-mkdir -p /etc/flapjack /var/log/flapjack
-
 exit 0

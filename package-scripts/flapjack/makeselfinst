@@ -24,4 +24,7 @@ rm -f $DEST_DIR/$PROGNAME
 # You may want to symlink your packages bin files into /usr/bin
 # ln -sf $DEST_DIR/bin/flapjack /usr/bin || error_exit "Cannot link flapjack to /usr/bin"
 
+# Set up config + logging directories
+mkdir -p /etc/flapjack /var/log/flapjack /var/run/flapjack
+
 exit 0
