@@ -20,6 +20,13 @@ version "1.6.0"
 
 dependencies ["ruby", "rubygems", "libxml2", "libxslt", "libiconv"]
 
+module ::Omnibus
+  class HealthCheck
+    WHITELIST_LIBS << %r{libz\.so.\d}
+    WHITELIST_LIBS << %r{linux-gate\.so}
+  end
+end
+
 build do
   gem ["install",
        "nokogiri",
