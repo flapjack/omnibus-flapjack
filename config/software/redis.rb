@@ -133,8 +133,10 @@ build do
   command ["make install", make_args].join(" ")
 
   etc_path = "#{install_dir}/embedded/etc"
-  command "mkdir #{etc_path}/redis"
-  command "mkdir #{etc_path}/init.d"
+
+  %w(redis init.d).each do |dir|
+    FileUtils.mkdir_p("#{etc_path}/#{dir}")
+  end
 
   config_path = "#{etc_path}/redis/redis-flapjack.conf"
   File.open(config_path, 'w') { |f| f << config }
