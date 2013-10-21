@@ -1,7 +1,8 @@
 # flapjack Omnibus project
 
 This project creates full-stack platform-specific packages for
-`flapjack`!
+`flapjack` and maintains appropriate package repositories at
+[packages.flapjack.io](http://packages.flapjack.io/)
 
 ## Installation
 
@@ -113,4 +114,70 @@ To rebuild the omnibus package without destroying the instance, you can do this:
 ``` shell
 $ vagrant provision ubuntu-precise64
 ```
+
+## Updating the debian package repo (ubuntu precise only at present)
+
+For now this is manually done within the running vagrant vm after omnibus has successfully built the package.
+
+SSH in to ubuntu-precise64 vm:
+
+``` bash
+vagrant ssh ubuntu-precise64
+```
+
+install reprepro and s3cmd:
+
+``` bash
+sudo apt-get install reprepro s3cmd
+```
+
+retrive the current repo:
+
+``` bash
+mkdir -p ~/src/packages.flapjack.io/deb
+cd ~/src/packages.flapjack.io/deb
+s3cmd sync --recursive s3://packages.flapjack.io/deb/ ~/src/packages.flapjack.io/deb/
+```
+
+add the new flapjack package to the debian repo
+
+``` bash
+reprepro -b ~/src/packages.flapjack.io/deb includedeb precise `ls ~/omnibus-flapjack/pkg/flapjack*deb | tail -1`
+```
+
+check you can see the new flapjack package in the output of `dpkg-scanpackages`, and that the Size, Installed-Size, etc look reasonable:
+
+``` bash
+dpkg-scanpackages src/packages.flapjack.io/deb
+```
+
+Eg, example output for 0.7.27:
+
+``` text
+Package: flapjack
+Version: 0.7.27+20131020221016-1.ubuntu.12.04
+Architecture: amd64
+Maintainer: Lindsay Holmwood <lindsay@holmwood.id.au>
+Installed-Size: 420086
+Replaces: flapjack
+Filename: src/packages.flapjack.io/deb/pool/main/f/flapjack/flapjack_0.7.27+20131020221016-1.ubuntu.12.04_amd64.deb
+Size: 138195228
+MD5sum: e75058def111248074286933707efe6e
+SHA1: 85f2ed6b379c85a42d11f1802f9a0740bf49e2db
+SHA256: b99444329044cfc956a48ef39c996519678ecab3060eb1fbaa151a31bb5dd90f
+Section: default
+Priority: extra
+Homepage: http://flapjack.io
+Description: The full stack of flapjack
+License: unknown
+Vendor: vagrant@flapjack-omnibus-build-lab
+```
+
+sync the debian repo back up to packages.flapjack.io, first with a dryrun:
+
+``` bash
+s3cmd sync --dry-run --verbose --recursive --delete-removed ~/src/packages.flapjack.io/deb/ s3://packages.flapjack.io/deb/
+```
+
+Then remove the --dry-run and run again if you're happy with what `s3cmd sync` is going to do.
 

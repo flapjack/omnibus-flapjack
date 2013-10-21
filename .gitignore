@@ -7,3 +7,4 @@ bin/*
 files/**/cache/
 vendor/cookbooks
 .flapjack-package-cache
+.DS_Store
