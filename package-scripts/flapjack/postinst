@@ -7,7 +7,7 @@
 INSTALLER_DIR=`dirname $0`
 DEST_DIR=/opt/flapjack
 CONFIG_DIR=/etc/flapjack
-FLAPJACK_GEM_DIR=`ls -ld ${DEST_DIR}/embedded/lib/ruby/gems/*/gems/flapjack-* | tail -1`
+FLAPJACK_GEM_DIR=`ls -dr ${DEST_DIR}/embedded/lib/ruby/gems/*/gems/flapjack-* | head -1`
 PROGNAME=$(basename $0)
 
 # /opt/flapjack/embedded/lib/ruby/gems/1.9.1/gems/flapjack-0.7.28/etc/flapjack_config.yaml.example
@@ -17,6 +17,8 @@ function error_exit
   echo "${PROGNAME}: ${1:-"Unknown Error"}" 1>&2
   exit 1
 }
+
+
 
 # Set up config + logging directories
 mkdir -p /etc/flapjack /var/log/flapjack /var/run/flapjack
@@ -30,15 +32,51 @@ fi
 # Copy in init scripts (FIXME: support OS's other than Ubunbu)
 if [ ! -e /etc/init.d/flapjack ] ; then
   echo "Creating /etc/init.d/flapjack"
-  cp ${FLAPJACK_GEM_DIR}/dist/etc/init.d/flapjack /etc/init.d/flapjack
+  cat > /etc/init.d/flapjack <<'EOF'
+#!/bin/bash
+
+PATH=/opt/flapjack/bin:$PATH
+
+if [ ! $(which flapjack) ]; then
+  echo "Error: flapjack isn't in PATH."
+  echo "Refusing to do anything!"
+  exit 1
+fi
+
+# Evaluate command
+flapjack $1
+
+RETVAL=$?
+exit $RETVAL
+EOF
+  chmod u+x /etc/init.d/flapjack
 fi
 
 if [ ! -e /etc/init.d/flapjack-nagios-receiver ] ; then
   echo "Creating /etc/init.d/flapjack-nagios-receiver"
-  cp ${FLAPJACK_GEM_DIR}/dist/etc/init.d/flapjack-nagios-receiver /etc/init.d/flapjack-nagios-receiver
+  cat > /etc/init.d/flapjack-nagios-receiver <<'EOFfnr'
+#!/bin/bash
+
+NAGIOS_PERFDATA_FIFO="/var/cache/nagios3/event_stream.fifo"
+PATH=/opt/flapjack/bin:$PATH
+
+if [ ! $(which flapjack-nagios-receiver) ]; then
+  echo "Error: flapjack-nagios-receiver isn't in PATH."
+  echo "Refusing to do anything!"
+  exit 1
+fi
+
+# Evaluate command
+flapjack-nagios-receiver $1 --fifo ${NAGIOS_PERFDATA_FIFO} --daemonize
+
+RETVAL=$?
+exit $RETVAL
+EOFfnr
+  chmod u+x /etc/init.d/flapjack-nagios-receiver
 fi
 
 echo "Thank you for installing flapjack!"
+echo "You should be able to start flapjack by running: '/etc/init.d/flapjack start'"
 
 exit 0
 
