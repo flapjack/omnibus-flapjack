@@ -4,6 +4,10 @@
 # after package is installed.
 #
 
+INSTALLER_DIR=`dirname $0`
+DEST_DIR=/opt/flapjack
+CONFIG_DIR=/etc/flapjack
+
 PROGNAME=$(basename $0)
 
 function error_exit
@@ -12,6 +16,27 @@ function error_exit
   exit 1
 }
 
+# Set up config + logging directories
+mkdir -p /etc/flapjack /var/log/flapjack /var/run/flapjack
+
+# Copy in default configuration if none exists already
+if [ ! -e /etc/flapjack/flapjack_config.yaml ] ; then
+  echo "Creating /etc/flapjack/flapjack_config.yaml"
+  cp ${DEST_DIR}/etc/flapjack_config.yaml.example /etc/flapjack/flapjack_config.yaml
+fi
+
+# Copy in init scripts (FIXME: support OS's other than Ubunbu)
+if [ ! -e /etc/init.d/flapjack ] ; then
+  echo "Creating /etc/init.d/flapjack"
+  cp ${DEST_DIR}/dist/etc/init.d/flapjack /etc/init.d/flapjack
+fi
+
+if [ ! -e /etc/init.d/flapjack-nagios-receiver ] ; then
+  echo "Creating /etc/init.d/flapjack-nagios-receiver"
+  cp ${DEST_DIR}/dist/etc/init.d/flapjack-nagios-receiver /etc/init.d/flapjack-nagios-receiver
+fi
+
 echo "Thank you for installing flapjack!"
 
 exit 0
+
