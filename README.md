@@ -125,13 +125,20 @@ SSH in to ubuntu-precise64 vm:
 vagrant ssh ubuntu-precise64
 ```
 
-install reprepro and s3cmd:
+Install reprepro and s3cmd (if you haven't already):
 
 ``` bash
 sudo apt-get install reprepro s3cmd
 ```
 
-retrive the current repo:
+Configure s3cmd (if you haven't already):
+
+``` bash
+s3cmd --configure
+```
+Note, this saves your AWS keys into your home directory, so think thrice about doing this on a shared machine.
+
+Retrive the current repo:
 
 ``` bash
 mkdir -p ~/src/packages.flapjack.io/deb
@@ -139,13 +146,13 @@ cd ~/src/packages.flapjack.io/deb
 s3cmd sync --recursive s3://packages.flapjack.io/deb/ ~/src/packages.flapjack.io/deb/
 ```
 
-add the new flapjack package to the debian repo
+Add the new flapjack package to the debian repo
 
 ``` bash
 reprepro -b ~/src/packages.flapjack.io/deb includedeb precise `ls ~/omnibus-flapjack/pkg/flapjack*deb | tail -1`
 ```
 
-check you can see the new flapjack package in the output of `dpkg-scanpackages`, and that the Size, Installed-Size, etc look reasonable:
+Check you can see the new flapjack package in the output of `dpkg-scanpackages`, and that the Size, Installed-Size, etc look reasonable:
 
 ``` bash
 dpkg-scanpackages src/packages.flapjack.io/deb
@@ -173,7 +180,7 @@ License: unknown
 Vendor: vagrant@flapjack-omnibus-build-lab
 ```
 
-sync the debian repo back up to packages.flapjack.io, first with a dryrun:
+Sync the debian repo back up to packages.flapjack.io, first with a dryrun:
 
 ``` bash
 s3cmd sync --dry-run --verbose --recursive --delete-removed ~/src/packages.flapjack.io/deb/ s3://packages.flapjack.io/deb/
