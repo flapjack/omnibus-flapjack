@@ -7,8 +7,10 @@
 INSTALLER_DIR=`dirname $0`
 DEST_DIR=/opt/flapjack
 CONFIG_DIR=/etc/flapjack
-
+FLAPJACK_GEM_DIR=`ls -ld ${DEST_DIR}/embedded/lib/ruby/gems/*/gems/flapjack-* | tail -1`
 PROGNAME=$(basename $0)
+
+# /opt/flapjack/embedded/lib/ruby/gems/1.9.1/gems/flapjack-0.7.28/etc/flapjack_config.yaml.example
 
 function error_exit
 {
@@ -22,18 +24,18 @@ mkdir -p /etc/flapjack /var/log/flapjack /var/run/flapjack
 # Copy in default configuration if none exists already
 if [ ! -e /etc/flapjack/flapjack_config.yaml ] ; then
   echo "Creating /etc/flapjack/flapjack_config.yaml"
-  cp ${DEST_DIR}/etc/flapjack_config.yaml.example /etc/flapjack/flapjack_config.yaml
+  cp ${FLAPJACK_GEM_DIR}/etc/flapjack_config.yaml.example ${CONFIG_DIR}/flapjack_config.yaml
 fi
 
 # Copy in init scripts (FIXME: support OS's other than Ubunbu)
 if [ ! -e /etc/init.d/flapjack ] ; then
   echo "Creating /etc/init.d/flapjack"
-  cp ${DEST_DIR}/dist/etc/init.d/flapjack /etc/init.d/flapjack
+  cp ${FLAPJACK_GEM_DIR}/dist/etc/init.d/flapjack /etc/init.d/flapjack
 fi
 
 if [ ! -e /etc/init.d/flapjack-nagios-receiver ] ; then
   echo "Creating /etc/init.d/flapjack-nagios-receiver"
-  cp ${DEST_DIR}/dist/etc/init.d/flapjack-nagios-receiver /etc/init.d/flapjack-nagios-receiver
+  cp ${FLAPJACK_GEM_DIR}/dist/etc/init.d/flapjack-nagios-receiver /etc/init.d/flapjack-nagios-receiver
 fi
 
 echo "Thank you for installing flapjack!"

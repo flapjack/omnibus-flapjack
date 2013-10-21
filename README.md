@@ -143,7 +143,7 @@ Retrive the current repo:
 ``` bash
 mkdir -p ~/src/packages.flapjack.io/deb
 cd ~/src/packages.flapjack.io/deb
-s3cmd sync --recursive s3://packages.flapjack.io/deb/ ~/src/packages.flapjack.io/deb/
+s3cmd sync --verbose --recursive s3://packages.flapjack.io/deb/ ~/src/packages.flapjack.io/deb/
 ```
 
 Add the new flapjack package to the debian repo
@@ -155,7 +155,7 @@ reprepro -b ~/src/packages.flapjack.io/deb includedeb precise `ls ~/omnibus-flap
 Check you can see the new flapjack package in the output of `dpkg-scanpackages`, and that the Size, Installed-Size, etc look reasonable:
 
 ``` bash
-dpkg-scanpackages src/packages.flapjack.io/deb
+dpkg-scanpackages ~/src/packages.flapjack.io/deb
 ```
 
 Eg, example output for 0.7.27:
