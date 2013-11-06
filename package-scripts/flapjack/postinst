@@ -18,8 +18,6 @@ function error_exit
   exit 1
 }
 
-
-
 # Set up config + logging directories
 mkdir -p /etc/flapjack /var/log/flapjack /var/run/flapjack
 
@@ -32,47 +30,20 @@ fi
 # Copy in init scripts (FIXME: support OS's other than Ubunbu)
 if [ ! -e /etc/init.d/flapjack ] ; then
   echo "Creating /etc/init.d/flapjack"
-  cat > /etc/init.d/flapjack <<'EOF'
-#!/bin/bash
-
-PATH=/opt/flapjack/bin:$PATH
-
-if [ ! $(which flapjack) ]; then
-  echo "Error: flapjack isn't in PATH."
-  echo "Refusing to do anything!"
-  exit 1
-fi
-
-# Evaluate command
-flapjack $1
-
-RETVAL=$?
-exit $RETVAL
-EOF
+  cp ${FLAPJACK_GEM_DIR}/dist/etc/init.d/flapjack /etc/init.d/flapjack
   chmod u+x /etc/init.d/flapjack
 fi
 
 if [ ! -e /etc/init.d/flapjack-nagios-receiver ] ; then
   echo "Creating /etc/init.d/flapjack-nagios-receiver"
-  cat > /etc/init.d/flapjack-nagios-receiver <<'EOFfnr'
-#!/bin/bash
-
-NAGIOS_PERFDATA_FIFO="/var/cache/nagios3/event_stream.fifo"
-PATH=/opt/flapjack/bin:$PATH
-
-if [ ! $(which flapjack-nagios-receiver) ]; then
-  echo "Error: flapjack-nagios-receiver isn't in PATH."
-  echo "Refusing to do anything!"
-  exit 1
+  cp ${FLAPJACK_GEM_DIR}/dist/etc/init.d/flapjack-nagios-receiver /etc/init.d/flapjack-nagios-receiver
+  chmod u+x /etc/init.d/flapjack-nagios-receiver
 fi
 
-# Evaluate command
-flapjack-nagios-receiver $1 --fifo ${NAGIOS_PERFDATA_FIFO} --daemonize
-
-RETVAL=$?
-exit $RETVAL
-EOFfnr
-  chmod u+x /etc/init.d/flapjack-nagios-receiver
+if [ ! -e /etc/init.d/flapper ] ; then
+  echo "Creating /etc/init.d/flapper"
+  cp ${FLAPJACK_GEM_DIR}/dist/etc/init.d/flapper /etc/init.d/flapper
+  chmod u+x /etc/init.d/flapper
 fi
 
 echo "Thank you for installing flapjack!"

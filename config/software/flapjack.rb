@@ -2,7 +2,7 @@ name "flapjack"
 
 puts "VERSION env: #{ENV['VERSION']}"
 puts "FLAPJACK_VERSION env: #{ENV['FLAPJACK_VERSION']}"
-version = ENV['FLAPJACK_VERSION'] || '0.7.28'
+version = ENV['FLAPJACK_VERSION'] || '0.7.30'
 version "v#{version}"
 
 dependency "ruby"
