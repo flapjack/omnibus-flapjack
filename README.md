@@ -138,12 +138,21 @@ s3cmd --configure
 ```
 Note, this saves your AWS keys into your home directory, so think thrice about doing this on a shared machine.
 
-Retrive the current repo:
+Clone the packages.flapjack.io git repo (if you haven't already):
 
 ``` bash
-mkdir -p ~/src/packages.flapjack.io/deb
-cd ~/src/packages.flapjack.io/deb
-s3cmd sync --verbose --recursive s3://packages.flapjack.io/deb/ ~/src/packages.flapjack.io/deb/
+mkdir -p ~/src && cd ~/src && git clone https://github.com/flpjck/packages.flapjack.io.git
+```
+
+Pull the latest commits (unless you've just cloned):
+``` bash
+cd ~/src/packages.flapjack.io && git pull
+```
+
+Retrive the current debian repository:
+
+``` bash
+~/src/packages.flapjack.io/bin/sync_deb_down
 ```
 
 Add the new flapjack package to the debian repo
@@ -183,8 +192,10 @@ Vendor: vagrant@flapjack-omnibus-build-lab
 Sync the debian repo back up to packages.flapjack.io, first with a dryrun:
 
 ``` bash
-s3cmd sync --dry-run --verbose --recursive --delete-removed ~/src/packages.flapjack.io/deb/ s3://packages.flapjack.io/deb/
+~/src/packages.flapjack.io/bin/sync_deb_up
 ```
 
-Then remove the --dry-run and run again if you're happy with what `s3cmd sync` is going to do.
+Then add 'apply=true' and run again if you're happy with what's going to be done.
+
+Check that the latest package is available for download at [http://packages.flapjack.io/deb/pool/main/f/flapjack/](http://packages.flapjack.io/deb/pool/main/f/flapjack/)
 
