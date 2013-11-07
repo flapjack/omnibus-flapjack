@@ -6,7 +6,7 @@ homepage   "http://flapjack.io"
 replaces        "flapjack"
 install_path    "/opt/flapjack"
 
-version = ENV['VERSION'] || '0.7.30'
+version = ENV['VERSION'] || '0.7.31'
 build_version   "#{version}+#{Time.now.strftime('%Y%m%d%H%M%S')}"
 build_iteration 1
 

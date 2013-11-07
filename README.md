@@ -189,6 +189,12 @@ License: unknown
 Vendor: vagrant@flapjack-omnibus-build-lab
 ```
 
+Create directory listing html file for every directory within the deb repo with:
+
+``` bash
+cd ~/src/packages.flapjack.io && bin/create_directory_listings deb
+```
+
 Sync the debian repo back up to packages.flapjack.io, first with a dryrun:
 
 ``` bash
