@@ -29,25 +29,25 @@ make_args = ["PREFIX=#{install_dir}/embedded",
 
 config = <<-CONFIG
 daemonize yes
-pidfile /var/run/redis/redis-flapjack.pid
+pidfile /var/run/flapjack/redis-flapjack.pid
 port 6380
 bind 127.0.0.1
 timeout 300
 loglevel notice
-logfile /var/log/redis/redis-flapjack.log
+logfile /var/log/flapjack/redis-flapjack.log
 databases 16
 save 900 1
 save 300 10
 save 60 10000
 rdbcompression yes
 dbfilename dump.rdb
-dir /var/lib/redis
+dir /var/lib/flapjack/redis-flapjack
 slave-serve-stale-data yes
 appendonly no
 appendfsync everysec
 no-appendfsync-on-rewrite no
 vm-enabled no
-vm-swap-file /var/lib/redis/redis.swap
+vm-swap-file /var/lib/flapjack/redis-flapjack/redis.swap
 CONFIG
 
 init = <<-INIT
@@ -67,11 +67,11 @@ init = <<-INIT
 
 PATH=#{install_dir}/embedded/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 DAEMON=#{install_dir}/embedded/bin/redis-server
-DAEMON_ARGS=#{install_dir}/embedded/etc/redis-flapjack.conf
+DAEMON_ARGS=#{install_dir}/embedded/etc/redis/redis-flapjack.conf
 NAME=redis-server
 DESC=redis-server
 
-RUNDIR=/var/run/redis
+RUNDIR=/var/run/flapjack
 PIDFILE=$RUNDIR/redis-flapjack.pid
 
 test -x $DAEMON || exit 0
@@ -83,9 +83,9 @@ case "$1" in
   echo -n "Starting $DESC: "
   mkdir -p $RUNDIR
   touch $PIDFILE
-  chown redis:redis $RUNDIR $PIDFILE
+  chown flapjack:flapjack $RUNDIR $PIDFILE
   chmod 755 $RUNDIR
-  if start-stop-daemon --start --quiet --umask 007 --pidfile $PIDFILE --chuid redis:redis --exec $DAEMON -- $DAEMON_ARGS
+  if start-stop-daemon --start --quiet --umask 007 --pidfile $PIDFILE --chuid flapjack:flapjack --exec $DAEMON -- $DAEMON_ARGS
   then
     echo "$NAME."
   else

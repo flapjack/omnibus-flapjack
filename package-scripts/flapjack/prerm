@@ -1,0 +1,12 @@
+#!/bin/bash
+#
+# Perform necessary flapjack removal steps
+# prior to package removal
+#
+
+echo "Stopping flapjack"
+/etc/init.d/flapjack stop
+
+echo "Stopping redis-flapjack"
+/etc/init.d/redis-flapjack stop
+

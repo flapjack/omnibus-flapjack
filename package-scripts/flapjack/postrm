@@ -4,6 +4,12 @@
 # after package is uninstalled.
 #
 
+rm /etc/init.d/flapjack /etc/init.d/flapjack-nagios-receiver /etc/init.d/flapper /etc/init.d/redis-flapjack
+update-rc.d flapjack remove
+update-rc.d flapjack-nagios-receiver remove
+update-rc.d flapper remove
+update-rc.d redis-flapjack remove
+
 echo "flapjack has been uninstalled!"
 
 exit 0
