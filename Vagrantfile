@@ -100,4 +100,10 @@ Vagrant.configure("2") do |config|
     su vagrant -c "bundle install --binstubs"
     su vagrant -c "bin/omnibus build project #{project_name}"
   OMNIBUS_BUILD
+
+  # to speed up subsequent rebuilds install vagrant-cachier
+  # https://github.com/fgrehm/vagrant-cachier
+  #   `vagrant plugin install vagrant-cachier`
+  config.cache.auto_detect = true
+
 end
