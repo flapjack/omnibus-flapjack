@@ -1,14 +1,13 @@
 name "flapjack"
 
-version = '0.7.33p'
+version = '0.7.33'
 version "v#{version}"
 
 dependency "ruby"
 dependency "rubygems"
 dependency "bundler"
 
-#source :git => "git://github.com/flpjck/flapjack.git"
-source :git => "git://github.com/jessereynolds/flapjack.git"
+source :git => "git://github.com/flpjck/flapjack.git"
 
 relative_path "flapjack"
 
