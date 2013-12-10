@@ -104,6 +104,8 @@ Vagrant.configure("2") do |config|
   # to speed up subsequent rebuilds install vagrant-cachier
   # https://github.com/fgrehm/vagrant-cachier
   #   `vagrant plugin install vagrant-cachier`
-  config.cache.auto_detect = true
+  #config.cache.auto_detect = true
+  #config.cache.enable_nfs = true
 
 end
+

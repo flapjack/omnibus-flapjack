@@ -57,6 +57,14 @@ fi
 update-rc.d redis-flapjack defaults 94 06 >/dev/null || exit $?
 update-rc.d flapjack defaults 95 05 >/dev/null || exit $?
 
+echo "Setting paths"
+if [ ! -e /etc/profile.d/flapjack.sh ] ; then
+  cat > /etc/profile.d/flapjack.sh <<'EOF'
+PATH=$PATH:/opt/flapjack/bin/
+EOF
+  chmod 644 /etc/profile.d/flapjack.sh
+fi
+
 echo "Starting redis-flapjack"
 /etc/init.d/redis-flapjack start || exit $?
 
