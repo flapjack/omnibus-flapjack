@@ -125,16 +125,17 @@ SSH in to ubuntu-precise64 vm:
 vagrant ssh ubuntu-precise64
 ```
 
-Install reprepro and s3cmd (if you haven't already):
+Install reprepro, pip and awscli etc (if you haven't already):
 
 ``` bash
-sudo apt-get install reprepro s3cmd
+sudo apt-get install reprepro python-pip groff
+sudo pip install awscli
 ```
 
-Configure s3cmd (if you haven't already):
+Configure awscli with your access credentials (if you haven't already):
 
 ``` bash
-s3cmd --configure
+aws configure --profile default
 ```
 Note, this saves your AWS keys into your home directory, so think thrice about doing this on a shared machine.
 
