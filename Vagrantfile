@@ -27,7 +27,7 @@ Vagrant.configure("2") do |config|
     c.vm.box_url = "http://opscode-vm.s3.amazonaws.com/vagrant/boxes/opscode-ubuntu-11.04.box"
   end
 
-  config.vm.define 'ubuntu-precise64' do |c|
+  config.vm.define 'ubuntu-precise64', primary: true do |c|
     c.berkshelf.berksfile_path = "./Berksfile"
     c.vm.box = "precise64"
     c.vm.box_url = "http://files.vagrantup.com/precise64.box"
