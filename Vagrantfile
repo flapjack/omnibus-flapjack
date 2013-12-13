@@ -102,10 +102,13 @@ Vagrant.configure("2") do |config|
   OMNIBUS_BUILD
 
   # to speed up subsequent rebuilds install vagrant-cachier
+  # to cache packages in your ~/.vagrant.d/cache directory
   # https://github.com/fgrehm/vagrant-cachier
   #   `vagrant plugin install vagrant-cachier`
-  #config.cache.auto_detect = true
-  #config.cache.enable_nfs = true
+  if ENV['VAGRANT_CACHE']
+    config.cache.auto_detect = true
+    config.cache.enable_nfs  = true
+  end
 
 end
 
