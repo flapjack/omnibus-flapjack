@@ -46,8 +46,6 @@ slave-serve-stale-data yes
 appendonly no
 appendfsync everysec
 no-appendfsync-on-rewrite no
-vm-enabled no
-vm-swap-file /var/lib/flapjack/redis-flapjack/redis.swap
 CONFIG
 
 init = <<-INIT
