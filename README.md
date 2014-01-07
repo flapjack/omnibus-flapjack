@@ -139,6 +139,8 @@ aws configure --profile default
 ```
 Note, this saves your AWS keys into your home directory, so think thrice about doing this on a shared machine.
 
+Use 'us-east-1' as the default region.
+
 Clone the packages.flapjack.io git repo (if you haven't already):
 
 ``` bash
