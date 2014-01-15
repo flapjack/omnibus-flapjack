@@ -60,6 +60,11 @@ Vagrant.configure("2") do |config|
     ]
   end
 
+  config.vm.provider "vmware_fusion" do |v|
+    v.vmx["memsize"] = "1536"
+    v.vmx["numvcpus"] = "2"
+  end
+
   # Ensure a recent version of the Chef Omnibus packages are installed
   config.omnibus.chef_version = :latest
 
