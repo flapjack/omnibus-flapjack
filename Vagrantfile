@@ -51,6 +51,12 @@ Vagrant.configure("2") do |config|
     c.vm.box_url = "http://opscode-vm.s3.amazonaws.com/vagrant/opscode_centos-6.3_chef-11.2.0.box"
   end
 
+  config.vm.define 'centos-6.5' do |c|
+    c.berkshelf.berksfile_path = "./Berksfile"
+    c.vm.box = "opscode-centos-6.5"
+    c.vm.box_url = "http://opscode-vm-bento.s3.amazonaws.com/vagrant/virtualbox/opscode_centos-6.5_chef-provisionerless.box"
+  end
+
   config.vm.provider :virtualbox do |vb|
     # Give enough horsepower to build without taking all day.
     vb.customize [
