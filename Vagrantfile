@@ -81,8 +81,9 @@ Vagrant.configure("2") do |config|
   end
 
   config.vm.provider :aws do |aws, override|
-    raise "AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SSH_PRIVATE_KEY_PATH env vars must be set" unless
-      aws_access_key_id && aws_secret_access_key && aws_ssh_private_key_path
+    # FIXME: how to throw this error only if you're using the aws provider ?
+    #raise "AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SSH_PRIVATE_KEY_PATH env vars must be set" unless
+    #  aws_access_key_id && aws_secret_access_key && aws_ssh_private_key_path
 
     aws.access_key_id     = aws_access_key_id
     aws.secret_access_key = aws_secret_access_key
