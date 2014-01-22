@@ -7,13 +7,23 @@ if Vagrant::VERSION < "1.2.1"
   raise "The Omnibus Build Lab is only compatible with Vagrant 1.2.1+"
 end
 
-host_project_path = File.expand_path("..", __FILE__)
-guest_project_path = "/home/vagrant/#{File.basename(host_project_path)}"
-project_name = "flapjack"
+host_project_path  = File.expand_path("..", __FILE__)
+project_name       = "flapjack"
+
+aws_access_key_id        = ENV['AWS_ACCESS_KEY_ID']
+aws_secret_access_key    = ENV['AWS_SECRET_ACCESS_KEY']
+aws_ssh_private_key_path = ENV['AWS_SSH_PRIVATE_KEY_PATH']
+remote_user              = ENV['VAGRANT_REMOTE_USER'] || 'vagrant'
 
 Vagrant.configure("2") do |config|
 
   config.vm.hostname = "#{project_name}-omnibus-build-lab"
+
+  config.vm.define 'aws-ubuntu-precise64' do |c|
+    c.berkshelf.berksfile_path = "./Berksfile"
+    c.vm.box = "aws-dummy"
+    c.vm.box_url = "https://github.com/mitchellh/vagrant-aws/raw/master/dummy.box"
+  end
 
   config.vm.define 'ubuntu-10.04' do |c|
     c.berkshelf.berksfile_path = "./Berksfile"
@@ -58,7 +68,6 @@ Vagrant.configure("2") do |config|
   end
 
   config.vm.provider :virtualbox do |vb|
-    # Give enough horsepower to build without taking all day.
     vb.customize [
       "modifyvm", :id,
       "--memory", "1536",
@@ -71,11 +80,43 @@ Vagrant.configure("2") do |config|
     v.vmx["numvcpus"] = "2"
   end
 
+  config.vm.provider :aws do |aws, override|
+    raise "AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SSH_PRIVATE_KEY_PATH env vars must be set" unless
+      aws_access_key_id && aws_secret_access_key && aws_ssh_private_key_path
+
+    aws.access_key_id     = aws_access_key_id
+    aws.secret_access_key = aws_secret_access_key
+
+    aws.instance_type = "c3.large"
+    #aws.instance_type = "m3.medium"
+    #aws.instance_type = "m1.small"
+
+    #aws.region = "us-east-1"
+    #aws.ami = "ami-7747d01e"
+
+    aws.region = "ap-southeast-2"
+    aws.ami = "ami-978916ad"
+
+    # Virginia
+    aws.region_config "us-east-1" do |region|
+      region.keypair_name = "jesse-us-east-1"
+    end
+
+    # Sydney
+    aws.region_config "ap-southeast-2" do |region|
+      region.keypair_name = "jesse-ap-southeast-2"
+    end
+
+    override.ssh.username = remote_user
+    override.ssh.private_key_path = aws_ssh_private_key_path
+  end
+
   # Ensure a recent version of the Chef Omnibus packages are installed
   config.omnibus.chef_version = :latest
 
   # Enable the berkshelf-vagrant plugin
   config.berkshelf.enabled = true
+
   # The path to the Berksfile to use with Vagrant Berkshelf
   config.berkshelf.berksfile_path = "./Berksfile"
 
@@ -86,7 +127,7 @@ Vagrant.configure("2") do |config|
   config.ssh.forward_agent = true
 
   host_project_path = File.expand_path("..", __FILE__)
-  guest_project_path = "/home/vagrant/#{File.basename(host_project_path)}"
+  guest_project_path = "/home/#{remote_user}/#{File.basename(host_project_path)}"
 
   config.vm.synced_folder host_project_path, guest_project_path
 
@@ -94,8 +135,8 @@ Vagrant.configure("2") do |config|
   config.vm.provision :chef_solo do |chef|
     chef.json = {
       "omnibus" => {
-        "build_user" => "vagrant",
-        "build_dir" => guest_project_path,
+        "build_user"  => remote_user,
+        "build_dir"   => guest_project_path,
         "install_dir" => "/opt/#{project_name}"
       }
     }
@@ -108,8 +149,8 @@ Vagrant.configure("2") do |config|
   config.vm.provision :shell, :inline => <<-OMNIBUS_BUILD
     export PATH=/usr/local/bin:$PATH
     cd #{guest_project_path}
-    su vagrant -c "bundle install --binstubs"
-    su vagrant -c "bin/omnibus build project #{project_name}"
+    su #{remote_user} -c "bundle install --binstubs"
+    su #{remote_user} -c "bin/omnibus build project #{project_name}"
   OMNIBUS_BUILD
 
   # to speed up subsequent rebuilds install vagrant-cachier
