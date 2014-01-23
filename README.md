@@ -56,9 +56,9 @@ $ bin/omnibus help
 
 ## Vagrant-based Virtualized Build Lab
 
-Every Omnibus project ships will a project-specific
+This Omnibus project ships will a project-specific
 [Berksfile](http://berkshelf.com/) and [Vagrantfile](http://www.vagrantup.com/)
-that will allow you to build your projects on the following platforms:
+that will allow you to build your projects on various platforms, including:
 
 * CentOS 5 64-bit
 * CentOS 6 64-bit
@@ -72,9 +72,8 @@ or Ubuntu packages. See the Vagrantfile to add new platforms to your build lab.
 
 The only requirements for standing up this virtualized build lab are:
 
-* VirtualBox - native packages exist for most platforms and can be downloaded
-from the [VirtualBox downloads page](https://www.virtualbox.org/wiki/Downloads).
-* Vagrant 1.2.1+ - native packages exist for most platforms and can be downloaded
+* VirtualBox, VMWare Fusion, or AWS EC2
+* Vagrant 1.4.3+ - native packages exist for most platforms and can be downloaded
 from the [Vagrant downloads page](http://downloads.vagrantup.com/).
 
 The [vagrant-berkshelf](https://github.com/RiotGames/vagrant-berkshelf) and
@@ -113,6 +112,48 @@ To rebuild the omnibus package without destroying the instance, you can do this:
 
 ``` shell
 $ vagrant provision ubuntu-precise64
+```
+
+## Building packages on AWS EC2
+
+The default region set up in the Vagrantfile is 'ap-southeast-2' (Sydney, Australia) with ami-978916ad, Canonical's Ubuntu Precise 12.04 LTS amd64 ebs Amazon Machine Image. The example below mentions ami-0568456c which is the equivalent ami for use in us-east-1 (Virginia). Other Linux OS's should also work but have not yet been tested on ec2.
+
+**AWS Setup:**
+
+- There must be a keypair named 'vagrant-flapjack' under your AWS account, for the region you are going to use.
+- Your security policy must also allow inbound SSH (port 22), eg by adding a rule to your default security group for the region you're going to use.
+
+**Shell Environment Setup:**
+
+``` bash
+# Required:
+export AWS_ACCESS_KEY_ID=''
+export AWS_SECRET_ACCESS_KEY=''
+export AWS_SSH_PRIVATE_KEY_PATH="${HOME}/.ssh/vagrant-flapjack.pem"
+export VAGRANT_REMOTE_USER='ubuntu'
+
+# Optional - select an alternative region+ami (default: ap-southeast-2, precise64):
+export AWS_REGION="us-east-1"  # DANGER: see the Warning below
+export AWS_AMI="ami-0568456c"
+
+# Optionsl - select an alternative instance type (default: c3.large)
+export AWS_INSTANCE_TYPE="m3.medium"
+```
+
+**WARNING**
+
+If you have an aws instance running, and so much as run `vagrant status aws-ubuntu-precise64` without setting AWS_REGION (and probably other environment variables) correctly, then Vagrant will go ahead and remove all knowledge of your running instance, so you won't be able to control it (eg to shut it down) from Vagrant anymore. For this reason it's recommended to stick with the default region that's configured in Vagrantfile.
+
+**Vagrant AWS Plugin:**
+```bash
+vagrant plugin install vagrant-aws
+```
+
+**Running Vagrant:**
+```
+vagrant up aws-ubuntu-precise64 --provider aws
+# manually do something with the generated package (to be automated)
+vagrant destroy aws-ubuntu-precise64
 ```
 
 ## Updating the debian package repo (ubuntu precise only at present)

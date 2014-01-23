@@ -14,6 +14,9 @@ aws_access_key_id        = ENV['AWS_ACCESS_KEY_ID']
 aws_secret_access_key    = ENV['AWS_SECRET_ACCESS_KEY']
 aws_ssh_private_key_path = ENV['AWS_SSH_PRIVATE_KEY_PATH']
 remote_user              = ENV['VAGRANT_REMOTE_USER'] || 'vagrant'
+aws_region               = ENV['AWS_REGION']          || 'ap-southeast-2'
+aws_ami                  = ENV['AWS_AMI']             || 'ami-978916ad'
+aws_instance_type        = ENV['AWS_INSTANCE_TYPE']   || 'c3.large'
 
 Vagrant.configure("2") do |config|
 
@@ -75,7 +78,7 @@ Vagrant.configure("2") do |config|
     ]
   end
 
-  config.vm.provider "vmware_fusion" do |v|
+  config.vm.provider :vmware_fusion do |v|
     v.vmx["memsize"] = "1536"
     v.vmx["numvcpus"] = "2"
   end
@@ -87,29 +90,14 @@ Vagrant.configure("2") do |config|
 
     aws.access_key_id     = aws_access_key_id
     aws.secret_access_key = aws_secret_access_key
+    aws.region            = aws_region
+    aws.ami               = aws_ami
+    aws.instance_type     = aws_instance_type
 
-    aws.instance_type = "c3.large"
-    #aws.instance_type = "m3.medium"
-    #aws.instance_type = "m1.small"
-
-    #aws.region = "us-east-1"
-    #aws.ami = "ami-7747d01e"
-
-    aws.region = "ap-southeast-2"
-    aws.ami = "ami-978916ad"
-
-    # Virginia
-    aws.region_config "us-east-1" do |region|
-      region.keypair_name = "jesse-us-east-1"
-    end
-
-    # Sydney
-    aws.region_config "ap-southeast-2" do |region|
-      region.keypair_name = "jesse-ap-southeast-2"
-    end
-
-    override.ssh.username = remote_user
+    override.ssh.username         = remote_user
     override.ssh.private_key_path = aws_ssh_private_key_path
+
+    aws.keypair_name  = "vagrant-#{project_name}"
   end
 
   # Ensure a recent version of the Chef Omnibus packages are installed
