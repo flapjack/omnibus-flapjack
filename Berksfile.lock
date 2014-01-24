@@ -3,6 +3,9 @@
     "omnibus": {
       "locked_version": "1.0.8"
     },
+    "python": {
+      "locked_version": "1.4.4"
+    },
     "apt": {
       "locked_version": "1.9.2"
     },
