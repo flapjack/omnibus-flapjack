@@ -1,6 +1,6 @@
 name "flapjack"
 
-version = '0.8.2'
+version = '0.8.3'
 version "v#{version}"
 
 dependency "ruby"
