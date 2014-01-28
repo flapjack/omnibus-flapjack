@@ -114,6 +114,10 @@ To rebuild the omnibus package without destroying the instance, you can do this:
 $ vagrant provision ubuntu-precise64
 ```
 
+## Automatic upload to S3
+
+Currently, built packages will be uploaded to `s3://flapjack-packages/new/` though this URL can be overridden with the `FLAPJACK_TARGET_S3_URL` environment variable. The AWS key id and secret key also need to be set in environment variables, see `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and other environment variables in the section below.
+
 ## Building packages on AWS EC2
 
 The default region set up in the Vagrantfile is 'ap-southeast-2' (Sydney, Australia) with ami-978916ad, Canonical's Ubuntu Precise 12.04 LTS amd64 ebs Amazon Machine Image. The example below mentions ami-0568456c which is the equivalent ami for use in us-east-1 (Virginia). Other Linux OS's should also work but have not yet been tested on ec2.
