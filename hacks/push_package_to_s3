@@ -5,7 +5,8 @@ bucket = 's3://flapjack-packages/new/'
 def run(command)
   #puts "running command: " + command
   unless system(command)
-    puts "Sad Panda"
+    puts "Error running the following command:"
+    puts "  #{command}"
     exit 1
   end
 end

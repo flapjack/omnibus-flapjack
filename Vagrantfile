@@ -139,13 +139,13 @@ Vagrant.configure("2") do |config|
   config.vm.provision :shell, :inline => <<-OMNIBUS_BUILD
     export PATH=/usr/local/bin:$PATH
     cd #{guest_project_path}
-    su #{remote_user} -c "bundle install --binstubs"
-    su #{remote_user} -c "bin/omnibus build project #{project_name}"
-    su #{remote_user} -c "omnibus-#{project_name}/hacks/configure_awscli \
+    #su #{remote_user} -c "bundle install --binstubs"
+    #su #{remote_user} -c "bin/omnibus build project #{project_name}"
+    su #{remote_user} -c "hacks/configure_awscli \
                             --aws-access-key-id #{aws_access_key_id} \
                             --aws-secret-access-key #{aws_secret_access_key} \
                             --default-region #{aws_region}"
-    su #{remote_user} -c "omnibus-#{project_name}/hacks/push_to_s3"
+    su #{remote_user} -c "hacks/push_package_to_s3"
   OMNIBUS_BUILD
 
   # to speed up subsequent rebuilds install vagrant-cachier
