@@ -13,6 +13,7 @@ project_name       = "flapjack"
 aws_access_key_id        = ENV['AWS_ACCESS_KEY_ID']
 aws_secret_access_key    = ENV['AWS_SECRET_ACCESS_KEY']
 aws_ssh_private_key_path = ENV['AWS_SSH_PRIVATE_KEY_PATH']
+flapjack_target_s3_url   = ENV['FLAPJACK_TARGET_S3_URL'] || 's3://flapjack-packages/new/'
 remote_user              = ENV['VAGRANT_REMOTE_USER'] || 'vagrant'
 aws_region               = ENV['AWS_REGION']          || 'ap-southeast-2'
 aws_ami                  = ENV['AWS_AMI']             || 'ami-978916ad'
@@ -132,20 +133,21 @@ Vagrant.configure("2") do |config|
 
     chef.run_list = [
       "recipe[omnibus::default]",
-      "recipe[python::default]"
+      "recipe[python::default]",
+      "recipe[awscli::default]"
     ]
   end
 
   config.vm.provision :shell, :inline => <<-OMNIBUS_BUILD
     export PATH=/usr/local/bin:$PATH
     cd #{guest_project_path}
-    #su #{remote_user} -c "bundle install --binstubs"
-    #su #{remote_user} -c "bin/omnibus build project #{project_name}"
+    su #{remote_user} -c "bundle install --binstubs"
+    su #{remote_user} -c "bin/omnibus build project #{project_name}"
     su #{remote_user} -c "hacks/configure_awscli \
                             --aws-access-key-id #{aws_access_key_id} \
                             --aws-secret-access-key #{aws_secret_access_key} \
                             --default-region #{aws_region}"
-    su #{remote_user} -c "hacks/push_package_to_s3"
+    su #{remote_user} -c "hacks/push_package_to_s3 #{flapjack_target_s3_url}"
   OMNIBUS_BUILD
 
   # to speed up subsequent rebuilds install vagrant-cachier

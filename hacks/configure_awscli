@@ -38,7 +38,8 @@ config_text =
 "[profile default]
 region = #{options.default_region}
 aws_access_key_id = #{options.aws_access_key_id}
-aws_secret_access_key = #{options.aws_secret_access_key}"
+aws_secret_access_key = #{options.aws_secret_access_key}
+"
 aws_dir = File.join(Dir.home, '.aws')
 
 unless File.directory?(aws_dir)
@@ -46,7 +47,7 @@ unless File.directory?(aws_dir)
 end
 
 config_path = File.join(aws_dir, 'config')
-raise "~/.aws/config already exists!" if File.file?(config_path)
+#raise "~/.aws/config already exists!" if File.file?(config_path)
 File.open(config_path, mode="w", 0600) do |f|
   f.write(config_text)
 end
