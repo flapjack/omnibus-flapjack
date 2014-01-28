@@ -1,0 +1,55 @@
+#!/usr/bin/env ruby
+
+require 'optparse'
+require 'ostruct'
+
+options = OpenStruct.new
+optparse = OptionParser.new do |opts|
+  opts.banner = "Usage: flapjack COMMAND [OPTIONS]"
+
+  opts.separator  ""
+  opts.separator  "Options"
+
+  opts.on("--aws-access-key-id [KEYID]", String, "AWS access key id to configure") do |a|
+    options.aws_access_key_id = a
+  end
+
+  opts.on("--aws-secret-access-key [SECRET]", String, "AWS secret access key to configure") do |s|
+    options.aws_secret_access_key = s
+  end
+
+  opts.on("--default-region [REGION]", String, "Default AWS region to configure") do |r|
+    options.default_region = r
+  end
+
+end
+
+optparse.parse!(ARGV)
+raise "--aws-access-key-id must be supplied" unless options.aws_access_key_id
+raise "--aws-secret-access-key must be supplied" unless options.aws_secret_access_key
+raise "--default-region must be supplied" unless options.default_region
+
+if options.help
+  puts optparse
+  exit
+end
+
+config_text =
+"[profile default]
+region = #{options.default_region}
+aws_access_key_id = #{options.aws_access_key_id}
+aws_secret_access_key = #{options.aws_secret_access_key}"
+aws_dir = File.join(Dir.home, '.aws')
+
+unless File.directory?(aws_dir)
+  Dir.mkdir(aws_dir, 0755)
+end
+
+config_path = File.join(aws_dir, 'config')
+raise "~/.aws/config already exists!" if File.file?(config_path)
+File.open(config_path, mode="w", 0600) do |f|
+  f.write(config_text)
+end
+
+puts "aws cli default profile configured!"
+

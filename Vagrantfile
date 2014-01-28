@@ -141,6 +141,11 @@ Vagrant.configure("2") do |config|
     cd #{guest_project_path}
     su #{remote_user} -c "bundle install --binstubs"
     su #{remote_user} -c "bin/omnibus build project #{project_name}"
+    su #{remote_user} -c "omnibus-#{project_name}/hacks/configure_awscli \
+                            --aws-access-key-id #{aws_access_key_id} \
+                            --aws-secret-access-key #{aws_secret_access_key} \
+                            --default-region #{aws_region}"
+    su #{remote_user} -c "omnibus-#{project_name}/hacks/push_to_s3"
   OMNIBUS_BUILD
 
   # to speed up subsequent rebuilds install vagrant-cachier

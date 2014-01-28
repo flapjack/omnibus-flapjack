@@ -1,0 +1,23 @@
+#!/usr/bin/env ruby
+
+bucket = 's3://flapjack-packages/new/'
+
+def run(command)
+  #puts "running command: " + command
+  unless system(command)
+    puts "Sad Panda"
+    exit 1
+  end
+end
+
+deb = `ls ~/omnibus-flapjack/pkg/flapjack*deb | tail -1`.chomp
+metadata = deb + ".metadata.json"
+
+raise "no deb found at #{deb.inspect}" unless File.file?(deb)
+raise "no metadata found for #{deb}" unless File.file?(metadata)
+
+puts "Storing #{deb} into #{bucket}"
+run("aws s3 cp #{deb} #{bucket}")
+puts "Storing #{metadata} into #{bucket}"
+run("aws s3 cp #{metadata} #{bucket}")
+
