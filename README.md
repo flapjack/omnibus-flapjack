@@ -81,21 +81,24 @@ The [vagrant-berkshelf](https://github.com/RiotGames/vagrant-berkshelf) and
 are also required and can be installed easily with the following commands:
 
 ```shell
-$ vagrant plugin install vagrant-berkshelf
-$ vagrant plugin install vagrant-omnibus
+vagrant plugin install vagrant-berkshelf
+vagrant plugin install vagrant-omnibus
 ```
 
 Once the pre-requisites are installed you can build your package across all
 platforms with the following command:
 
 ```shell
-$ vagrant up
+export FLAPJACK_BUILD_TAG="0.8.4"
+vagrant up
 ```
+(Change the tag to build in the `FLAPJACK_BUILD_TAG` environment variable.)
 
 If you would like to build a package for a single platform the command looks like this:
 
 ```shell
-$ vagrant up PLATFORM
+export FLAPJACK_BUILD_TAG="0.8.4"
+vagrant up PLATFORM
 ```
 
 The complete list of valid platform names can be viewed with the
@@ -105,18 +108,21 @@ We've also defined a custom instance that uses the official Vagrant Ubuntu
 Precise (12.04) box:
 
 ``` shell
-$ vagrant up ubuntu-precise64
+export FLAPJACK_BUILD_TAG="0.8.4"
+vagrant up ubuntu-precise64
 ```
 
 To rebuild the omnibus package without destroying the instance, you can do this:
 
 ``` shell
-$ vagrant provision ubuntu-precise64
+vagrant provision ubuntu-precise64
 ```
 
 ## Automatic upload to S3
 
 Currently, built packages will be uploaded to `s3://flapjack-packages/new/` though this URL can be overridden with the `FLAPJACK_TARGET_S3_URL` environment variable. The AWS key id and secret key also need to be set in environment variables, see `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and other environment variables in the section below.
+
+You can disable this behaviour by setting the `SKIP_S3_STORE` environment variable.
 
 ## Building packages on AWS EC2
 
@@ -150,11 +156,12 @@ If you have an aws instance running, and so much as run `vagrant status aws-ubun
 
 **Vagrant AWS Plugin:**
 ```bash
-vagrant plugin install vagrant-aws
+$ vagrant plugin install vagrant-aws
 ```
 
 **Running Vagrant:**
 ```
+export FLAPJACK_BUILD_TAG="0.8.4"
 vagrant up aws-ubuntu-precise64 --provider aws
 # manually do something with the generated package (to be automated)
 vagrant destroy aws-ubuntu-precise64

@@ -1,6 +1,6 @@
 GIT
   remote: git://github.com/opscode/omnibus-software.git
-  revision: b899b8aa021b565708237486c3cb71566dc661eb
+  revision: 5ee2eae4a159f3c20dccf89e64a3532eadba2eff
   branch: master
   specs:
     omnibus-software (0.0.1)
@@ -11,7 +11,7 @@ GEM
     addressable (2.3.5)
     arr-pm (0.0.8)
       cabin (> 0)
-    backports (3.4.0)
+    backports (3.4.1)
     cabin (0.6.1)
     capistrano (2.14.1)
       highline

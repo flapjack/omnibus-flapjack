@@ -10,6 +10,7 @@ end
 host_project_path  = File.expand_path("..", __FILE__)
 project_name       = "flapjack"
 
+flapjack_build_tag       = ENV['FLAPJACK_BUILD_TAG']
 aws_access_key_id        = ENV['AWS_ACCESS_KEY_ID']
 aws_secret_access_key    = ENV['AWS_SECRET_ACCESS_KEY']
 aws_ssh_private_key_path = ENV['AWS_SSH_PRIVATE_KEY_PATH']
@@ -18,6 +19,25 @@ remote_user              = ENV['VAGRANT_REMOTE_USER'] || 'vagrant'
 aws_region               = ENV['AWS_REGION']          || 'ap-southeast-2'
 aws_ami                  = ENV['AWS_AMI']             || 'ami-978916ad'
 aws_instance_type        = ENV['AWS_INSTANCE_TYPE']   || 'c3.large'
+skip_s3_store            = !!ENV['SKIP_S3_STORE']
+
+raise "FLAPJACK_BUILD_TAG environment variable must be set" unless flapjack_build_tag
+
+host_project_path = File.expand_path("..", __FILE__)
+guest_project_path = "/home/#{remote_user}/#{File.basename(host_project_path)}"
+
+omnibus_build_commands = <<-OMNIBUS_BUILD
+  export PATH=/usr/local/bin:$PATH
+  export FLAPJACK_BUILD_TAG=#{flapjack_build_tag}
+  cd #{guest_project_path}
+  su #{remote_user} -c "bundle install --binstubs"
+  su #{remote_user} -c "bin/omnibus build project #{project_name}"
+  su #{remote_user} -c "hacks/configure_awscli \
+                          --aws-access-key-id #{aws_access_key_id} \
+                          --aws-secret-access-key #{aws_secret_access_key} \
+                          --default-region #{aws_region}"
+  su #{remote_user} -c "hacks/push_package_to_s3 #{flapjack_target_s3_url}"
+OMNIBUS_BUILD
 
 Vagrant.configure("2") do |config|
 
@@ -116,9 +136,6 @@ Vagrant.configure("2") do |config|
   end
   config.ssh.forward_agent = true
 
-  host_project_path = File.expand_path("..", __FILE__)
-  guest_project_path = "/home/#{remote_user}/#{File.basename(host_project_path)}"
-
   config.vm.synced_folder host_project_path, guest_project_path
 
   # prepare VM to be an Omnibus builder
@@ -138,17 +155,7 @@ Vagrant.configure("2") do |config|
     ]
   end
 
-  config.vm.provision :shell, :inline => <<-OMNIBUS_BUILD
-    export PATH=/usr/local/bin:$PATH
-    cd #{guest_project_path}
-    su #{remote_user} -c "bundle install --binstubs"
-    su #{remote_user} -c "bin/omnibus build project #{project_name}"
-    su #{remote_user} -c "hacks/configure_awscli \
-                            --aws-access-key-id #{aws_access_key_id} \
-                            --aws-secret-access-key #{aws_secret_access_key} \
-                            --default-region #{aws_region}"
-    su #{remote_user} -c "hacks/push_package_to_s3 #{flapjack_target_s3_url}"
-  OMNIBUS_BUILD
+  config.vm.provision :shell, :inline => omnibus_build_commands
 
   # to speed up subsequent rebuilds install vagrant-cachier
   # to cache packages in your ~/.vagrant.d/cache directory

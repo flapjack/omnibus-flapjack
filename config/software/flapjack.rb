@@ -1,6 +1,6 @@
 name "flapjack"
 
-version = '0.8.3'
+version = ENV['FLAPJACK_BUILD_TAG']
 version "v#{version}"
 
 dependency "ruby"
