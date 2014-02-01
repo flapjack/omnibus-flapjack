@@ -32,12 +32,17 @@ omnibus_build_commands = <<-OMNIBUS_BUILD
   cd #{guest_project_path}
   su #{remote_user} -c "bundle install --binstubs"
   su #{remote_user} -c "bin/omnibus build project #{project_name}"
+OMNIBUS_BUILD
+
+s3_store_commands = <<-S3_STORE_COMMANDS
   su #{remote_user} -c "hacks/configure_awscli \
                           --aws-access-key-id #{aws_access_key_id} \
                           --aws-secret-access-key #{aws_secret_access_key} \
                           --default-region #{aws_region}"
   su #{remote_user} -c "hacks/push_package_to_s3 #{flapjack_target_s3_url}"
-OMNIBUS_BUILD
+S3_STORE_COMMANDS
+
+omnibus_build_commands += s3_store_commands unless skip_s3_store
 
 Vagrant.configure("2") do |config|
 
@@ -140,6 +145,7 @@ Vagrant.configure("2") do |config|
 
   # prepare VM to be an Omnibus builder
   config.vm.provision :chef_solo do |chef|
+
     chef.json = {
       "omnibus" => {
         "build_user"  => remote_user,
