@@ -4,12 +4,12 @@
       "locked_version": "1.0.8"
     },
     "python": {
-      "locked_version": "1.4.4"
+      "locked_version": "1.4.6"
     },
     "awscli": {
       "locked_version": "0.1.0",
       "git": "git://github.com/flpjck/awscli",
-      "ref": "0a4a028f43135889a70976dabb2a010624028ef3"
+      "ref": "d7dc2d8eaa9504619f7f079efead3b5a3e0d6a1b"
     },
     "apt": {
       "locked_version": "1.9.2"
