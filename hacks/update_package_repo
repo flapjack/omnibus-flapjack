@@ -1,0 +1,26 @@
+#!/bin/bash
+
+sudo apt-get install -y reprepro groff
+retval=$?
+if [ "${retval}" -ne "0" ] ; then echo "Error installing dependencies. retval: $retval" ; exit $retval ; fi
+
+mkdir -p ~/src && cd ~/src && git clone https://github.com/flpjck/packages.flapjack.io.git
+retval=$?
+if [ "${retval}" -ne "0" ] ; then echo "Error cloning the packages.flapjack.io repo. retval: $retval" ; exit $retval ; fi
+
+~/src/packages.flapjack.io/bin/sync_deb_down
+retval=$?
+if [ "${retval}" -ne "0" ] ; then echo "Error syncing down the current deb repo. retval: $retval" ; exit $retval ; fi
+
+reprepro -b ~/src/packages.flapjack.io/deb includedeb precise `ls ~/omnibus-flapjack/pkg/flapjack*deb | tail -1`
+retval=$?
+if [ "${retval}" -ne "0" ] ; then echo "Error syncing down the current deb repo. retval: $retval" ; exit $retval ; fi
+
+cd ~/src/packages.flapjack.io && bin/create_directory_listings deb
+retval=$?
+if [ "${retval}" -ne "0" ] ; then echo "Error creating directory index files. retval: $retval" ; exit $retval ; fi
+
+~/src/packages.flapjack.io/bin/sync_deb_up apply=true
+retval=$?
+if [ "${retval}" -ne "0" ] ; then echo "Error syncing the deb repo up to packages.flapjack.io. retval: $retval" ; exit $retval ; fi
+
