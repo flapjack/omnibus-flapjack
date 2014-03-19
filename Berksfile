@@ -6,5 +6,5 @@ cookbook 'awscli', git: 'git://github.com/flpjck/awscli'
 
 # Until the upsteam cookbooks have been cleaned up this should be a version prior to 3.
 # http://community.opscode.com/cookbooks/yum
-#cookbook "yum", "< 3.0"
+cookbook "yum", "< 3.0"
 

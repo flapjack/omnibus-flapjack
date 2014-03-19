@@ -23,9 +23,6 @@
     "dmg": {
       "locked_version": "2.1.2"
     },
-    "yum": {
-      "locked_version": "3.0.4"
-    },
     "windows": {
       "locked_version": "1.12.8"
     },
