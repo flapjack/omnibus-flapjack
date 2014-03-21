@@ -20,6 +20,7 @@ aws_region               = ENV['AWS_REGION']          || 'ap-southeast-2'
 aws_ami                  = ENV['AWS_AMI']             || 'ami-978916ad'
 aws_instance_type        = ENV['AWS_INSTANCE_TYPE']   || 'c3.large'
 skip_s3_store            = !!ENV['SKIP_S3_STORE']
+flapjack_update_repo     = ENV['FLAPJACK_UPDATE_REPO']
 
 raise "FLAPJACK_BUILD_TAG environment variable must be set" unless flapjack_build_tag
 
@@ -42,7 +43,17 @@ s3_store_commands = <<-S3_STORE_COMMANDS
   su #{remote_user} -c "hacks/push_package_to_s3 #{flapjack_target_s3_url}"
 S3_STORE_COMMANDS
 
+update_repo_commands = <<-UPDATE_REPO_COMMANDS
+  if [ ! -f /home/#{remote_user}/omnibus-flapjack/pkg/flapjack_#{flapjack_build_tag}*deb ] ; then
+    echo "Error: Not proceeding with update to package repository as the deb doesn't seem to exist at:"
+    echo "  /home/#{remote_user}/omnibus-flapjack/pkg/flapjack_#{flapjack_build_tag}*deb"
+    exit 1
+  fi
+  su #{remote_user} -c "hacks/update_package_repo"
+UPDATE_REPO_COMMANDS
+
 omnibus_build_commands += s3_store_commands unless skip_s3_store
+omnibus_build_commands += update_repo_commands if flapjack_update_repo
 
 Vagrant.configure("2") do |config|
 
