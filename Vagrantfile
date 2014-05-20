@@ -19,6 +19,7 @@ remote_user              = ENV['VAGRANT_REMOTE_USER'] || 'vagrant'
 aws_region               = ENV['AWS_REGION']          || 'ap-southeast-2'
 aws_ami                  = ENV['AWS_AMI']             || 'ami-978916ad'
 aws_instance_type        = ENV['AWS_INSTANCE_TYPE']   || 'c3.large'
+skip_omnibus_build       = !!ENV['SKIP_OMNIBUS_BUILD']
 skip_s3_store            = !!ENV['SKIP_S3_STORE']
 flapjack_update_repo     = ENV['FLAPJACK_UPDATE_REPO']
 
@@ -52,8 +53,10 @@ update_repo_commands = <<-UPDATE_REPO_COMMANDS
   su #{remote_user} -c "hacks/update_package_repo"
 UPDATE_REPO_COMMANDS
 
-omnibus_build_commands += s3_store_commands unless skip_s3_store
-omnibus_build_commands += update_repo_commands if flapjack_update_repo
+provision_commands = ''
+provision_commands += omnibus_build_commands unless skip_omnibus_build
+provision_commands += s3_store_commands unless skip_s3_store
+provision_commands += update_repo_commands if flapjack_update_repo
 
 Vagrant.configure("2") do |config|
 
@@ -172,7 +175,7 @@ Vagrant.configure("2") do |config|
     ]
   end
 
-  config.vm.provision :shell, :inline => omnibus_build_commands
+  config.vm.provision :shell, :inline => provision_commands
 
   # to speed up subsequent rebuilds install vagrant-cachier
   # to cache packages in your ~/.vagrant.d/cache directory
