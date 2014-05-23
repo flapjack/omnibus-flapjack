@@ -62,6 +62,12 @@ Vagrant.configure("2") do |config|
 
   config.vm.hostname = "#{project_name}-omnibus-build-lab"
 
+  config.vm.define 'aws-centos-6.5' do |c|
+    c.berkshelf.berksfile_path = "./Berksfile"
+    c.vm.box = "aws-dummy"
+    c.vm.box_url = "https://github.com/mitchellh/vagrant-aws/raw/master/dummy.box"
+  end
+
   config.vm.define 'aws-ubuntu-precise64' do |c|
     c.berkshelf.berksfile_path = "./Berksfile"
     c.vm.box = "aws-dummy"
