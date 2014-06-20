@@ -124,6 +124,14 @@ Currently, built packages will be uploaded to `s3://flapjack-packages/new/` thou
 
 You can disable this behaviour by setting the `SKIP_S3_STORE` environment variable.
 
+## Updating the debian package repo (ubuntu precise only at present)
+
+Set the following environment variable before running the `vagrant up` command below.
+
+```
+export FLAPJACK_UPDATE_REPO='yes'
+```
+
 ## Building packages on AWS EC2
 
 The default region set up in the Vagrantfile is 'ap-southeast-2' (Sydney, Australia) with ami-978916ad, Canonical's Ubuntu Precise 12.04 LTS amd64 ebs Amazon Machine Image. The example below mentions ami-0568456c which is the equivalent ami for use in us-east-1 (Virginia). Other Linux OS's should also work but have not yet been tested on ec2.
@@ -150,6 +158,9 @@ export AWS_AMI="ami-0568456c"
 export AWS_INSTANCE_TYPE="m3.medium"
 ```
 
+# Optional - have packages.flapjack.io deb repo updated with the freshly built package
+export FLAPJACK_UPDATE_REPO="yes"
+
 **WARNING**
 
 If you have an aws instance running, and so much as run `vagrant status aws-ubuntu-precise64` without setting AWS_REGION (and probably other environment variables) correctly, then Vagrant will go ahead and remove all knowledge of your running instance, so you won't be able to control it (eg to shut it down) from Vagrant anymore. For this reason it's recommended to stick with the default region that's configured in Vagrantfile.
@@ -166,97 +177,3 @@ vagrant up aws-ubuntu-precise64 --provider aws
 # manually do something with the generated package (to be automated)
 vagrant destroy aws-ubuntu-precise64
 ```
-
-## Updating the debian package repo (ubuntu precise only at present)
-
-For now this is manually done within the running vagrant vm after omnibus has successfully built the package.
-
-SSH in to ubuntu-precise64 vm:
-
-``` bash
-vagrant ssh ubuntu-precise64
-```
-
-Install reprepro, pip and awscli etc (if you haven't already):
-
-``` bash
-sudo apt-get install reprepro python-pip groff
-sudo pip install awscli
-```
-
-Configure awscli with your access credentials (if you haven't already):
-
-``` bash
-aws configure --profile default
-```
-Note, this saves your AWS keys into your home directory, so think thrice about doing this on a shared machine.
-
-Use 'us-east-1' as the default region.
-
-Clone the packages.flapjack.io git repo (if you haven't already):
-
-``` bash
-mkdir -p ~/src && cd ~/src && git clone https://github.com/flpjck/packages.flapjack.io.git
-```
-
-Pull the latest commits (unless you've just cloned):
-``` bash
-cd ~/src/packages.flapjack.io && git pull
-```
-
-Retrive the current debian repository:
-
-``` bash
-~/src/packages.flapjack.io/bin/sync_deb_down
-```
-
-Add the new flapjack package to the debian repo
-
-``` bash
-reprepro -b ~/src/packages.flapjack.io/deb includedeb precise `ls ~/omnibus-flapjack/pkg/flapjack*deb | tail -1`
-```
-
-Check you can see the new flapjack package in the output of `dpkg-scanpackages`, and that the Size, Installed-Size, etc look reasonable:
-
-``` bash
-dpkg-scanpackages ~/src/packages.flapjack.io/deb
-```
-
-Eg, example output for 0.7.27:
-
-``` text
-Package: flapjack
-Version: 0.7.27+20131020221016-1.ubuntu.12.04
-Architecture: amd64
-Maintainer: Lindsay Holmwood <lindsay@holmwood.id.au>
-Installed-Size: 420086
-Replaces: flapjack
-Filename: src/packages.flapjack.io/deb/pool/main/f/flapjack/flapjack_0.7.27+20131020221016-1.ubuntu.12.04_amd64.deb
-Size: 138195228
-MD5sum: e75058def111248074286933707efe6e
-SHA1: 85f2ed6b379c85a42d11f1802f9a0740bf49e2db
-SHA256: b99444329044cfc956a48ef39c996519678ecab3060eb1fbaa151a31bb5dd90f
-Section: default
-Priority: extra
-Homepage: http://flapjack.io
-Description: The full stack of flapjack
-License: unknown
-Vendor: vagrant@flapjack-omnibus-build-lab
-```
-
-Create directory listing html file for every directory within the deb repo with:
-
-``` bash
-cd ~/src/packages.flapjack.io && bin/create_directory_listings deb
-```
-
-Sync the debian repo back up to packages.flapjack.io, first with a dryrun:
-
-``` bash
-~/src/packages.flapjack.io/bin/sync_deb_up
-```
-
-Then add 'apply=true' and run again if you're happy with what's going to be done.
-
-Check that the latest package is available for download at [http://packages.flapjack.io/deb/pool/main/f/flapjack/](http://packages.flapjack.io/deb/pool/main/f/flapjack/)
-
