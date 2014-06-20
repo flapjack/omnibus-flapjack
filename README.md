@@ -154,12 +154,12 @@ export VAGRANT_REMOTE_USER='ubuntu'
 export AWS_REGION="us-east-1"  # DANGER: see the Warning below
 export AWS_AMI="ami-0568456c"
 
-# Optionsl - select an alternative instance type (default: c3.large)
+# Optional - select an alternative instance type (default: c3.large)
 export AWS_INSTANCE_TYPE="m3.medium"
-```
 
 # Optional - have packages.flapjack.io deb repo updated with the freshly built package
 export FLAPJACK_UPDATE_REPO="yes"
+```
 
 **WARNING**
 
