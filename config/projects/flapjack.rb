@@ -16,7 +16,7 @@ build_iteration 1
 # dependency "somedep"
 
 # version manifest file
-dependency "version-manifest"
+#dependency "version-manifest"
 
 exclude "\.git*"
 exclude "bundler\/git"
