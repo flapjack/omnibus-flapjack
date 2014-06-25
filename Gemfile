@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 
-gem 'omnibus', '~> 3.1.0'
-#gem 'omnibus-software', :github => 'opscode/omnibus-software'
+gem 'omnibus-software', :github => 'opscode/omnibus-software', :branch => 'master'
+gem 'omnibus', :github => 'opscode/omnibus-ruby', :branch => 'master'
 gem 'mixlib-log'
 

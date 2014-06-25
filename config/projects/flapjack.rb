@@ -1,22 +1,22 @@
 
-name       "flapjack"
-maintainer "Jesse Reynolds <jessedreynolds@gmail.com>"
-homepage   "http://flapjack.io"
+name          "flapjack"
+friendly_name "Flapjack"
+homepage      "http://flapjack.io"
 
-install_path    "/opt/flapjack"
+install_path   "/opt/flapjack"
 
 version = ENV['FLAPJACK_BUILD_TAG']
-build_version   "#{version}+#{Time.now.strftime('%Y%m%d%H%M%S')}"
+build_version  "#{version}+#{Time.now.strftime('%Y%m%d%H%M%S')}"
 build_iteration 1
 
 # creates required build directories
-#dependency "preparation"
+dependency "preparation"
 
 # flapjack dependencies/components
 # dependency "somedep"
 
 # version manifest file
-#dependency "version-manifest"
+dependency "version-manifest"
 
 exclude "\.git*"
 exclude "bundler\/git"
