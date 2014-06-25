@@ -1,6 +1,7 @@
 
 name          "flapjack"
 friendly_name "Flapjack"
+maintainer    "Lindsay Holmwood, Jesse Reynolds, Ali Graham"
 homepage      "http://flapjack.io"
 
 install_path   "/opt/flapjack"
