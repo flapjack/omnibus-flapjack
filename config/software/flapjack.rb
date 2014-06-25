@@ -1,7 +1,7 @@
 name "flapjack"
 
-version = ENV['FLAPJACK_BUILD_TAG']
-version "v#{version}"
+build_ref = ENV['FLAPJACK_BUILD_TAG'] ? "v#{ENV['FLAPJACK_BUILD_TAG']}" : "HEAD"
+default_version build_ref
 
 dependency "ruby"
 dependency "rubygems"
@@ -21,5 +21,4 @@ build do
         "--bindir #{install_dir}/bin",
         "--no-rdoc --no-ri" ].join(" ")
 end
-
 
