@@ -23,8 +23,11 @@ exclude "\.git*"
 exclude "bundler\/git"
 
 dependency "ruby"
+dependency "rubygems"
+dependency "bundler"
 dependency "redis"
 dependency "yajl"
 dependency "zlib"
 dependency "nokogiri"
 dependency "flapjack"
+

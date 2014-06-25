@@ -6,6 +6,7 @@ default_version build_ref
 dependency "ruby"
 dependency "rubygems"
 dependency "bundler"
+dependency "nokogiri"
 
 source :git => "https://github.com/flapjack/flapjack"
 
