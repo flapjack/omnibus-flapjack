@@ -117,7 +117,7 @@ build do
   etc_path = "#{install_dir}/embedded/etc"
 
   %w(redis init.d).each do |dir|
-    command "mkdir -p #{etc_path}/#{dir}"
+    FileUtils.mkdir_p("#{etc_path}/#{dir}")
   end
 
   config_path = "#{etc_path}/redis/redis-flapjack.conf"
