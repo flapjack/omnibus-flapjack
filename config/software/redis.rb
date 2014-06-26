@@ -117,12 +117,15 @@ build do
   etc_path = "#{install_dir}/embedded/etc"
 
   %w(redis init.d).each do |dir|
-    FileUtils.mkdir_p("#{etc_path}/#{dir}")
+    command "mkdir -p #{etc_path}/#{dir}"
   end
 
   config_path = "#{etc_path}/redis/redis-flapjack.conf"
   File.open(config_path, 'w') { |f| f << config }
   init_path   = "#{etc_path}/init.d/redis-flapjack"
   File.open(init_path, 'w') { |f| f << init }
+
+  command "touch #{config_path}"
+  command "touch #{init_path}"
 end
 
