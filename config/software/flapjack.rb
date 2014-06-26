@@ -28,13 +28,13 @@ build do
   #        " #{install_dir}/embedded/bin/bundle install" +
   #        " --path=#{install_dir}/embedded/service/gem"
 
-  #gem [ "install pkg/flapjack*.gem",
-  #      "--bindir #{install_dir}/bin",
-  #      "--no-rdoc --no-ri" ].join(" ")
+  gem [ "install flapjack --version #{ENV['FLAPJACK_BUILD_TAG']}",
+        "--bindir #{install_dir}/bin",
+        "--no-rdoc --no-ri" ].join(" ")
 
-  command "PATH=#{install_dir}/embedded/bin:$PATH" +
-          " #{install_dir}/embedded/bin/gem install flapjack --version #{ENV['FLAPJACK_BUILD_TAG']}" +
-          " --bindir #{install_dir}/bin" +
-          " --no-rdoc --no-ri"
+  #command "PATH=#{install_dir}/embedded/bin:$PATH" +
+  #        " #{install_dir}/embedded/bin/gem install flapjack --version #{ENV['FLAPJACK_BUILD_TAG']}" +
+  #        " --bindir #{install_dir}/bin" +
+  #        " --no-rdoc --no-ri"
 end
 
