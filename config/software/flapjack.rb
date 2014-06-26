@@ -15,6 +15,7 @@ relative_path "flapjack"
 build do
   # Install all dependencies
   #command "rm Gemfile.lock"
+  command "PATH=#{install_dir}/embedded/bin:${PATH} ; export PATH"
   bundle "install --path=#{install_dir}/embedded/service/gem"
 
   # Build + install the gem
