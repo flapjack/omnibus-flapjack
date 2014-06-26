@@ -1,8 +1,9 @@
 FROM flapjack/omnibus-ubuntu:latest
 MAINTAINER Jesse Reynolds @jessereynolds
 
-# could use ADD or COPY here instead I guess?
-RUN git clone --branch omnibus3 https://github.com/flapjack/omnibus-flapjack.git && \
+RUN if [ ! -e omnibus-fapjack ] ; then \
+      git clone --branch omnibus3 https://github.com/flapjack/omnibus-flapjack.git ; \
+    fi && \
     cd omnibus-flapjack && \
     bundle install --binstubs
 
