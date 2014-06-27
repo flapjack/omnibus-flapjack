@@ -58,7 +58,7 @@ CONTAINER ID        IMAGE               COMMAND             CREATED             
 
 This shows that there are no docker containers running.
 
-# Building Flapjack with Omnibus 3 and Docker
+## I like to build it build it
 
 Pull down the latest omnibus-ubuntu image from the docker registry, details here:
 - https://registry.hub.docker.com/u/flapjack/omnibus-ubuntu/builds_history/27355/
