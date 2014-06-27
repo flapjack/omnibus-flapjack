@@ -60,17 +60,17 @@ This shows that there are no docker containers running.
 
 ## I like to build it build it
 
-Pull down the latest omnibus-ubuntu image from the docker registry, details here:
-- https://registry.hub.docker.com/u/flapjack/omnibus-ubuntu/builds_history/27355/
-
-The image is rebuilt automatically when the following repo changes:
-- https://github.com/flapjack/omnibus-ubuntu
+Pull down the latest flapjack/omnibus-ubuntu image from the docker registry:
 
 ```
 docker pull flapjack/omnibus-ubuntu
 ```
 
-It's about 750 MB worth I think. 
+It's about 750 MB worth I think. Details here:
+- https://registry.hub.docker.com/u/flapjack/omnibus-ubuntu/builds_history/27355/
+
+The image is rebuilt automatically when the following repo changes:
+- https://github.com/flapjack/omnibus-ubuntu
 
 Once you've got that down, you can create a container by running the flapjack/omnibus-ubuntu image like so:
 
@@ -83,4 +83,6 @@ docker run --rm -i -t -e "FLAPJACK_BUILD_TAG=1.0.0rc1" \
   bin/omnibus build --log-level=info flapjack ; \
   bash"
 ```
+
+While still shell'd in to the build container (and before the container is purged) you can scp the created package somewhere to test installing it. It can be found at a path like `/omnibus-flapjack/pkg/flapjack*.deb`
 
