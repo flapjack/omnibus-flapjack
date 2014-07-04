@@ -7,6 +7,8 @@ source :url => "http://download.redis.io/releases/redis-2.8.3.tar.gz",
 
 relative_path "redis-2.8.3"
 
+etc_path = "#{install_dir}/embedded/etc"
+
 make_args = ["PREFIX=#{install_dir}/embedded",
              "CFLAGS='-L#{install_dir}/embedded/lib -I#{install_dir}/embedded/include'",
              "LD_RUN_PATH=#{install_dir}/embedded/lib"].join(" ")
@@ -114,18 +116,13 @@ build do
   command ["make -j #{max_build_jobs}", make_args].join(" ")
   command ["make install", make_args].join(" ")
 
-  etc_path = "#{install_dir}/embedded/etc"
+  command "mkdir -p '#{etc_path}/redis'"
+  command "mkdir -p '#{etc_path}/init.d'"
 
-  %w(redis init.d).each do |dir|
-    FileUtils.mkdir_p("#{etc_path}/#{dir}")
-  end
+  command "cat >#{etc_path}/redis/redis-flapjack.conf <<EOCONFIG\n#{config.gsub(/\$/, '\\$')}EOCONFIG"
+  command "cat >#{etc_path}/init.d/redis-flapjack <<EOINIT\n#{init.gsub(/\$/, '\\$')}EOINIT"
 
-  config_path = "#{etc_path}/redis/redis-flapjack.conf"
-  File.open(config_path, 'w') { |f| f << config }
-  init_path   = "#{etc_path}/init.d/redis-flapjack"
-  File.open(init_path, 'w') { |f| f << init }
-
-  command "touch #{config_path}"
-  command "touch #{init_path}"
+  command "touch #{etc_path}/redis/redis-flapjack.conf"
+  command "touch #{etc_path}/init.d/redis-flapjack"
 end
 
