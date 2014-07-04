@@ -25,7 +25,7 @@ chown -R flapjack:flapjack /var/log/flapjack /var/run/flapjack /var/lib/flapjack
 # Copy in default configuration if none exists already
 if [ ! -e /etc/flapjack/flapjack_config.yaml ] ; then
   echo "Creating /etc/flapjack/flapjack_config.yaml"
-  cp ${FLAPJACK_GEM_DIR}/etc/flapjack_config.yaml.example ${CONFIG_DIR}/flapjack_config.yaml
+  cp ${FLAPJACK_GEM_DIR}/etc/flapjack_config.yaml.example ${CONFIG_DIR}/flapjack.yaml
 fi
 
 # Copy in init scripts (FIXME: support OS's other than Ubunbu)
@@ -38,19 +38,19 @@ fi
 
 if [ ! -e /etc/init.d/flapjack ] ; then
   echo "Creating /etc/init.d/flapjack"
-  cp ${FLAPJACK_GEM_DIR}/dist/etc/init.d/flapjack /etc/init.d/flapjack
+  cp ${DEST_DIR}/embedded/etc/init.d/flapjack /etc/init.d/flapjack
   chmod u+x /etc/init.d/flapjack
 fi
 
 if [ ! -e /etc/init.d/flapjack-nagios-receiver ] ; then
   echo "Creating /etc/init.d/flapjack-nagios-receiver"
-  cp ${FLAPJACK_GEM_DIR}/dist/etc/init.d/flapjack-nagios-receiver /etc/init.d/flapjack-nagios-receiver
+  cp ${DEST_DIR}/embedded/etc/init.d/flapjack-nagios-receiver /etc/init.d/flapjack-nagios-receiver
   chmod u+x /etc/init.d/flapjack-nagios-receiver
 fi
 
 if [ ! -e /etc/init.d/flapper ] ; then
   echo "Creating /etc/init.d/flapper"
-  cp ${FLAPJACK_GEM_DIR}/dist/etc/init.d/flapper /etc/init.d/flapper
+  cp ${DEST_DIR}/embedded/etc/init.d/flapper /etc/init.d/flapper
   chmod u+x /etc/init.d/flapper
 fi
 

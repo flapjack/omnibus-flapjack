@@ -5,7 +5,7 @@
 #
 
 echo "Stopping flapjack"
-/etc/init.d/flapjack stop
+/etc/init.d/flapjack server stop
 
 echo "Stopping redis-flapjack"
 /etc/init.d/redis-flapjack stop
