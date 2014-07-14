@@ -25,7 +25,7 @@ chown -R flapjack:flapjack /var/log/flapjack /var/run/flapjack /var/lib/flapjack
 # Copy in default configuration if none exists already
 if [ ! -e /etc/flapjack/flapjack_config.yaml ] ; then
   echo "Creating /etc/flapjack/flapjack_config.yaml"
-  cp ${FLAPJACK_GEM_DIR}/etc/flapjack_config.yaml.example ${CONFIG_DIR}/flapjack.yaml
+  cp ${FLAPJACK_GEM_DIR}/etc/flapjack_config.yaml.example ${CONFIG_DIR}/flapjack_config.yaml
 fi
 
 # Copy in init scripts (FIXME: support OS's other than Ubunbu)
