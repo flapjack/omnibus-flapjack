@@ -1,7 +1,7 @@
 FROM flapjack/omnibus-ubuntu:latest
 MAINTAINER Jesse Reynolds @jessereynolds
 
-RUN if [ ! -e omnibus-fapjack ] ; then \
+RUN if [ ! -e omnibus-flapjack ] ; then \
       git clone --branch omnibus3 https://github.com/flapjack/omnibus-flapjack.git ; \
     fi && \
     cd omnibus-flapjack && \
