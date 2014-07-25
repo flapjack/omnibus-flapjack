@@ -6,7 +6,7 @@ homepage      "http://flapjack.io"
 
 install_path   "/opt/flapjack"
 
-version = ENV['FLAPJACK_BUILD_TAG']
+version = ENV['FLAPJACK_BUILD_REF']
 build_version  "#{version}+#{Time.now.strftime('%Y%m%d%H%M%S')}"
 build_iteration 1
 

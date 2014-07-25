@@ -1,6 +1,6 @@
 name "flapjack"
 
-build_ref = ENV['FLAPJACK_BUILD_TAG'] ? "v#{ENV['FLAPJACK_BUILD_TAG']}" : "HEAD"
+build_ref = ENV['FLAPJACK_BUILD_REF'] || 'HEAD'
 default_version build_ref
 
 etc_path = "#{install_dir}/embedded/etc"
@@ -109,9 +109,17 @@ build do
   #        " #{install_dir}/embedded/bin/bundle install" +
   #        " --path=#{install_dir}/embedded/service/gem"
 
-  gem [ "install flapjack --version #{ENV['FLAPJACK_BUILD_TAG']}",
+  command "git clone https://github.com/flapjack/flapjack.git flapjack_source"
+  command "cd flapjack_source"
+  command "bundle"
+  command "bundle exec rake build"
+  gem [ "install pkg/flapjack*gem",
         "--bindir #{install_dir}/bin",
         "--no-rdoc --no-ri" ].join(" ")
+
+  #gem [ "install flapjack --version #{ENV['FLAPJACK_BUILD_TAG']}",
+  #      "--bindir #{install_dir}/bin",
+  #      "--no-rdoc --no-ri" ].join(" ")
 
   #command "PATH=#{install_dir}/embedded/bin:$PATH" +
   #        " #{install_dir}/embedded/bin/gem install flapjack --version #{ENV['FLAPJACK_BUILD_TAG']}" +
