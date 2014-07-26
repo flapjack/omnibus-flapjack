@@ -110,10 +110,8 @@ build do
   #        " --path=#{install_dir}/embedded/service/gem"
 
   command "git clone https://github.com/flapjack/flapjack.git flapjack_source"
-  command "cd flapjack_source"
-  command "bundle"
-  command "bundle exec rake build"
-  gem [ "install pkg/flapjack*gem",
+  command "cd /var/cache/omnibus/src/flapjack/flapjack_source && bundle && bundle exec rake build"
+  gem [ "install /var/cache/omnibus/src/flapjack/flapjack_source/pkg/flapjack*gem",
         "--bindir #{install_dir}/bin",
         "--no-rdoc --no-ri" ].join(" ")
 
