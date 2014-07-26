@@ -115,7 +115,7 @@ build do
           #"/opt/flapjack/embedded/bin/bundle install && " +
           #"/opt/flapjack/embedded/bin/bundle exec " +
           #"/opt/flapjack/embedded/bin/rake build"
-  gem [ "install /var/cache/omnibus/src/flapjack/flapjack_source/pkg/flapjack*gem",
+  gem [ "install /var/cache/omnibus/src/flapjack/flapjack_source/flapjack*gem",
         "--bindir #{install_dir}/bin",
         "--no-rdoc --no-ri" ].join(" ")
 
