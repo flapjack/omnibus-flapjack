@@ -111,9 +111,10 @@ build do
 
   command "git clone https://github.com/flapjack/flapjack.git flapjack_source"
   command "cd /var/cache/omnibus/src/flapjack/flapjack_source && " +
-          "/opt/flapjack/embedded/bin/bundle && " +
-          "/opt/flapjack/embedded/bin/bundle exec " +
-          "/opt/flapjack/embedded/bin/rake build"
+          "/opt/flapjack/embedded/bin/gem build flapjack.gemspec"
+          #"/opt/flapjack/embedded/bin/bundle install && " +
+          #"/opt/flapjack/embedded/bin/bundle exec " +
+          #"/opt/flapjack/embedded/bin/rake build"
   gem [ "install /var/cache/omnibus/src/flapjack/flapjack_source/pkg/flapjack*gem",
         "--bindir #{install_dir}/bin",
         "--no-rdoc --no-ri" ].join(" ")
