@@ -116,7 +116,7 @@ build do
 
   command "git clone https://github.com/flapjack/flapjack.git flapjack_source"
   command "cd /var/cache/omnibus/src/flapjack/flapjack_source && " +
-          "git checkout #{build_ref} && "
+          "git checkout #{build_ref} && " +
           "/opt/flapjack/embedded/bin/gem build flapjack.gemspec"
           #"/opt/flapjack/embedded/bin/bundle install && " +
           #"/opt/flapjack/embedded/bin/bundle exec " +
