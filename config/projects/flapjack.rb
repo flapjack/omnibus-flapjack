@@ -8,7 +8,7 @@ install_path   "/opt/flapjack"
 
 version = ENV['FLAPJACK_BUILD_REF']
 package_version = ENV['FLAPJACK_PACKAGE_VERSION']
-raise "FLAPJACK_BUILD_REF must be set" unless build_ref
+raise "FLAPJACK_BUILD_REF must be set" unless version
 raise "FLAPJACK_PACKAGE_VERSION must be set" unless package_version
 
 build_version package_version
