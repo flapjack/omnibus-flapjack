@@ -75,7 +75,8 @@ The image is rebuilt automatically when the following repo changes:
 Once you've got that down, you can create a container by running the flapjack/omnibus-ubuntu image like so:
 
 ```
-docker run --rm -i -t -e "FLAPJACK_BUILD_TAG=1.0.0rc1" \
+docker run --rm -i -t -e "FLAPJACK_BUILD_REF=9b1e831" \
+  -e "FLAPJACK_PACKAGE_VERSION=1.0.0~rc3~20140727T125000-9b1e831-1" \
   flapjack/omnibus-ubuntu bash -c \
   "cd omnibus-flapjack ; \
   git pull ; \
