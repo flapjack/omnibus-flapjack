@@ -1,7 +1,12 @@
 name "flapjack"
 
-build_ref = ENV['FLAPJACK_BUILD_REF'] || 'HEAD'
-default_version build_ref
+build_ref = ENV['FLAPJACK_BUILD_REF']
+package_version = ENV['FLAPJACK_PACKAGE_VERSION']
+
+raise "FLAPJACK_BUILD_REF must be set" unless build_ref
+raise "FLAPJACK_PACKAGE_VERSION must be set" unless package_version
+
+default_version package_version
 
 etc_path = "#{install_dir}/embedded/etc"
 
@@ -111,6 +116,7 @@ build do
 
   command "git clone https://github.com/flapjack/flapjack.git flapjack_source"
   command "cd /var/cache/omnibus/src/flapjack/flapjack_source && " +
+          "git checkout #{build_ref} && "
           "/opt/flapjack/embedded/bin/gem build flapjack.gemspec"
           #"/opt/flapjack/embedded/bin/bundle install && " +
           #"/opt/flapjack/embedded/bin/bundle exec " +

@@ -7,7 +7,11 @@ homepage      "http://flapjack.io"
 install_path   "/opt/flapjack"
 
 version = ENV['FLAPJACK_BUILD_REF']
-build_version  "#{version}+#{Time.now.strftime('%Y%m%d%H%M%S')}"
+package_version = ENV['FLAPJACK_PACKAGE_VERSION']
+raise "FLAPJACK_BUILD_REF must be set" unless build_ref
+raise "FLAPJACK_PACKAGE_VERSION must be set" unless package_version
+
+build_version package_version
 build_iteration 1
 
 # creates required build directories
