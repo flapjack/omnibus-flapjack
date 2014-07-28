@@ -4,7 +4,7 @@ sudo apt-get install -y reprepro groff
 retval=$?
 if [ "${retval}" -ne "0" ] ; then echo "Error installing dependencies. retval: $retval" ; exit $retval ; fi
 
-mkdir -p ~/src && cd ~/src && git clone https://github.com/flpjck/packages.flapjack.io.git
+mkdir -p ~/src && cd ~/src && git clone https://github.com/flapjack/packages.flapjack.io.git
 retval=$?
 if [ "${retval}" -ne "0" ] ; then echo "Error cloning the packages.flapjack.io repo. retval: $retval" ; exit $retval ; fi
 

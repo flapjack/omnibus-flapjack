@@ -5,7 +5,7 @@ require 'tmpdir'
 
 task :default => 'deploy:push'
 
-repo          = 'git@github.com:flpjck/packages.flapjack.io.git'
+repo          = 'git@github.com:flapjack/packages.flapjack.io.git'
 cache_pointer = '.flapjack-package-cache'
 
 # FIXME(auxesis): this is all a little dirty right now, and doesn't work end to end
@@ -15,7 +15,7 @@ namespace :deploy do
       @cache_path = File.read(cache_pointer).strip
       puts "Using cached packages.flapjack.io repo at #{@cache_path}".green
     else
-      repo        = 'git@github.com:flpjck/packages.flapjack.io.git'
+      repo        = 'git@github.com:flapjack/packages.flapjack.io.git'
       @cache_path = Dir.mktmpdir
       puts "Cloning packages.flapjack.io repo to #{@cache_path}".green
       command = "git clone #{repo} #{@cache_path}"

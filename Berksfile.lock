@@ -8,7 +8,7 @@
     },
     "awscli": {
       "locked_version": "0.1.0",
-      "git": "git://github.com/flpjck/awscli",
+      "git": "git://github.com/flapjack/awscli",
       "ref": "d7dc2d8eaa9504619f7f079efead3b5a3e0d6a1b"
     },
     "apt": {
