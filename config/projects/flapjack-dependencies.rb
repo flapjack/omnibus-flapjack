@@ -4,7 +4,7 @@ friendly_name "Flapjack's Dependencies"
 maintainer    "Lindsay Holmwood, Jesse Reynolds, Ali Graham"
 homepage      "http://flapjack.io"
 
-install_path   "/opt/flapjack"
+install_dir   "/opt/flapjack"
 
 build_version  "#{Time.now.strftime('%Y%m%d%H%M%S')}"
 build_iteration 1

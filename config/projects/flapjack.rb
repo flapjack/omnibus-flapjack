@@ -4,7 +4,7 @@ friendly_name "Flapjack"
 maintainer    "Lindsay Holmwood, Jesse Reynolds, Ali Graham"
 homepage      "http://flapjack.io"
 
-install_path   "/opt/flapjack"
+install_dir   "/opt/flapjack"
 
 version = ENV['FLAPJACK_BUILD_REF']
 package_version = ENV['FLAPJACK_PACKAGE_VERSION']
