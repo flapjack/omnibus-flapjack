@@ -21,7 +21,7 @@ dependency "version-manifest"
 exclude "\.git*"
 exclude "bundler\/git"
 
-override :ruby, version: '2.1.1'
+override :ruby, version: '2.1.2'
 
 dependency "ruby"
 dependency "rubygems"
