@@ -12,14 +12,19 @@ required gems are installed and ready to use:
 ```shell
 $ bundle install --binstubs
 ```
+Also make sure you have fpm and the required tools to build packages (such as rpm-build on rpm based platform)
+installed
+
 
 ## Usage
 
 ### Build
 
+After setting the FLAPJACK_BUILD_TAG 
 You create a platform-specific package using the `build project` command:
 
 ```shell
+$ export FLAPJACK_BUILD_TAG="0.8.4"
 $ bin/omnibus build project flapjack
 ```
 
