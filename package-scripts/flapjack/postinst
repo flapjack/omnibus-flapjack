@@ -4,6 +4,15 @@
 # after package is installed.
 #
 
+if [ -f /etc/redhat-release ]; then 
+    # Better to exit than the break the full postinstall 
+    exit 0
+
+
+fi
+
+    
+
 INSTALLER_DIR=`dirname $0`
 DEST_DIR=/opt/flapjack
 CONFIG_DIR=/etc/flapjack
