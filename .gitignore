@@ -9,4 +9,5 @@ vendor/cookbooks
 .flapjack-package-cache
 .DS_Store
 .elasticbeanstalk/
-hacks/aptly.conf
+aptly.conf
+aptly/*
