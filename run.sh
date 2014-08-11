@@ -54,7 +54,8 @@ EOF
 fi
 # End aptly installation
 
-aws s3 sync s3://packages.flapjack.io/aptly aptly --acl bucket-owner-full-control
+mkdir -p aptly
+aws s3 sync s3://packages.flapjack.io/aptly aptly --acl private --region us-east-1
 
 if ! aptly -config=aptly.conf repo add flapjack-${type} pkg/flapjack_${FLAPJACK_BUILD_TAG}-${date}-${FLAPJACK_BUILD_REF}.deb ; then
   echo "Error adding deb to repostory" ; exit $? ;
@@ -64,6 +65,6 @@ if ! aptly -config=aptly.conf -gpg-key="803709B6" publish repo flapjack-${type} 
   echo "Error publishing packages locally." ; exit $? ;
 fi
 
-aws s3 sync aptly s3://packages.flapjack.io/aptly --acl bucket-owner-full-control
+aws s3 sync aptly s3://packages.flapjack.io/aptly --acl private --region us-east-1
 
-aws s3 cp s3://packages.flapjack.io/aptly/public s3://packages.flapjack.io/public --acl public-read
+aws s3 cp s3://packages.flapjack.io/aptly/public s3://packages.flapjack.io/public --acl public-read --region us-east-1
