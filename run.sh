@@ -4,14 +4,15 @@ set -e
 args=("$@")
 if [ $# -ne 2 ]
 then
-  echo "Usage: `basename $0` build_type build_ref"
-  echo "eg. `basename $0` experimental master"
+  echo "Usage: `basename $0` build_ref distro_release distro_component"
+  echo "eg. `basename $0` master precise experimental"
   exit 2
 fi
 
 DATE=$(date +%Y%m%d%H%M%S)
-BUILD_TYPE=$1
-FLAPJACK_BUILD_REF=$2
+FLAPJACK_BUILD_REF=$1
+DISTRO_RELEASE=$2
+DISTRO_COMPONENT=$3
 # FIXME: Find this from lib/flapjack/version.rb
 FLAPJACK_BUILD_TAG='1.0.0~rc3'
 
@@ -74,18 +75,18 @@ mkdir -p aptly
 aws s3 sync s3://packages.flapjack.io/aptly aptly --acl private --region us-east-1
 
 # Create the repo if it doesn't exist
-if ! aptly -config=aptly.conf repo show flapjack-${BUILD_TYPE} 2>/dev/null ; then
-  aptly -config=aptly.conf repo create --distribution ${BUILD_TYPE} flapjack-${BUILD_TYPE}
+if ! aptly -config=aptly.conf repo show flapjack-${DISTRO_RELEASE} 2>/dev/null ; then
+  aptly -config=aptly.conf repo create --distribution ${DISTRO_RELEASE} -component=${DISTRO_COMPONENT} flapjack-${DISTRO_RELEASE}
 fi
 
 
-if ! aptly -config=aptly.conf repo add flapjack-${BUILD_TYPE} pkg/flapjack_${FLAPJACK_BUILD_TAG}-${date}-${FLAPJACK_BUILD_REF}.deb ; then
+if ! aptly -config=aptly.conf repo add flapjack-${DISTRO_RELEASE} pkg/flapjack_${FLAPJACK_BUILD_TAG}-${date}-${FLAPJACK_BUILD_REF}.deb ; then
   echo "Error adding deb to repostory" ; exit $? ;
 fi
 
 # Try updating the published repository, otherwise do the first publish
-if ! aptly -config=aptly.conf -gpg-key="803709B6" publish update ${BUILD_TYPE} ; then
-  aptly -config=aptly.conf -gpg-key="803709B6" publish repo flapjack-${BUILD_TYPE}
+if ! aptly -config=aptly.conf -gpg-key="803709B6" publish update ${DISTRO_RELEASE} ; then
+  aptly -config=aptly.conf -component=${DISTRO_COMPONENT} -gpg-key="803709B6" publish repo flapjack-${DISTRO_RELEASE}
 fi
 
 aws s3 sync aptly s3://packages.flapjack.io/aptly --acl private --region us-east-1
