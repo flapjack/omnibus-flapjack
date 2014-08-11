@@ -57,14 +57,21 @@ fi
 mkdir -p aptly
 aws s3 sync s3://packages.flapjack.io/aptly aptly --acl private --region us-east-1
 
+# Create the repo if it doesn't exist
+if ! aptly -config=aptly.conf repo show flapjack-${type} 2>/dev/null ; then
+  aptly -config=aptly.conf repo create --distribution ${type} flapjack-${type}
+fi
+
+
 if ! aptly -config=aptly.conf repo add flapjack-${type} pkg/flapjack_${FLAPJACK_BUILD_TAG}-${date}-${FLAPJACK_BUILD_REF}.deb ; then
   echo "Error adding deb to repostory" ; exit $? ;
 fi
 
-if ! aptly -config=aptly.conf -gpg-key="803709B6" publish repo flapjack-${type} ; then
-  echo "Error publishing packages locally." ; exit $? ;
+# Try updating the published repository, otherwise do the first publish
+if ! aptly -config=aptly.conf -gpg-key="803709B6" publish update ${type} ; then
+  aptly -config=aptly.conf -gpg-key="803709B6" publish repo flapjack-${type}
 fi
 
 aws s3 sync aptly s3://packages.flapjack.io/aptly --acl private --region us-east-1
 
-aws s3 cp s3://packages.flapjack.io/aptly/public s3://packages.flapjack.io/public --acl public-read --region us-east-1
+aws s3 sync aptly/public s3://packages.flapjack.io/public --acl public-read --region us-east-1
