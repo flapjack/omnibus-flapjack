@@ -46,14 +46,7 @@ if not hash aptly 2>/dev/null; then
   "gpgDisableSign": false,
   "gpgDisableVerify": false,
   "downloadSourcePackages": false,
-  "S3PublishEndpoints": {
-    "packages.flapjack.io": {
-      "region": "ap-southeast-2",
-      "bucket": "packages.flapjack.io",
-      "prefix": "aptly",
-      "acl": "public-read"
-    }
-  }
+  "S3PublishEndpoints": {}
 }
 EOF
   fi
@@ -61,14 +54,16 @@ EOF
 fi
 # End aptly installation
 
-if ! aptly -config=aptly.conf -distribution ${type} repo create flapjack-${type} 2>/dev/null; then
-  echo "Flapjack repository already exists."
-fi
+aws s3 sync s3://packages.flapjack.io/aptly aptly --acl bucket-owner-full-control
 
 if ! aptly -config=aptly.conf repo add flapjack-${type} pkg/flapjack_${FLAPJACK_BUILD_TAG}-${date}-${FLAPJACK_BUILD_REF}.deb ; then
   echo "Error adding deb to repostory" ; exit $? ;
 fi
 
-if ! aptly -config=aptly.conf -gpg-key="01B76104" publish repo flapjack-${type} s3:packages.flapjack.io: ; then
-  echo "Error publishing to S3." ; exit $? ;
+if ! aptly -config=aptly.conf -gpg-key="803709B6" publish repo flapjack-${type} ; then
+  echo "Error publishing packages locally." ; exit $? ;
 fi
+
+aws s3 sync aptly s3://packages.flapjack.io/aptly --acl bucket-owner-full-control
+
+aws s3 cp s3://packages.flapjack.io/aptly/public s3://packages.flapjack.io/public --acl public-read
