@@ -25,6 +25,7 @@
     "type": "shell",
     "inline": [
       "sleep 30",
+      "git clone git@github.com:flapjack/omnibus-flapjack.git && cd omnibus-flapjack && git checkout omnibus3",
       "sudo apt-get update",
       "sudo apt-get install -y gnupg awscli",
       "gpg --batch --yes --import /tmp/pkg_signing_key",
@@ -39,8 +40,7 @@
       "sudo docker pull flapjack/omnibus-ubuntu",
       "sudo docker images",
       "sudo service docker stop",
-      "sleep 5",
-      "sudo service docker status"
+      "sleep 5"
     ]
   }]
 }
