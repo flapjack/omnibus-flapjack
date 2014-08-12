@@ -30,12 +30,12 @@ docker cp ${container_id}:/omnibus-flapjack/pkg .
 docker rm ${container_id}
 
 # Check if awscli exists
-if not hash aws 2>/dev/null; then
+if ! hash aws 2>/dev/null; then
   apt-get install -y awscli
 fi
 
 # Check if aptly exists
-if not hash aptly 2>/dev/null; then
+if ! hash aptly 2>/dev/null; then
   if [ -f /etc/debian_version ]; then
     echo 'deb http://repo.aptly.info/ squeeze main' > /etc/apt/sources.list.d/aptly.list
     gpg --keyserver keys.gnupg.net --recv-keys 2A194991
