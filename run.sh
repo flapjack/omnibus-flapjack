@@ -17,7 +17,7 @@ DISTRO_COMPONENT=$3
 FLAPJACK_BUILD_TAG=$(wget -qO - https://raw.githubusercontent.com/flapjack/flapjack/${FLAPJACK_BUILD_REF}/lib/flapjack/version.rb | grep 'VERSION' | cut -d '"' -f 2)
 : ${FLAPJACK_BUILD_TAG:?"Incorrect build_ref.  Tags should be specified as 'v1.0.0rc3'" }
 
-docker run -i -t -e "FLAPJACK_BUILD_REF=${FLAPJACK_BUILD_REF}" \
+sudo docker run -i -t -e "FLAPJACK_BUILD_REF=${FLAPJACK_BUILD_REF}" \
 -e "FLAPJACK_PACKAGE_VERSION=${FLAPJACK_BUILD_TAG}~${DATE}-${FLAPJACK_BUILD_REF}" \
 flapjack/omnibus-ubuntu bash -c \
 "cd omnibus-flapjack ; \
@@ -25,26 +25,24 @@ git pull ; \
 bundle install --binstubs ; \
 bin/omnibus build --log-level=info flapjack"
 
-container_id=`docker ps -l -q`
-docker cp ${container_id}:/omnibus-flapjack/pkg .
-docker rm ${container_id}
+container_id=`sudo docker ps -l -q`
+sudo docker cp ${container_id}:/omnibus-flapjack/pkg .
+sudo docker rm ${container_id}
 
 # Check if awscli exists
 if ! hash aws 2>/dev/null; then
-  apt-get install -y awscli
+  sudo apt-get install -y awscli
 fi
 
 # Check if aptly exists
 if ! hash aptly 2>/dev/null; then
   if [ -f /etc/debian_version ]; then
-    echo 'deb http://repo.aptly.info/ squeeze main' > /etc/apt/sources.list.d/aptly.list
+    echo 'deb http://repo.aptly.info/ squeeze main' | sudo tee  /etc/apt/sources.list.d/aptly.list
     gpg --keyserver keys.gnupg.net --recv-keys 2A194991
-    gpg -a --export 2A194991 | apt-key add -
+    gpg -a --export 2A194991 | sudo apt-key add -
 
-    apt-get update
-    apt-get install -y aptly
-
-    if !apt-get install -y aptly ; then
+    sudo apt-get update
+    if !sudo apt-get install -y aptly ; then
       echo "Error installing aptly." ; exit $? ;
     fi
 
