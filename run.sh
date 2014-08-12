@@ -13,8 +13,9 @@ DATE=$(date +%Y%m%d%H%M%S)
 FLAPJACK_BUILD_REF=$1
 DISTRO_RELEASE=$2
 DISTRO_COMPONENT=$3
-# FIXME: Find this from lib/flapjack/version.rb
-FLAPJACK_BUILD_TAG='1.0.0~rc3'
+
+FLAPJACK_BUILD_TAG=$(wget -qO - https://raw.githubusercontent.com/flapjack/flapjack/${FLAPJACK_BUILD_REF}/lib/flapjack/version.rb | grep 'VERSION' | cut -d '"' -f 2)
+: ${FLAPJACK_BUILD_TAG:?"Incorrect build_ref.  Tags should be specified as 'v1.0.0rc3'" }
 
 docker run -i -t -e "FLAPJACK_BUILD_REF=${FLAPJACK_BUILD_REF}" \
 -e "FLAPJACK_PACKAGE_VERSION=${FLAPJACK_BUILD_TAG}~${DATE}-${FLAPJACK_BUILD_REF}" \
