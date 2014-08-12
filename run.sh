@@ -86,6 +86,11 @@ if ! aptly -config=aptly.conf -gpg-key="803709B6" publish update ${DISTRO_RELEAS
   aptly -config=aptly.conf -component=${DISTRO_COMPONENT} -gpg-key="803709B6" publish repo flapjack-${DISTRO_RELEASE}
 fi
 
+# Create directory index files for published packages
+if ! ${PWD}/create_directory_listings aptly/public ; then
+  echo "Directory indexes failed to create"
+fi
+
 aws s3 sync aptly s3://packages.flapjack.io/aptly --acl private --region us-east-1
 
 aws s3 sync aptly/public s3://packages.flapjack.io/public --acl public-read --region us-east-1
