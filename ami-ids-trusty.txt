@@ -1,0 +1,26 @@
+ap-southeast-2  trusty  14.04 LTS amd64 hvm:ebs 20140724  ami-fb3751c1  hvm
+ap-southeast-2  trusty  14.04 LTS amd64 hvm:ebs-io1 20140724  ami-f93751c3  hvm
+ap-southeast-2  trusty  14.04 LTS amd64 hvm:ebs-ssd 20140724  ami-ff3751c5  hvm
+ap-southeast-2  trusty  14.04 LTS amd64 hvm:instance-store  20140724  ami-893751b3  hvm
+ap-southeast-2  trusty  14.04 LTS amd64 ebs 20140724  ami-8d3751b7  aki-c362fff9
+ap-southeast-2  trusty  14.04 LTS amd64 ebs-io1 20140724  ami-813751bb  aki-c362fff9
+ap-southeast-2  trusty  14.04 LTS amd64 ebs-ssd 20140724  ami-853751bf  aki-c362fff9
+ap-southeast-2  trusty  14.04 LTS amd64 instance-store  20140724  ami-893650b3  aki-c362fff9
+
+us-east-1 trusty  14.04 LTS amd64 hvm:ebs 20140724  ami-b227efda  hvm
+us-east-1 trusty  14.04 LTS amd64 hvm:ebs-io1 20140724  ami-b427efdc  hvm
+us-east-1 trusty  14.04 LTS amd64 hvm:ebs-ssd 20140724  ami-8827efe0  hvm
+us-east-1 trusty  14.04 LTS amd64 hvm:instance-store  20140724  ami-7c20e814  hvm
+us-east-1 trusty  14.04 LTS amd64 ebs 20140724  ami-a427efcc  aki-919dcaf8
+us-east-1 trusty  14.04 LTS amd64 ebs-io1 20140724  ami-bc27efd4  aki-919dcaf8
+us-east-1 trusty  14.04 LTS amd64 ebs-ssd 20140724  ami-b027efd8  aki-919dcaf8
+us-east-1 trusty  14.04 LTS amd64 instance-store  20140724  ami-e411d98c  aki-919dcaf8
+
+us-west-1 trusty  14.04 LTS amd64 hvm:ebs 20140724  ami-0db4b748  hvm
+us-west-1 trusty  14.04 LTS amd64 hvm:ebs-io1 20140724  ami-0fb4b74a  hvm
+us-west-1 trusty  14.04 LTS amd64 hvm:ebs-ssd 20140724  ami-09b4b74c  hvm
+us-west-1 trusty  14.04 LTS amd64 hvm:instance-store  20140724  ami-5bb6b51e  hvm
+us-west-1 trusty  14.04 LTS amd64 ebs 20140724  ami-79b4b73c  aki-880531cd
+us-west-1 trusty  14.04 LTS amd64 ebs-io1 20140724  ami-05b4b740  aki-880531cd
+us-west-1 trusty  14.04 LTS amd64 ebs-ssd 20140724  ami-03b4b746  aki-880531cd
+us-west-1 trusty  14.04 LTS amd64 instance-store  20140724  ami-91b1b2d4  aki-880531cd
