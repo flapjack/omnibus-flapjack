@@ -2,7 +2,7 @@
 set -e
 
 args=("$@")
-if [ $# -ne 2 ]
+if [ $# -ne 3 ]
 then
   echo "Usage: `basename $0` build_ref distro_release distro_component"
   echo "eg. `basename $0` master precise experimental"
@@ -27,8 +27,6 @@ bin/omnibus build --log-level=info flapjack"
 container_id=`docker ps -l -q`
 docker cp ${container_id}:/omnibus-flapjack/pkg .
 docker rm ${container_id}
-
-exit 0
 
 # Check if awscli exists
 if not hash aws 2>/dev/null; then
@@ -79,9 +77,8 @@ if ! aptly -config=aptly.conf repo show flapjack-${DISTRO_RELEASE} 2>/dev/null ;
   aptly -config=aptly.conf repo create --distribution ${DISTRO_RELEASE} -component=${DISTRO_COMPONENT} flapjack-${DISTRO_RELEASE}
 fi
 
-
-if ! aptly -config=aptly.conf repo add flapjack-${DISTRO_RELEASE} pkg/flapjack_${FLAPJACK_BUILD_TAG}-${date}-${FLAPJACK_BUILD_REF}.deb ; then
-  echo "Error adding deb to repostory" ; exit $? ;
+if ! aptly -config=aptly.conf repo add flapjack-${DISTRO_RELEASE} pkg/flapjack_${FLAPJACK_BUILD_TAG}~${DATE}-${FLAPJACK_BUILD_REF}*.deb ; then
+  echo "Error adding deb to repostory" ; exit $?
 fi
 
 # Try updating the published repository, otherwise do the first publish
