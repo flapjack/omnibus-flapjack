@@ -74,7 +74,7 @@ aws s3 sync s3://packages.flapjack.io/aptly aptly --acl private --region us-east
 
 # Create the repo if it doesn't exist
 if ! aptly -config=aptly.conf repo show flapjack-${DISTRO_RELEASE} 2>/dev/null ; then
-  aptly -config=aptly.conf repo create --distribution ${DISTRO_RELEASE} -component=${DISTRO_COMPONENT} flapjack-${DISTRO_RELEASE}
+  aptly -config=aptly.conf repo create --distribution ${DISTRO_RELEASE} -architectures="i386,amd64" -component=${DISTRO_COMPONENT} flapjack-${DISTRO_RELEASE}
 fi
 
 if ! aptly -config=aptly.conf repo add flapjack-${DISTRO_RELEASE} pkg/flapjack_${FLAPJACK_BUILD_TAG}~${DATE}-${FLAPJACK_BUILD_REF}*.deb ; then
@@ -83,7 +83,7 @@ fi
 
 # Try updating the published repository, otherwise do the first publish
 if ! aptly -config=aptly.conf -gpg-key="803709B6" publish update ${DISTRO_RELEASE} ; then
-  aptly -config=aptly.conf -component=${DISTRO_COMPONENT} -gpg-key="803709B6" publish repo flapjack-${DISTRO_RELEASE}
+  aptly -config=aptly.conf -component=${DISTRO_COMPONENT} -architectures="i386,amd64" -gpg-key="803709B6" publish repo flapjack-${DISTRO_RELEASE}
 fi
 
 # Create directory index files for published packages
@@ -93,4 +93,4 @@ fi
 
 aws s3 sync aptly s3://packages.flapjack.io/aptly --acl private --region us-east-1
 
-aws s3 sync aptly/public s3://packages.flapjack.io/public --acl public-read --region us-east-1
+aws s3 sync aptly/public s3://packages.flapjack.io/deb --acl public-read --region us-east-1
