@@ -67,7 +67,7 @@ if ! hash aptly 2>/dev/null; then
     gpg -a --export 2A194991 | sudo apt-key add -
 
     sudo apt-get update
-    if !sudo apt-get install -y aptly ; then
+    if ! sudo apt-get install -y aptly ; then
       echo "Error installing aptly." ; exit $? ;
     fi
 
