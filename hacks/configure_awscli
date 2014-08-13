@@ -5,7 +5,7 @@ require 'ostruct'
 
 options = OpenStruct.new
 optparse = OptionParser.new do |opts|
-  opts.banner = "Usage: flapjack COMMAND [OPTIONS]"
+  opts.banner = "Usage: configure_awscli COMMAND [OPTIONS]"
 
   opts.separator  ""
   opts.separator  "Options"
