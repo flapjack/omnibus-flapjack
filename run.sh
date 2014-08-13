@@ -19,7 +19,13 @@ echo "Determining FLAPJACK_BUILD_TAG..."
 FLAPJACK_FULL_VERSION=$(wget -qO - https://raw.githubusercontent.com/flapjack/flapjack/${FLAPJACK_BUILD_REF}/lib/flapjack/version.rb | grep 'VERSION' | cut -d '"' -f 2)
 : ${FLAPJACK_FULL_VERSION:?"Incorrect build_ref.  Tags should be specified as 'v1.0.0rc3'" }
 FLAPJACK_MAJOR_VERSION=$(echo $FLAPJACK_FULL_VERSION |  cut -d . -f 1,2)
-FLAPJACK_PACKAGE_VERSION="${FLAPJACK_FULL_VERSION}~${DATE}-${FLAPJACK_BUILD_REF}"
+
+# Only put the build ref and date on our testing packages, not the final ones.
+if [ $DISTRO_COMPONENT = "main" ] ; then
+  FLAPJACK_PACKAGE_VERSION="${FLAPJACK_FULL_VERSION}"
+else
+  FLAPJACK_PACKAGE_VERSION="${FLAPJACK_FULL_VERSION}~${DATE}-${FLAPJACK_BUILD_REF}"
+fi
 
 echo
 echo "FLAPJACK_FULL_VERSION: ${FLAPJACK_FULL_VERSION}"
