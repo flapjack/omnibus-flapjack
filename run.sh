@@ -36,7 +36,7 @@ echo
 echo "Starting Docker container..."
 
 
-sudo docker run -t -a stdin,stdout,stderr --detach false -e "FLAPJACK_BUILD_REF=${FLAPJACK_BUILD_REF}" \
+sudo docker run -t --attach stdout --attach stderr --detach=false -e "FLAPJACK_BUILD_REF=${FLAPJACK_BUILD_REF}" \
 -e "FLAPJACK_PACKAGE_VERSION=${FLAPJACK_PACKAGE_VERSION}" \
 flapjack/omnibus-ubuntu bash -c \
 "cd omnibus-flapjack ; \
