@@ -25,9 +25,9 @@
     "type": "shell",
     "inline": [
       "sleep 30",
-      "git clone git@github.com:flapjack/omnibus-flapjack.git && cd omnibus-flapjack && git checkout omnibus3",
       "sudo apt-get update",
-      "sudo apt-get install -y gnupg awscli",
+      "sudo apt-get install -y gnupg awscli git",
+      "git clone git@github.com:flapjack/omnibus-flapjack.git && cd omnibus-flapjack && git checkout omnibus3",
       "gpg --batch --yes --import /tmp/pkg_signing_key",
       "gpg --batch --yes --keyserver keys.gnupg.net --recv-keys 2A194991",
       "gpg --batch --yes -a --export 2A194991 | sudo apt-key add -",
