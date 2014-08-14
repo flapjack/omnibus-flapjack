@@ -104,14 +104,14 @@ fi
 
 echo "Putting packages into aptly repo, syncing with S3"
 mkdir -p aptly
-aws s3 sync s3://packages.flapjack.io/aptly aptly --acl private --region us-east-1
+aws s3 sync s3://packages.flapjack.io/aptly aptly --acl public-read --region us-east-1
 
 echo "Creating all components for the distro release if they don't exist"
 for component in ${VALID_COMPONENTS}; do
   if ! aptly -config=aptly.conf repo show flapjack-${FLAPJACK_MAJOR_VERSION}-${DISTRO_RELEASE}-${component} &>/dev/null ; then
     aptly -config=aptly.conf repo create -distribution ${DISTRO_RELEASE} -architectures="i386,amd64" -component=${component} flapjack-${FLAPJACK_MAJOR_VERSION}-${DISTRO_RELEASE}-${component}
   fi
-; done
+done
 
 echo "Adding pkg/flapjack_${FLAPJACK_FULL_VERSION}~${DATE}-${FLAPJACK_BUILD_REF}*.deb to the flapjack-${FLAPJACK_MAJOR_VERSION}-${DISTRO_RELEASE}-${DISTRO_COMPONENT} repo"
 if ! aptly -config=aptly.conf repo add flapjack-${FLAPJACK_MAJOR_VERSION}-${DISTRO_RELEASE}-${DISTRO_COMPONENT} pkg/flapjack_${FLAPJACK_FULL_VERSION}~${DATE}-${FLAPJACK_BUILD_REF}*.deb ; then
@@ -135,7 +135,7 @@ fi
 cd -
 
 echo "Syncing the aptly db up to S3"
-aws s3 sync aptly s3://packages.flapjack.io/aptly --acl private --region us-east-1
+aws s3 sync aptly s3://packages.flapjack.io/aptly --acl public-read --region us-east-1
 
 echo "Syncing the public packages repo up to S3"
 aws s3 sync aptly/public s3://packages.flapjack.io/deb --acl public-read --region us-east-1
