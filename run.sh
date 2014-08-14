@@ -28,9 +28,9 @@ FLAPJACK_FULL_VERSION=$(echo $FLAPJACK_FULL_VERSION | sed -e 's/\([a-z]\)/~\1/')
 
 # Only put the build ref and date on our testing packages, not the final ones.
 if [ $DISTRO_COMPONENT = "main" ] ; then
-  FLAPJACK_PACKAGE_VERSION="${FLAPJACK_FULL_VERSION}"
+  FLAPJACK_PACKAGE_VERSION="${FLAPJACK_FULL_VERSION}-#{DISTRO_RELEASE}"
 else
-  FLAPJACK_PACKAGE_VERSION="${FLAPJACK_FULL_VERSION}~${DATE}-${FLAPJACK_BUILD_REF}"
+  FLAPJACK_PACKAGE_VERSION="${FLAPJACK_FULL_VERSION}~${DATE}-${FLAPJACK_BUILD_REF}-#{DISTRO_RELEASE}"
 fi
 
 echo
@@ -114,8 +114,8 @@ for component in "${VALID_COMPONENTS[@]}"; do
   fi
 done
 
-echo "Adding pkg/flapjack_${FLAPJACK_FULL_VERSION}~${DATE}-${FLAPJACK_BUILD_REF}*.deb to the flapjack-${FLAPJACK_MAJOR_VERSION}-${DISTRO_RELEASE}-${DISTRO_COMPONENT} repo"
-if ! aptly -config=aptly.conf repo add flapjack-${FLAPJACK_MAJOR_VERSION}-${DISTRO_RELEASE}-${DISTRO_COMPONENT} pkg/flapjack_${FLAPJACK_FULL_VERSION}~${DATE}-${FLAPJACK_BUILD_REF}*.deb ; then
+echo "Adding pkg/flapjack_${FLAPJACK_PACKAGE_VERSION}*.deb to the flapjack-${FLAPJACK_MAJOR_VERSION}-${DISTRO_RELEASE}-${DISTRO_COMPONENT} repo"
+if ! aptly -config=aptly.conf repo add flapjack-${FLAPJACK_MAJOR_VERSION}-${DISTRO_RELEASE}-${DISTRO_COMPONENT} pkg/flapjack_${FLAPJACK_PACKAGE_VERSION}*.deb ; then
   echo "Error adding deb to repostory" ; exit $?
 fi
 
