@@ -139,3 +139,5 @@ aws s3 sync aptly s3://packages.flapjack.io/aptly --acl public-read --region us-
 
 echo "Syncing the public packages repo up to S3"
 aws s3 sync aptly/public s3://packages.flapjack.io/deb --acl public-read --region us-east-1
+
+echo "Done"
