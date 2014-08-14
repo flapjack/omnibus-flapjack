@@ -105,7 +105,7 @@ fi
 
 echo "Putting packages into aptly repo, syncing with S3"
 mkdir -p aptly
-aws s3 sync s3://packages.flapjack.io/aptly aptly --acl public-read --region us-east-1
+aws s3 sync s3://packages.flapjack.io/aptly aptly --delete --acl public-read --region us-east-1
 
 echo "Creating all components for the distro release if they don't exist"
 for component in "${VALID_COMPONENTS[@]}"; do
@@ -119,13 +119,13 @@ if ! aptly -config=aptly.conf repo add flapjack-${FLAPJACK_MAJOR_VERSION}-${DIST
   echo "Error adding deb to repostory" ; exit $?
 fi
 
-echo "Trying to update the published repository for all components of the major version of the given distro release, otherwise doing the first publish"
-if ! aptly -config=aptly.conf -gpg-key="803709B6" publish update ${DISTRO_RELEASE} ${FLAPJACK_MAJOR_VERSION} ; then
-  # eg aptly publish repo -architectures="i386,amd64" -gpg-key="803709B6"  -component=, flapjack-1.0-trusty-main flapjack-1.0-trusty-experimental 1.0
-  publish_cmd='aptly -config=aptly.conf publish repo -architectures="i386,amd64" -gpg-key="803709B6" -component=, '
-  for component in ${VALID_COMPONENTS[@]}; do publish_cmd+="flapjack-${FLAPJACK_MAJOR_VERSION}-${DISTRO_RELEASE}-${component} "; done
-  publish_cmd+=" ${FLAPJACK_MAJOR_VERSION}"
-  eval $publish_cmd
+echo "Attempting the first publish for all components of the major version of the given distro release"
+publish_cmd='aptly -config=aptly.conf publish repo -architectures="i386,amd64" -gpg-key="803709B6" -component=, '
+for component in ${VALID_COMPONENTS[@]}; do publish_cmd+="flapjack-${FLAPJACK_MAJOR_VERSION}-${DISTRO_RELEASE}-${component} "; done
+publish_cmd+=" ${FLAPJACK_MAJOR_VERSION}"
+if ! eval $publish_cmd &>/dev/null ; then
+  echo "Repository already published, attempting an update"
+  aptly -config=aptly.conf -gpg-key="803709B6" publish update ${DISTRO_RELEASE} ${FLAPJACK_MAJOR_VERSION}
 fi
 
 echo "Creating directory index files for published packages"
@@ -136,10 +136,9 @@ fi
 cd -
 
 echo "Syncing the aptly db up to S3"
-aws s3 sync aptly s3://packages.flapjack.io/aptly --acl public-read --region us-east-1
+aws s3 sync aptly s3://packages.flapjack.io/aptly --delete --acl public-read --region us-east-1
 
 echo "Syncing the public packages repo up to S3"
-aws s3 sync aptly/public s3://packages.flapjack.io/deb --acl public-read --region us-east-1
+aws s3 sync aptly/public s3://packages.flapjack.io/deb --delete --acl public-read --region us-east-1
 
 echo "Done"
-
