@@ -19,7 +19,8 @@ echo "Determining FLAPJACK_BUILD_TAG..."
 FLAPJACK_FULL_VERSION=$(wget -qO - https://raw.githubusercontent.com/flapjack/flapjack/${FLAPJACK_BUILD_REF}/lib/flapjack/version.rb | grep 'VERSION' | cut -d '"' -f 2)
 : ${FLAPJACK_FULL_VERSION:?"Incorrect build_ref.  Tags should be specified as 'v1.0.0rc3'" }
 FLAPJACK_MAJOR_VERSION=$(echo $FLAPJACK_FULL_VERSION |  cut -d . -f 1,2)
-#TODO: put a ~ separator in before any alpha parts of the version string, eg "1.0.0rc3" -> "1.0.0~rc3"
+#put a ~ separator in before any alpha parts of the version string, eg "1.0.0rc3" -> "1.0.0~rc3"
+FLAPJACK_FULL_VERSION=`ruby -e 'v = "${FLAPJACK_FULL_VERSION}"; v.match(/^(\d+\.\d+\.\d+)(.*)$/) ; if $2.length > 0 ; puts "#{$1}~#{$2}" ; else puts "#{v}" ; end'
 
 # Only put the build ref and date on our testing packages, not the final ones.
 if [ $DISTRO_COMPONENT = "main" ] ; then
