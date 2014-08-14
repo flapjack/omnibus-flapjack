@@ -130,7 +130,7 @@ fi
 
 echo "Creating directory index files for published packages"
 cd aptly/public
-if ! ${PWD}/../../create_directory_listings . ; then
+if ! ${PWD}/../../omnibus-flapjack/create_directory_listings . ; then
   echo "Directory indexes failed to create"
 fi
 cd -
@@ -142,3 +142,4 @@ echo "Syncing the public packages repo up to S3"
 aws s3 sync aptly/public s3://packages.flapjack.io/deb --acl public-read --region us-east-1
 
 echo "Done"
+
