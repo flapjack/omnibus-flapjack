@@ -15,6 +15,10 @@ DISTRO_RELEASE=$2
 DISTRO_COMPONENT=$3
 VALID_COMPONENTS=(main experimental)
 
+if ! echo ${VALID_COMPONENTS[*]} | grep ${DISTRO_COMPONENT} &>/dev/null ; then
+  echo "Invalid distro_component specified." ; exit $?
+fi
+
 echo "Determining FLAPJACK_BUILD_TAG..."
 FLAPJACK_FULL_VERSION=$(wget -qO - https://raw.githubusercontent.com/flapjack/flapjack/${FLAPJACK_BUILD_REF}/lib/flapjack/version.rb | grep 'VERSION' | cut -d '"' -f 2)
 : ${FLAPJACK_FULL_VERSION:?"Incorrect build_ref.  Tags should be specified as 'v1.0.0rc3'" }
