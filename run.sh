@@ -123,7 +123,7 @@ echo "Trying to update the published repository for all components of the major 
 if ! aptly -config=aptly.conf -gpg-key="803709B6" publish update ${DISTRO_RELEASE} ${FLAPJACK_MAJOR_VERSION} ; then
   # eg aptly publish repo -architectures="i386,amd64" -gpg-key="803709B6"  -component=, flapjack-1.0-trusty-main flapjack-1.0-trusty-experimental 1.0
   publish_cmd='aptly -config=aptly.conf publish repo -architectures="i386,amd64" -gpg-key="803709B6" -component=, '
-  for component in ${VALID_COMPONENTS}; do publish_cmd+="flapjack-${FLAPJACK_MAJOR_VERSION}-${DISTRO_RELEASE}-${component} "; done
+  for component in ${VALID_COMPONENTS[@]}; do publish_cmd+="flapjack-${FLAPJACK_MAJOR_VERSION}-${DISTRO_RELEASE}-${component} "; done
   publish_cmd+=" ${FLAPJACK_MAJOR_VERSION}"
   eval $publish_cmd
 fi
