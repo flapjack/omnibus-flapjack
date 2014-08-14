@@ -51,6 +51,7 @@ bin/omnibus build --log-level=info flapjack"
 
 
 echo "Docker run completed."
+sleep 10 # one time I got "Could not find the file /omnibus-flapjack/pkg in container" and a while later it worked fine
 echo "Retrieving package from the container"
 container_id=`sudo docker ps -l -q`
 sudo docker cp ${container_id}:/omnibus-flapjack/pkg .
