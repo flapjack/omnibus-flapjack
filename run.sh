@@ -107,7 +107,7 @@ mkdir -p aptly
 aws s3 sync s3://packages.flapjack.io/aptly aptly --acl public-read --region us-east-1
 
 echo "Creating all components for the distro release if they don't exist"
-for component in ${VALID_COMPONENTS}; do
+for component in "${VALID_COMPONENTS[@]}"; do
   if ! aptly -config=aptly.conf repo show flapjack-${FLAPJACK_MAJOR_VERSION}-${DISTRO_RELEASE}-${component} &>/dev/null ; then
     aptly -config=aptly.conf repo create -distribution ${DISTRO_RELEASE} -architectures="i386,amd64" -component=${component} flapjack-${FLAPJACK_MAJOR_VERSION}-${DISTRO_RELEASE}-${component}
   fi
