@@ -125,7 +125,8 @@ for component in ${VALID_COMPONENTS[@]}; do publish_cmd+="flapjack-${FLAPJACK_MA
 publish_cmd+=" ${FLAPJACK_MAJOR_VERSION}"
 if ! eval $publish_cmd &>/dev/null ; then
   echo "Repository already published, attempting an update"
-  aptly -config=aptly.conf -gpg-key="803709B6" publish update ${DISTRO_RELEASE} ${FLAPJACK_MAJOR_VERSION}
+  # Aptly checks the inode number to determine if packages are the same.  As we sync from S3, our inode numbers change, so identical packages are deemed different.
+  aptly -config=aptly.conf -gpg-key="803709B6" -force-overwrite=true publish update ${DISTRO_RELEASE} ${FLAPJACK_MAJOR_VERSION}
 fi
 
 echo "Creating directory index files for published packages"
