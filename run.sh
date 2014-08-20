@@ -24,11 +24,13 @@ echo
 echo "FLAPJACK_FULL_VERSION: ${FLAPJACK_FULL_VERSION}"
 echo "FLAPJACK_BUILD_REF: ${FLAPJACK_BUILD_REF}"
 echo "FLAPJACK_PACKAGE_VERSION: ${FLAPJACK_PACKAGE_VERSION}"
+echo "DISTRO_RELEASE: ${DISTRO_RELEASE}"
 echo
 echo "Starting Docker container..."
 
 
-time sudo docker run -t --attach stdout --attach stderr --detach=false -e "FLAPJACK_BUILD_REF=${FLAPJACK_BUILD_REF}" \
+time sudo docker run -t --attach stdout --attach stderr --detach=false \
+-e "FLAPJACK_BUILD_REF=${FLAPJACK_BUILD_REF}" \
 -e "FLAPJACK_PACKAGE_VERSION=${FLAPJACK_PACKAGE_VERSION}" \
 -e "DISTRO_RELEASE=${DISTRO_RELEASE}" \
 flapjack/omnibus-ubuntu bash -c \
@@ -37,8 +39,8 @@ git pull ; \
 bundle install --binstubs ; \
 bin/omnibus build --log-level=info flapjack ; \
 cd /omnibus-flapjack/pkg ; \
-ls -ct1 | head -n 1 > /tmp/experimental_deb
-EXPERIMENTAL_VERSION=$(echo $(cut -d _ -f 2 /tmp/experimental_deb | cut -d "-" -f -3))
+ls -ct1 | head -n 1 > /tmp/experimental_deb ; \
+EXPERIMENTAL_VERSION=$(echo $(cut -d _ -f 2 /tmp/experimental_deb | cut -d "-" -f -3)) ; \
 MAIN_VERSION=$(echo ${FLAPJACK_PACKAGE_VERSION} | cut -d "~" -f 1) ; \
 MAIN_DEB_FILENAME=$(cut -d _ -f 1 /tmp/experimental_deb)_${MAIN_VERSION}-${DISTRO_RELEASE}_$(cut -d _ -f 3 /tmp/experimental_deb) ; \
 dpkg-deb -R $(cat /tmp/experimental_deb) repackage ; \
