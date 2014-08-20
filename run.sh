@@ -2,8 +2,7 @@
 set -e
 
 args=("$@")
-if [ $# -ne 2 ]
-then
+if [ $# -ne 2 ]; then
   echo "Usage: `basename $0` build_ref distro_release"
   echo "eg. `basename $0` 4deb3ef precise"
   exit 2
@@ -120,7 +119,7 @@ fi
 
 echo "Creating directory index files for published packages"
 cd aptly/public
-if ! ${PWD}/../../omnibus-flapjack/create_directory_listings . ; then
+if ! ../../create_directory_listings . ; then
   echo "Directory indexes failed to create"
 fi
 cd -
