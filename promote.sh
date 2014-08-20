@@ -1,45 +1,31 @@
 #!/bin/bash
 set -e
 
-args=("$@")
 if [ $# -ne 1 ]; then
   echo "Usage: filename"
-  echo "eg. flapjack_1.0.0~rc3~20140815122115-master-precise-1_amd64.deb"
+  echo "eg. flapjack_1.0.0-precise_amd64.deb"
   exit 2
 fi
 
-EXPERIMENTAL_DEB_FILENAME=$1
+FILENAME=$1
 
-IFS="_" read -ra VERSION_ARRAY <<< "${EXPERIMENTAL_DEB_FILENAME}"
+IFS="_" read -ra VERSION_ARRAY <<< "${FILENAME}"
 
-EXPERIMENTAL_VERSION=${VERSION_ARRAY[1]}
-MAIN_VERSION=$(echo ${EXPERIMENTAL_VERSION} | sed -e 's/\(~20.*\)//')
-DISTRO_RELEASE=$(echo ${EXPERIMENTAL_VERSION} | cut -d '-' -f 3)
-MAIN_DEB_FILENAME=${VERSION_ARRAY[0]}_${MAIN_VERSION}-${DISTRO_RELEASE}_${VERSION_ARRAY[2]}
+VERSION=${VERSION_ARRAY[1]}
+DISTRO_RELEASE=$(echo ${VERSION} | cut -d '-' -f 2)
+FLAPJACK_MAJOR_VERSION=$(echo ${VERSION} | cut -d . -f 1,2)
 
-if [ ! -f pkg/${EXPERIMENTAL_DEB_FILENAME} ]; then
-  echo "Couldn't find package at pkg/${DEB_FILENAME}"
+if [ ! -f pkg/${FILENAME} ]; then
+  echo "Couldn't find package at pkg/${FILENAME}"
   exit 3
 fi
-
-echo "Starting with ${EXPERIMENTAL_DEB_FILENAME} with version ${EXPERIMENTAL_VERSION}"
-echo "Promoting ${MAIN_DEB_FILENAME} with version ${MAIN_VERSION} for the ${DISTRO_RELEASE} release"
-
-echo "Unpacking pkg/${EXPERIMENTAL_DEB_FILENAME}"
-dpkg-deb -R pkg/${EXPERIMENTAL_DEB_FILENAME} repackage
-
-echo "Updating version number"
-for i in 'DEBIAN/control' 'opt/flapjack/version-manifest.txt'; do sed -i s#${EXPERIMENTAL_VERSION}#${MAIN_VERSION}#g repackage/$i; done
-
-echo "Repacking pkg/${DEB_FILENAME}"
-dpkg-deb -b repackage pkg/${MAIN_DEB_FILENAME}
 
 echo "Putting packages into aptly repo, syncing with S3"
 mkdir -p aptly
 aws s3 sync s3://packages.flapjack.io/aptly aptly --delete --acl public-read --region us-east-1
 
-echo "Adding pkg/${VERSION_ARRAY[0]}_${MAIN_VERSION}-${DISTRO_RELEASE}_${VERSION_ARRAY[2]} to the flapjack-${FLAPJACK_MAJOR_VERSION}-${DISTRO_RELEASE}-main repo"
-if ! aptly -config=aptly.conf repo add flapjack-${FLAPJACK_MAJOR_VERSION}-${DISTRO_RELEASE}-main pkg/${MAIN_DEB_FILENAME} ; then
+echo "Adding pkg/${FILENAME} to the flapjack-${FLAPJACK_MAJOR_VERSION}-${DISTRO_RELEASE}-main repo"
+if ! aptly -config=aptly.conf repo add flapjack-${FLAPJACK_MAJOR_VERSION}-${DISTRO_RELEASE}-main pkg/${FILENAME} ; then
   echo "Error adding deb to repostory" ; exit $?
 fi
 

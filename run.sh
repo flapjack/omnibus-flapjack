@@ -1,7 +1,6 @@
 #!/bin/bash
 set -e
 
-args=("$@")
 if [ $# -ne 2 ]; then
   echo "Usage: `basename $0` build_ref distro_release"
   echo "eg. `basename $0` 4deb3ef precise"
@@ -31,12 +30,21 @@ echo "Starting Docker container..."
 
 time sudo docker run -t --attach stdout --attach stderr --detach=false -e "FLAPJACK_BUILD_REF=${FLAPJACK_BUILD_REF}" \
 -e "FLAPJACK_PACKAGE_VERSION=${FLAPJACK_PACKAGE_VERSION}" \
+-e "DISTRO_RELEASE=${DISTRO_RELEASE}" \
 flapjack/omnibus-ubuntu bash -c \
-"cd omnibus-flapjack ; \
+'cd omnibus-flapjack ; \
 git pull ; \
 bundle install --binstubs ; \
-bin/omnibus build --log-level=info flapjack"
-
+bin/omnibus build --log-level=info flapjack ; \
+cd /omnibus-flapjack/pkg ; \
+ls -ct1 | head -n 1 > /tmp/experimental_deb
+EXPERIMENTAL_VERSION=$(echo $(cut -d _ -f 2 /tmp/experimental_deb | cut -d "-" -f -3))
+MAIN_VERSION=$(echo ${FLAPJACK_PACKAGE_VERSION} | cut -d "~" -f 1) ; \
+MAIN_DEB_FILENAME=$(cut -d _ -f 1 /tmp/experimental_deb)_${MAIN_VERSION}-${DISTRO_RELEASE}_$(cut -d _ -f 3 /tmp/experimental_deb) ; \
+dpkg-deb -R $(cat /tmp/experimental_deb) repackage ; \
+sed -i s#${EXPERIMENTAL_VERSION}-1#${MAIN_VERSION}#g repackage/DEBIAN/control ; \
+sed -i s#${EXPERIMENTAL_VERSION}#${MAIN_VERSION}#g repackage/opt/flapjack/version-manifest.txt ; \
+dpkg-deb -b repackage ${MAIN_DEB_FILENAME}'
 
 echo "Docker run completed."
 sleep 10 # one time I got "Could not find the file /omnibus-flapjack/pkg in container" and a while later it worked fine
