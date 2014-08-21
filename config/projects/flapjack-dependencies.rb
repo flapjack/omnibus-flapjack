@@ -1,7 +1,7 @@
 
 name          "flapjack-dependencies"
 friendly_name "Flapjack's Dependencies"
-maintainer    "Lindsay Holmwood, Jesse Reynolds, Ali Graham"
+maintainer    "Lindsay Holmwood, Jesse Reynolds, Ali Graham, Sarah Kowalik"
 homepage      "http://flapjack.io"
 
 install_dir   "/opt/flapjack"

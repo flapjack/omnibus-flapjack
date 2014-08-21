@@ -1,23 +1,16 @@
 #!/bin/bash
 set -e
 
-args=("$@")
-if [ $# -ne 3 ]
-then
-  echo "Usage: `basename $0` build_ref distro_release distro_component"
-  echo "eg. `basename $0` 4deb3ef precise experimental"
+if [ $# -ne 2 ]; then
+  echo "Usage: `basename $0` build_ref distro_release"
+  echo "eg. `basename $0` 4deb3ef precise"
   exit 2
 fi
 
 DATE=$(date +%Y%m%d%H%M%S)
 FLAPJACK_BUILD_REF=$1
 DISTRO_RELEASE=$2
-DISTRO_COMPONENT=$3
 VALID_COMPONENTS=(main experimental)
-
-if ! echo ${VALID_COMPONENTS[*]} | grep ${DISTRO_COMPONENT} &>/dev/null ; then
-  echo "Invalid distro_component specified." ; exit $?
-fi
 
 echo "Determining FLAPJACK_BUILD_TAG..."
 FLAPJACK_FULL_VERSION=$(wget -qO - https://raw.githubusercontent.com/flapjack/flapjack/${FLAPJACK_BUILD_REF}/lib/flapjack/version.rb | grep 'VERSION' | cut -d '"' -f 2)
@@ -25,30 +18,35 @@ FLAPJACK_FULL_VERSION=$(wget -qO - https://raw.githubusercontent.com/flapjack/fl
 FLAPJACK_MAJOR_VERSION=$(echo $FLAPJACK_FULL_VERSION |  cut -d . -f 1,2)
 #put a ~ separator in before any alpha parts of the version string, eg "1.0.0rc3" -> "1.0.0~rc3"
 FLAPJACK_FULL_VERSION=$(echo $FLAPJACK_FULL_VERSION | sed -e 's/\([a-z]\)/~\1/')
-
-# Only put the build ref and date on our testing packages, not the final ones.
-if [ $DISTRO_COMPONENT = "main" ] ; then
-  FLAPJACK_PACKAGE_VERSION="${FLAPJACK_FULL_VERSION}"
-else
-  FLAPJACK_PACKAGE_VERSION="${FLAPJACK_FULL_VERSION}~${DATE}-${FLAPJACK_BUILD_REF}"
-fi
+FLAPJACK_PACKAGE_VERSION="${FLAPJACK_FULL_VERSION}~${DATE}-${FLAPJACK_BUILD_REF}-${DISTRO_RELEASE}"
+FLAPJACK_MAIN_PACKAGE_VERSION="$(echo ${FLAPJACK_PACKAGE_VERSION} | cut -d "~" -f 1)-${DISTRO_RELEASE}"
 
 echo
 echo "FLAPJACK_FULL_VERSION: ${FLAPJACK_FULL_VERSION}"
 echo "FLAPJACK_BUILD_REF: ${FLAPJACK_BUILD_REF}"
 echo "FLAPJACK_PACKAGE_VERSION: ${FLAPJACK_PACKAGE_VERSION}"
+echo "FLAPJACK_MAIN_PACKAGE_VERSION: ${FLAPJACK_MAIN_PACKAGE_VERSION}"
+echo "DISTRO_RELEASE: ${DISTRO_RELEASE}"
 echo
 echo "Starting Docker container..."
 
 
-sudo docker run -t --attach stdout --attach stderr --detach=false -e "FLAPJACK_BUILD_REF=${FLAPJACK_BUILD_REF}" \
+time sudo docker run -t --attach stdout --attach stderr --detach=false \
+-e "FLAPJACK_BUILD_REF=${FLAPJACK_BUILD_REF}" \
 -e "FLAPJACK_PACKAGE_VERSION=${FLAPJACK_PACKAGE_VERSION}" \
+-e "FLAPJACK_MAIN_PACKAGE_VERSION=${FLAPJACK_MAIN_PACKAGE_VERSION}" \
+-e "DISTRO_RELEASE=${DISTRO_RELEASE}" \
 flapjack/omnibus-ubuntu bash -c \
-"cd omnibus-flapjack ; \
+'cd omnibus-flapjack ; \
 git pull ; \
 bundle install --binstubs ; \
-bin/omnibus build --log-level=info flapjack"
-
+bin/omnibus build --log-level=info flapjack ; \
+cd /omnibus-flapjack/pkg ; \
+EXPERIMENTAL_FILENAME=$(ls flapjack_${FLAPJACK_PACKAGE_VERSION}*.deb) ; \
+dpkg-deb -R ${EXPERIMENTAL_FILENAME} repackage ; \
+sed -i s#${FLAPJACK_PACKAGE_VERSION}-1#${FLAPJACK_MAIN_PACKAGE_VERSION}#g repackage/DEBIAN/control ; \
+sed -i s#${FLAPJACK_PACKAGE_VERSION}#${FLAPJACK_MAIN_PACKAGE_VERSION}#g repackage/opt/flapjack/version-manifest.txt ; \
+dpkg-deb -b repackage candidate_${EXPERIMENTAL_FILENAME}'
 
 echo "Docker run completed."
 sleep 10 # one time I got "Could not find the file /omnibus-flapjack/pkg in container" and a while later it worked fine
@@ -105,7 +103,7 @@ fi
 
 echo "Putting packages into aptly repo, syncing with S3"
 mkdir -p aptly
-aws s3 sync s3://packages.flapjack.io/aptly aptly --acl public-read --region us-east-1
+aws s3 sync s3://packages.flapjack.io/aptly aptly --delete --acl public-read --region us-east-1
 
 echo "Creating all components for the distro release if they don't exist"
 for component in "${VALID_COMPONENTS[@]}"; do
@@ -114,32 +112,35 @@ for component in "${VALID_COMPONENTS[@]}"; do
   fi
 done
 
-echo "Adding pkg/flapjack_${FLAPJACK_FULL_VERSION}~${DATE}-${FLAPJACK_BUILD_REF}*.deb to the flapjack-${FLAPJACK_MAJOR_VERSION}-${DISTRO_RELEASE}-${DISTRO_COMPONENT} repo"
-if ! aptly -config=aptly.conf repo add flapjack-${FLAPJACK_MAJOR_VERSION}-${DISTRO_RELEASE}-${DISTRO_COMPONENT} pkg/flapjack_${FLAPJACK_FULL_VERSION}~${DATE}-${FLAPJACK_BUILD_REF}*.deb ; then
+echo "Adding pkg/flapjack_${FLAPJACK_PACKAGE_VERSION}*.deb to the flapjack-${FLAPJACK_MAJOR_VERSION}-${DISTRO_RELEASE}-experimental repo"
+if ! aptly -config=aptly.conf repo add flapjack-${FLAPJACK_MAJOR_VERSION}-${DISTRO_RELEASE}-experimental pkg/flapjack_${FLAPJACK_PACKAGE_VERSION}*.deb ; then
   echo "Error adding deb to repostory" ; exit $?
 fi
 
-echo "Trying to update the published repository for all components of the major version of the given distro release, otherwise doing the first publish"
-if ! aptly -config=aptly.conf -gpg-key="803709B6" publish update ${DISTRO_RELEASE} ${FLAPJACK_MAJOR_VERSION} ; then
-  # eg aptly publish repo -architectures="i386,amd64" -gpg-key="803709B6"  -component=, flapjack-1.0-trusty-main flapjack-1.0-trusty-experimental 1.0
-  publish_cmd='aptly -config=aptly.conf publish repo -architectures="i386,amd64" -gpg-key="803709B6" -component=, '
-  for component in ${VALID_COMPONENTS[@]}; do publish_cmd+="flapjack-${FLAPJACK_MAJOR_VERSION}-${DISTRO_RELEASE}-${component} "; done
-  publish_cmd+=" ${FLAPJACK_MAJOR_VERSION}"
-  eval $publish_cmd
+echo "Attempting the first publish for all components of the major version of the given distro release"
+publish_cmd='aptly -config=aptly.conf publish repo -architectures="i386,amd64" -gpg-key="803709B6" -component=, '
+for component in ${VALID_COMPONENTS[@]}; do publish_cmd+="flapjack-${FLAPJACK_MAJOR_VERSION}-${DISTRO_RELEASE}-${component} "; done
+publish_cmd+=" ${FLAPJACK_MAJOR_VERSION}"
+if ! eval $publish_cmd &>/dev/null ; then
+  echo "Repository already published, attempting an update"
+  # Aptly checks the inode number to determine if packages are the same.  As we sync from S3, our inode numbers change, so identical packages are deemed different.
+  aptly -config=aptly.conf -gpg-key="803709B6" -force-overwrite=true publish update ${DISTRO_RELEASE} ${FLAPJACK_MAJOR_VERSION}
 fi
 
 echo "Creating directory index files for published packages"
 cd aptly/public
-if ! ${PWD}/../../omnibus-flapjack/create_directory_listings . ; then
+if ! ../../create_directory_listings . ; then
   echo "Directory indexes failed to create"
 fi
 cd -
 
 echo "Syncing the aptly db up to S3"
-aws s3 sync aptly s3://packages.flapjack.io/aptly --acl public-read --region us-east-1
+aws s3 sync aptly s3://packages.flapjack.io/aptly --delete --acl public-read --region us-east-1
 
 echo "Syncing the public packages repo up to S3"
-aws s3 sync aptly/public s3://packages.flapjack.io/deb --acl public-read --region us-east-1
+aws s3 sync aptly/public s3://packages.flapjack.io/deb --delete --acl public-read --region us-east-1
+
+echo "Copying candidate deb for main to s3"
+aws s3 cp pkg/candidate_flapjack_${FLAPJACK_PACKAGE_VERSION}*.deb s3://packages.flapjack.io/candidates --acl public-read --region us-east-1
 
 echo "Done"
-
