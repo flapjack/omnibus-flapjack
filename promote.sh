@@ -52,4 +52,7 @@ aws s3 sync aptly s3://packages.flapjack.io/aptly --delete --acl public-read --r
 echo "Syncing the public packages repo up to S3"
 aws s3 sync aptly/public s3://packages.flapjack.io/deb --delete --acl public-read --region us-east-1
 
+echo "Remove the old s3 package"
+aws s3 rm s3://packages.flapjack.io/candidates/${FILENAME}
+
 echo "Done"
