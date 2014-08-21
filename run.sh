@@ -19,11 +19,13 @@ FLAPJACK_MAJOR_VERSION=$(echo $FLAPJACK_FULL_VERSION |  cut -d . -f 1,2)
 #put a ~ separator in before any alpha parts of the version string, eg "1.0.0rc3" -> "1.0.0~rc3"
 FLAPJACK_FULL_VERSION=$(echo $FLAPJACK_FULL_VERSION | sed -e 's/\([a-z]\)/~\1/')
 FLAPJACK_PACKAGE_VERSION="${FLAPJACK_FULL_VERSION}~${DATE}-${FLAPJACK_BUILD_REF}-${DISTRO_RELEASE}"
+FLAPJACK_MAIN_PACKAGE_VERSION="$(echo ${FLAPJACK_PACKAGE_VERSION} | cut -d "~" -f 1)-${DISTRO_RELEASE}"
 
 echo
 echo "FLAPJACK_FULL_VERSION: ${FLAPJACK_FULL_VERSION}"
 echo "FLAPJACK_BUILD_REF: ${FLAPJACK_BUILD_REF}"
 echo "FLAPJACK_PACKAGE_VERSION: ${FLAPJACK_PACKAGE_VERSION}"
+echo "FLAPJACK_MAIN_PACKAGE_VERSION: ${FLAPJACK_MAIN_PACKAGE_VERSION}"
 echo "DISTRO_RELEASE: ${DISTRO_RELEASE}"
 echo
 echo "Starting Docker container..."
@@ -32,6 +34,7 @@ echo "Starting Docker container..."
 time sudo docker run -t --attach stdout --attach stderr --detach=false \
 -e "FLAPJACK_BUILD_REF=${FLAPJACK_BUILD_REF}" \
 -e "FLAPJACK_PACKAGE_VERSION=${FLAPJACK_PACKAGE_VERSION}" \
+-e "FLAPJACK_MAIN_PACKAGE_VERSION=${FLAPJACK_MAIN_PACKAGE_VERSION}" \
 -e "DISTRO_RELEASE=${DISTRO_RELEASE}" \
 flapjack/omnibus-ubuntu bash -c \
 'cd omnibus-flapjack ; \
@@ -39,14 +42,11 @@ git pull ; \
 bundle install --binstubs ; \
 bin/omnibus build --log-level=info flapjack ; \
 cd /omnibus-flapjack/pkg ; \
-ls -ct1 | head -n 1 > /tmp/experimental_deb ; \
-EXPERIMENTAL_VERSION=$(echo $(cut -d _ -f 2 /tmp/experimental_deb | cut -d "-" -f -3)) ; \
-MAIN_VERSION=$(echo ${FLAPJACK_PACKAGE_VERSION} | cut -d "~" -f 1) ; \
-MAIN_DEB_FILENAME=$(cut -d _ -f 1 /tmp/experimental_deb)_${MAIN_VERSION}-${DISTRO_RELEASE}_$(cut -d _ -f 3 /tmp/experimental_deb) ; \
-dpkg-deb -R $(cat /tmp/experimental_deb) repackage ; \
-sed -i s#${EXPERIMENTAL_VERSION}-1#${MAIN_VERSION}#g repackage/DEBIAN/control ; \
-sed -i s#${EXPERIMENTAL_VERSION}#${MAIN_VERSION}#g repackage/opt/flapjack/version-manifest.txt ; \
-dpkg-deb -b repackage ${MAIN_DEB_FILENAME}'
+EXPERIMENTAL_FILENAME=$(ls -ct1 | head -n 1) ; \
+dpkg-deb -R ${EXPERIMENTAL_FILENAME} repackage ; \
+sed -i s#${FLAPJACK_PACKAGE_VERSION}-1#${FLAPJACK_MAIN_PACKAGE_VERSION}#g repackage/DEBIAN/control ; \
+sed -i s#${FLAPJACK_PACKAGE_VERSION}#${FLAPJACK_MAIN_PACKAGE_VERSION}#g repackage/opt/flapjack/version-manifest.txt ; \
+dpkg-deb -b repackage candidate_${EXPERIMENTAL_FILENAME}'
 
 echo "Docker run completed."
 sleep 10 # one time I got "Could not find the file /omnibus-flapjack/pkg in container" and a while later it worked fine
@@ -139,5 +139,8 @@ aws s3 sync aptly s3://packages.flapjack.io/aptly --delete --acl public-read --r
 
 echo "Syncing the public packages repo up to S3"
 aws s3 sync aptly/public s3://packages.flapjack.io/deb --delete --acl public-read --region us-east-1
+
+echo "Copying candidate deb for main to s3"
+aws s3 cp pkg/candidate_flapjack_${FLAPJACK_PACKAGE_VERSION}*.deb s3://packages.flapjack.io/candidates --acl public-read --region us-east-1
 
 echo "Done"
