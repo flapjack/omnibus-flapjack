@@ -72,6 +72,10 @@ echo "Starting flapjack"
 /etc/init.d/flapjack start || exit $?
 
 echo "Thank you for installing flapjack!"
+echo
+echo "Log in again to have /opt/flapjack/bin added to your PATH or run:"
+echo "  export PATH=$PATH:/opt/flapjack/bin"
+echo
 echo "Flapjack should now be running. Visit http://localhost:3080/"
 
 exit 0
