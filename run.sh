@@ -42,7 +42,7 @@ git pull ; \
 bundle install --binstubs ; \
 bin/omnibus build --log-level=info flapjack ; \
 cd /omnibus-flapjack/pkg ; \
-EXPERIMENTAL_FILENAME=$(ls -ct1 | head -n 1) ; \
+EXPERIMENTAL_FILENAME=$(ls flapjack_${FLAPJACK_PACKAGE_VERSION}*.deb) ; \
 dpkg-deb -R ${EXPERIMENTAL_FILENAME} repackage ; \
 sed -i s#${FLAPJACK_PACKAGE_VERSION}-1#${FLAPJACK_MAIN_PACKAGE_VERSION}#g repackage/DEBIAN/control ; \
 sed -i s#${FLAPJACK_PACKAGE_VERSION}#${FLAPJACK_MAIN_PACKAGE_VERSION}#g repackage/opt/flapjack/version-manifest.txt ; \
