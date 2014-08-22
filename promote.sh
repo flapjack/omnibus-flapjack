@@ -16,12 +16,15 @@ DISTRO_RELEASE=$(echo ${VERSION} | cut -d '-' -f 3)
 MAIN_VERSION=$(echo ${VERSION} | cut -d "~" -f 1)-${DISTRO_RELEASE}
 FLAPJACK_MAJOR_VERSION=$(echo ${VERSION} | cut -d . -f 1,2)
 
-if [ ! -e "pkg/${FILENAME}" ] ; then
+if [ -e "pkg/${FILENAME}" ] ; then
+  echo "Copying candidate package from local pkg dir"
+  cp pkg/${FILENAME} .
+else
   echo "Copying candidate package from s3"
   aws s3 cp s3://packages.flapjack.io/candidates/${FILENAME} . --acl public-read --region us-east-1
   retval=$?
   if [ ! "$retval" -eq "0" ] ; then
-    echo "Couldn't upload package from pkg/${FILENAME}"
+    echo "Couldn't download package ${FILENAME}"
     exit $retval
   fi
 fi
