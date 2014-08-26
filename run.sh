@@ -18,7 +18,12 @@ FLAPJACK_FULL_VERSION=$(wget -qO - https://raw.githubusercontent.com/flapjack/fl
 FLAPJACK_MAJOR_VERSION=$(echo $FLAPJACK_FULL_VERSION |  cut -d . -f 1,2)
 #put a ~ separator in before any alpha parts of the version string, eg "1.0.0rc3" -> "1.0.0~rc3"
 FLAPJACK_FULL_VERSION=$(echo $FLAPJACK_FULL_VERSION | sed -e 's/\([a-z]\)/~\1/')
-FLAPJACK_PACKAGE_VERSION="${FLAPJACK_FULL_VERSION}~${DATE}-${FLAPJACK_BUILD_REF}-${DISTRO_RELEASE}"
+if $(echo $FLAPJACK_FULL_VERSION | grep -q '[a-zA-Z]') ; then
+  FLAPJACK_PACKAGE_VERSION="${FLAPJACK_FULL_VERSION}~${DATE}-${FLAPJACK_BUILD_REF}-${DISTRO_RELEASE}"
+else
+  # If we get a version that isn't an RC, make the full version full_version~+date-ref-release-1 so that it sorts above RCs
+  FLAPJACK_PACKAGE_VERSION="${FLAPJACK_FULL_VERSION}~+${DATE}-${FLAPJACK_BUILD_REF}-${DISTRO_RELEASE}"
+fi
 FLAPJACK_MAIN_PACKAGE_VERSION="$(echo ${FLAPJACK_PACKAGE_VERSION} | cut -d "~" -f 1)-${DISTRO_RELEASE}"
 
 echo
@@ -30,13 +35,14 @@ echo "DISTRO_RELEASE: ${DISTRO_RELEASE}"
 echo
 echo "Starting Docker container..."
 
+exit
 
-time sudo docker run -t --attach stdout --attach stderr --detach=false \
+time docker run -t --attach stdout --attach stderr --detach=false \
 -e "FLAPJACK_BUILD_REF=${FLAPJACK_BUILD_REF}" \
 -e "FLAPJACK_PACKAGE_VERSION=${FLAPJACK_PACKAGE_VERSION}" \
 -e "FLAPJACK_MAIN_PACKAGE_VERSION=${FLAPJACK_MAIN_PACKAGE_VERSION}" \
 -e "DISTRO_RELEASE=${DISTRO_RELEASE}" \
-flapjack/omnibus-ubuntu bash -c \
+flapjack/omnibus-ubuntu:${DISTRO_RELEASE} bash -c \
 'cd omnibus-flapjack ; \
 git pull ; \
 bundle install --binstubs ; \
@@ -51,12 +57,13 @@ dpkg-deb -b repackage candidate_${EXPERIMENTAL_FILENAME}'
 echo "Docker run completed."
 sleep 10 # one time I got "Could not find the file /omnibus-flapjack/pkg in container" and a while later it worked fine
 echo "Retrieving package from the container"
-container_id=`sudo docker ps -l -q`
-sudo docker cp ${container_id}:/omnibus-flapjack/pkg .
+container_id=`docker ps -l -q`
+docker cp ${container_id}:/omnibus-flapjack/pkg .
 
 echo "Purging the container"
-sudo docker rm ${container_id}
+docker rm ${container_id}
 
+exit
 # Check if awscli exists
 if ! hash aws 2>/dev/null; then
   echo "Installing awscli"
