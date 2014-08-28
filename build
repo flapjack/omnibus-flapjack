@@ -12,6 +12,9 @@ FLAPJACK_BUILD_REF=$1
 DISTRO_RELEASE=$2
 VALID_COMPONENTS=(main experimental)
 
+echo "Adding user ubuntu to the docker group"
+sudo usermod -a -G docker ubuntu
+
 echo "Determining FLAPJACK_BUILD_TAG..."
 FLAPJACK_FULL_VERSION=$(wget -qO - https://raw.githubusercontent.com/flapjack/flapjack/${FLAPJACK_BUILD_REF}/lib/flapjack/version.rb | grep 'VERSION' | cut -d '"' -f 2)
 : ${FLAPJACK_FULL_VERSION:?"Incorrect build_ref.  Tags should be specified as 'v1.0.0rc3'" }
@@ -35,7 +38,7 @@ echo "DISTRO_RELEASE: ${DISTRO_RELEASE}"
 echo
 echo "Starting Docker container..."
 
-time sudo docker run -t --attach stdout --attach stderr --detach=false \
+time docker run -t --attach stdout --attach stderr --detach=false \
 -e "FLAPJACK_BUILD_REF=${FLAPJACK_BUILD_REF}" \
 -e "FLAPJACK_PACKAGE_VERSION=${FLAPJACK_PACKAGE_VERSION}" \
 -e "FLAPJACK_MAIN_PACKAGE_VERSION=${FLAPJACK_MAIN_PACKAGE_VERSION}" \
@@ -55,11 +58,11 @@ dpkg-deb -b repackage candidate_${EXPERIMENTAL_FILENAME}'
 echo "Docker run completed."
 sleep 10 # one time I got "Could not find the file /omnibus-flapjack/pkg in container" and a while later it worked fine
 echo "Retrieving package from the container"
-container_id=`sudo docker ps -l -q`
-sudo docker cp ${container_id}:/omnibus-flapjack/pkg .
+container_id=`docker ps -l -q`
+docker cp ${container_id}:/omnibus-flapjack/pkg .
 
 echo "Purging the container"
-sudo docker rm ${container_id}
+docker rm ${container_id}
 
 # Check if awscli exists
 if ! hash aws 2>/dev/null; then
