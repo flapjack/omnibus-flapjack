@@ -9,7 +9,7 @@ You have some choice over how you run this:
 - locally
 - within a docker container
 
-If you run locally, you'll be calling `omnibus build` directly rather than using the `build` script, which menas you'll miss out on the ability to update packages.flapjack.io with the resulting package.
+If you run locally, you'll be calling `omnibus build` directly rather than using the `build` script, which means you'll miss out on the ability to update packages.flapjack.io with the resulting package.
 
 ## Running omnibus locally
 
@@ -22,7 +22,7 @@ required gems are installed and ready to use:
 $ bundle install --binstubs
 ```
 
-Also make sure you have fpm and the required tools to build packages (such as rpm-build on rpm based platform) installed
+Also make sure you have fpm and the required tools to build packages (such as rpm-build on rpm based platforms) installed.
 
 The platform/architecture type of the package created will match the platform
 where the `build` command is invoked. So running this command on say a
@@ -65,7 +65,7 @@ $ bin/omnibus help
 
 ## Running within a Docker container
 
-You'll need a docker server to talk to. An easy way to do this is [using boot2docker](Docker.md). A complicated way is to use an EC2 instance, but that's what we use for the official packages. There's a [packer-ebs.json] for building AMI's we use.
+You'll need a docker server to talk to. An easy way to do this is [using boot2docker](Docker.md). A complicated way is to use an EC2 instance, but that's what we use for the official packages. There's a [packer config](packer-ebs.json) for building AMI's we use.
 
 ### AWS CLI Configuration
 
