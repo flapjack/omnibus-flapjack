@@ -1,4 +1,4 @@
-# flapjack Omnibus project
+# Flapjack Omnibus project
 
 This project creates full-stack platform-specific packages for
 [Flapjack](http://flapjack.io) using [omnibus](https://github.com/opscode/omnibus) and maintains appropriate package repositories at [packages.flapjack.io](http://packages.flapjack.io/)
