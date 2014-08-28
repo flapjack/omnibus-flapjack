@@ -35,7 +35,7 @@ echo "DISTRO_RELEASE: ${DISTRO_RELEASE}"
 echo
 echo "Starting Docker container..."
 
-time docker run -t --attach stdout --attach stderr --detach=false \
+time sudo docker run -t --attach stdout --attach stderr --detach=false \
 -e "FLAPJACK_BUILD_REF=${FLAPJACK_BUILD_REF}" \
 -e "FLAPJACK_PACKAGE_VERSION=${FLAPJACK_PACKAGE_VERSION}" \
 -e "FLAPJACK_MAIN_PACKAGE_VERSION=${FLAPJACK_MAIN_PACKAGE_VERSION}" \
@@ -55,13 +55,12 @@ dpkg-deb -b repackage candidate_${EXPERIMENTAL_FILENAME}'
 echo "Docker run completed."
 sleep 10 # one time I got "Could not find the file /omnibus-flapjack/pkg in container" and a while later it worked fine
 echo "Retrieving package from the container"
-container_id=`docker ps -l -q`
-docker cp ${container_id}:/omnibus-flapjack/pkg .
+container_id=`sudo docker ps -l -q`
+sudo docker cp ${container_id}:/omnibus-flapjack/pkg .
 
 echo "Purging the container"
-docker rm ${container_id}
+sudo docker rm ${container_id}
 
-exit
 # Check if awscli exists
 if ! hash aws 2>/dev/null; then
   echo "Installing awscli"
