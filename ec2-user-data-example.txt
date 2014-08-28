@@ -12,7 +12,7 @@ su - ubuntu -c 'cd omnibus-flapjack && git pull'
 
 echo "CONFIGURING AWSCLI"
 
-su - ubuntu -c 'omnibus-flapjack/configure_awscli --aws-access-key-id AKIAILEOEVSMATLFE5ZQ --aws-secret-access-key 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 --default-region us-east-1'
+su - ubuntu -c 'omnibus-flapjack/configure_awscli --aws-access-key-id xxxxx --aws-secret-access-key xxxxx --default-region us-east-1'
 
 echo "RUNNING build"
 
