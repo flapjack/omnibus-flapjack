@@ -72,7 +72,10 @@ You'll need a docker server to talk to. An easy way to do this is [using boot2do
 If you want the build script to publish to packages.flapjack.io then you'll need to have set up a valid configuration for aws cli. You and do this as follows:
 
 ```
-./configure_awscli --aws-access-key-id xxx --aws-secret-access-key xxx --default-region us-east-1
+./configure_awscli \
+  --aws-access-key-id xxx \
+  --aws-secret-access-key xxx \
+  --default-region us-east-1
 ```
 
 ### Build & Publish
