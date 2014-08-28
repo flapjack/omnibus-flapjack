@@ -6,17 +6,18 @@
 
 echo "USER DATA SCRIPT STARTING AT `date`"
 
-echo "UPDATING omnibus-ubuntu"
+echo "UPDATING omnibus-flapjack"
 
 su - ubuntu -c 'cd omnibus-flapjack && git pull'
 
 echo "CONFIGURING AWSCLI"
 
-su - ubuntu -c 'omnibus-flapjack/hacks/configure_awscli --aws-access-key-id xxxxxxxx --aws-secret-access-key xxxxxxxx --default-region us-east-1'
+su - ubuntu -c 'omnibus-flapjack/configure_awscli --aws-access-key-id AKIAILEOEVSMATLFE5ZQ --aws-secret-access-key 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 --default-region us-east-1'
 
-echo "RUNNING run.sh"
+echo "RUNNING build"
 
-su - ubuntu -c 'bash -x omnibus-flapjack/run.sh master precise experimental'
+# FIXME: how to parameterise these arguments in the user data?
+su - ubuntu -c 'cd omnibus-flapjack && ./build v1.0.0 precise'
 
 echo "FINISHED  AT `date`"
 
