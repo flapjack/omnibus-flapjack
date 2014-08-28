@@ -35,8 +35,6 @@ echo "DISTRO_RELEASE: ${DISTRO_RELEASE}"
 echo
 echo "Starting Docker container..."
 
-exit
-
 time docker run -t --attach stdout --attach stderr --detach=false \
 -e "FLAPJACK_BUILD_REF=${FLAPJACK_BUILD_REF}" \
 -e "FLAPJACK_PACKAGE_VERSION=${FLAPJACK_PACKAGE_VERSION}" \
