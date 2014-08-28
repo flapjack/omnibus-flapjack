@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# Paste this script into the User Data for an ec2 instance (eg in an ASG Launch Configuration) and update the access key id and secret for the s3 bucket you're publishing to
+
+# Output will be found at /var/log/cloud-init-output.log
+
+echo "USER DATA SCRIPT STARTING AT `date`"
+
+echo "UPDATING omnibus-ubuntu"
+
+su - ubuntu -c 'cd omnibus-flapjack && git pull'
+
+echo "CONFIGURING AWSCLI"
+
+su - ubuntu -c 'omnibus-flapjack/hacks/configure_awscli --aws-access-key-id xxxxxxxx --aws-secret-access-key xxxxxxxx --default-region us-east-1'
+
+echo "RUNNING run.sh"
+
+su - ubuntu -c 'bash -x omnibus-flapjack/run.sh master precise experimental'
+
+echo "FINISHED  AT `date`"
+

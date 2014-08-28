@@ -1,27 +1,13 @@
-#
-# Copyright:: Copyright (c) 2012 Opscode, Inc.
-# License:: Apache License, Version 2.0
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
 
 name "redis"
-version "2.8.3"
+default_version "2.8.3"
 
 source :url => "http://download.redis.io/releases/redis-2.8.3.tar.gz",
        :md5 => "6327e6786130b556b048beef0edbdfa7"
 
 relative_path "redis-2.8.3"
+
+etc_path = "#{install_dir}/embedded/etc"
 
 make_args = ["PREFIX=#{install_dir}/embedded",
              "CFLAGS='-L#{install_dir}/embedded/lib -I#{install_dir}/embedded/include'",
@@ -130,14 +116,13 @@ build do
   command ["make -j #{max_build_jobs}", make_args].join(" ")
   command ["make install", make_args].join(" ")
 
-  etc_path = "#{install_dir}/embedded/etc"
+  command "mkdir -p '#{etc_path}/redis'"
+  command "mkdir -p '#{etc_path}/init.d'"
 
-  %w(redis init.d).each do |dir|
-    FileUtils.mkdir_p("#{etc_path}/#{dir}")
-  end
+  command "cat >#{etc_path}/redis/redis-flapjack.conf <<EOCONFIG\n#{config.gsub(/\$/, '\\$')}EOCONFIG"
+  command "cat >#{etc_path}/init.d/redis-flapjack <<EOINIT\n#{init.gsub(/\$/, '\\$')}EOINIT"
 
-  config_path = "#{etc_path}/redis/redis-flapjack.conf"
-  File.open(config_path, 'w') { |f| f << config }
-  init_path   = "#{etc_path}/init.d/redis-flapjack"
-  File.open(init_path, 'w') { |f| f << init }
+  command "touch #{etc_path}/redis/redis-flapjack.conf"
+  command "touch #{etc_path}/init.d/redis-flapjack"
 end
+

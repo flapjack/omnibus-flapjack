@@ -1,0 +1,60 @@
+{
+  "variables": {
+    "aws_access_key": "{{env `AWS_ACCESS_KEY_ID`}}",
+    "aws_secret_key": "{{env `AWS_SECRET_ACCESS_KEY`}}",
+    "aws_account_id": "{{env `AWS_ACCOUNT_ID`}}",
+    "aws_x509_cert_path": "{{env `AWS_X509_CERT_PATH`}}",
+    "aws_x509_key_path": "{{env `AWS_X509_KEY_PATH`}}",
+    "pkg_signing_key": "{{env `PKG_SIGNING_KEY`}}"
+  },
+  "builders": [{
+    "type": "amazon-instance",
+    "access_key": "{{user `aws_access_key`}}",
+    "secret_key": "{{user `aws_secret_key`}}",
+    "region": "us-east-1",
+    "source_ami": "ami-e411d98c",
+    "instance_type": "m3.medium",
+    "ssh_username": "ubuntu",
+
+    "account_id": "{{user `aws_account_id`}}",
+    "s3_bucket": "flapjack-packer-images",
+    "x509_cert_path": "{{user `aws_x509_cert_path`}}",
+    "x509_key_path": "{{user `aws_x509_key_path`}}",
+    "x509_upload_path": "/tmp",
+    "ami_description": "omnibus package building environment",
+    "bundle_vol_command": "sudo -n /tmp/ec2-ami-tools-1.5.3/bin/ec2-bundle-vol -k {{.KeyPath}} -u {{.AccountId}} -c {{.CertPath}} -r {{.Architecture}} -e {{.PrivatePath}}/* -d {{.Destination}} -p {{.Prefix}}  --batch",
+    "bundle_upload_command": "sudo -n /tmp/ec2-ami-tools-1.5.3/bin/ec2-upload-bundle -b {{.BucketName}} -m {{.ManifestPath}} -a {{.AccessKey}} -s {{.SecretKey}} -d {{.BundleDirectory}} --batch --url {{.S3Endpoint}} --retry",
+
+    "ami_name": "docker/flapjack/omnibus-ubuntu {{timestamp}}"
+  }],
+  "provisioners": [
+  {
+    "type": "file",
+    "source": "{{user `pkg_signing_key`}}",
+    "destination": "/tmp/pkg_signing_key"
+  },
+  {
+    "type": "shell",
+    "inline": [
+      "sleep 30",
+      "sudo apt-get update",
+      "sudo apt-get install -y gnupg",
+      "gpg --batch --yes --import /tmp/pkg_signing_key",
+      "sudo apt-get install -y unzip ruby kpartx",
+      "curl -o /tmp/ec2-ami-tools-1.5.3.zip http://s3.amazonaws.com/ec2-downloads/ec2-ami-tools-1.5.3.zip",
+      "unzip /tmp/ec2-ami-tools-1.5.3.zip -d /tmp",
+      "export EC2_HOME=/tmp/ec2-ami-tools-1.5.3",
+      "if [ ! -e /usr/lib/apt/methods/https ]; then sudo apt-get install -y apt-transport-https ; fi",
+      "sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 36A1D7869245C8950F966E92D8576A8BA88D21E9",
+      "sudo sh -c \"echo deb https://get.docker.io/ubuntu docker main > /etc/apt/sources.list.d/docker.list\"",
+      "sudo apt-get update",
+      "sudo apt-get install -y lxc-docker gnupg",
+      "sudo docker pull flapjack/omnibus-ubuntu",
+      "sudo docker images",
+      "sudo service docker stop",
+      "sleep 5",
+      "sudo service docker status"
+    ]
+  }]
+}
+

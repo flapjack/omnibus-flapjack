@@ -8,3 +8,6 @@ files/**/cache/
 vendor/cookbooks
 .flapjack-package-cache
 .DS_Store
+.elasticbeanstalk/
+aptly.conf
+aptly/*

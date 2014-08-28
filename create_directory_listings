@@ -1,0 +1,108 @@
+#!/usr/bin/env ruby
+
+require 'erb'
+
+# creates an index.html file in every directory below (and including) the current directory
+# each index.html file contains a list of files and directories that are in its parent directory
+
+def process_directory(path)
+  directories = []
+  files       = []
+  sizes       = {}
+  Dir.entries(path).sort.each do |filename|
+    full_path = "#{path}/#{filename}"
+    case filename
+    when '.' || '..'
+
+    when 'index.html'
+
+    else
+
+      case
+      when filename =~ /^\./
+        # ignore hidden files
+      when File.directory?(full_path)
+        directories << filename
+      when File.file?(full_path)
+        files << filename
+        sizes[full_path] = File.size(full_path)
+      end
+
+    end # case filename
+  end
+
+  directories.sort.each do |directory|
+    process_directory("#{path}/#{directory}")
+  end
+
+  # output this directory's info:
+  write_index_file("#{path}/index.html", directories, files, sizes)
+  puts "#{path}/index.html"
+end
+
+def write_index_file(path, directories, files, sizes)
+  @basename    = File.basename(path)
+  @dirname     = File.dirname(path)
+  @directories = directories
+  @files       = files
+  @sizes       = sizes
+  @levels_deep = @dirname.split('/').length - 1
+
+  # FIXME: make me look pretty
+  erb = ERB.new(<<EOS)
+<html>
+  <head>
+    <title><%= @dirname %></title>
+    <meta name="generator" content="flapjack.io flapjack-omnibus bin/create_directory_listings">
+  </head>
+  <body>
+    <h2><a href="http://packages.flapjack.io">packages.flapjack.io</a></h2>
+    <% parts = @dirname.split('/') %>
+    <h3>
+      <% parts.each_with_index do |part, i| %>
+        <% uri_up = nil %>
+        <% j = i %>
+        <% while @levels_deep > j %>
+          <% uri_up = uri_up ? (uri_up + '../') : '../' %>
+          <% j += 1 %>
+        <% end %>
+        <% if uri_up %>
+          <a href="<%= uri_up %>"><%= part %></a> /
+        <% else %>
+          <%= part %> /
+        <% end %>
+      <% end %>
+    </h3>
+    <ul>
+      <li><a href="../">..</a></li>
+      <% @directories.each do |d| %>
+        <li><a href="<%= d %>"><%= d %>/</a></li>
+      <% end %>
+      <% @files.each do |thefile| %>
+        <li>
+          <% full_path = [@dirname, thefile].join('/') %>
+          <a href="<%= thefile %>"><%= thefile %></a>
+            - <%= @sizes[full_path] %> bytes
+        </li>
+      <% end %>
+    </ul>
+  </body>
+</html>
+EOS
+
+  File.open(path, 'w') do |index|
+    index.write erb.result(binding)
+  end
+end
+
+unless dir = ARGV[0]
+  puts "please specify a directory, eg:"
+  puts "  #{$?} deb"
+  exit 1
+end
+unless File.directory?(dir)
+  puts "Error: can't see a directory at #{dir}"
+  exit 1
+end
+process_directory(dir)
+

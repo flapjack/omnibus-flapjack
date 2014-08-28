@@ -9,4 +9,3 @@ echo "Stopping flapjack"
 
 echo "Stopping redis-flapjack"
 /etc/init.d/redis-flapjack stop
-

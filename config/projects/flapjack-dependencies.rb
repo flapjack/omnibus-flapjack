@@ -1,17 +1,12 @@
 
-name          "flapjack"
-friendly_name "Flapjack"
+name          "flapjack-dependencies"
+friendly_name "Flapjack's Dependencies"
 maintainer    "Lindsay Holmwood, Jesse Reynolds, Ali Graham, Sarah Kowalik"
 homepage      "http://flapjack.io"
 
 install_dir   "/opt/flapjack"
 
-version = ENV['FLAPJACK_BUILD_REF']
-package_version = ENV['FLAPJACK_PACKAGE_VERSION']
-raise "FLAPJACK_BUILD_REF must be set" unless version
-raise "FLAPJACK_PACKAGE_VERSION must be set" unless package_version
-
-build_version package_version
+build_version  "#{Time.now.strftime('%Y%m%d%H%M%S')}"
 build_iteration 1
 
 # creates required build directories
@@ -35,5 +30,4 @@ dependency "redis"
 dependency "yajl"
 dependency "zlib"
 dependency "nokogiri"
-dependency "flapjack"
 
