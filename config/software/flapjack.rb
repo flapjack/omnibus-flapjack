@@ -114,8 +114,9 @@ build do
   #        " #{install_dir}/embedded/bin/bundle install" +
   #        " --path=#{install_dir}/embedded/service/gem"
 
-  command "git clone https://github.com/flapjack/flapjack.git flapjack_source"
-  command "cd /var/cache/omnibus/src/flapjack/flapjack_source && " +
+  command "if [ ! -d flapjack_source ] ; then git clone https://github.com/flapjack/flapjack.git flapjack_source ; fi"
+  command "cd flapjack_source && " +
+          "git pull && " +
           "git checkout #{build_ref} && " +
           "/opt/flapjack/embedded/bin/gem build flapjack.gemspec"
           #"/opt/flapjack/embedded/bin/bundle install && " +
