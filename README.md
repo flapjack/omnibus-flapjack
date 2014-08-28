@@ -65,7 +65,7 @@ $ bin/omnibus help
 
 ## Running within a Docker container
 
-You'll need a docker server to talk to. An easy way to do this is [using boot2docker](Docker.md). A complicated way is to use an EC2 instance, but that's what we use for the official packages. There's a [packer config](packer-ebs.json) for building AMI's we use.
+You'll need a docker server to talk to. An easy way to do this is [using boot2docker](Docker.md). A complicated way is to use an EC2 instance, but that's what we use for the official packages. There's a [packer config](packer-ebs.json) for building AMIs we use.
 
 ### AWS CLI Configuration
 
