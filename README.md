@@ -97,3 +97,8 @@ $ ./build v1.0.0rc6 precise
 
 If you have your aws cli configured correctly then `build` will also add the resulting package to the *experimental* component of your apt package repo, with the specified distro release.
 
+If you don't want to upload the package you just built, export the skip_package_upload variable.
+
+```shell
+export skip_package_upload=true
+```
