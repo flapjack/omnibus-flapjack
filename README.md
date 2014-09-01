@@ -20,7 +20,7 @@ installed
 
 ### Build
 
-After setting the FLAPJACK_BUILD_TAG 
+After setting the FLAPJACK_BUILD_TAG
 You create a platform-specific package using the `build project` command:
 
 ```shell
@@ -182,3 +182,46 @@ vagrant up aws-ubuntu-precise64 --provider aws
 # manually do something with the generated package (to be automated)
 vagrant destroy aws-ubuntu-precise64
 ```
+
+
+# Bootstrapping a package build environment on ec2
+
+Notes on attempting to get the vagrant build environment running on an ec2 instance with the vagrant-aws plugin/provider.
+
+- create an ec2 instance from ubuntu-trusty-14.04-amd64-server-20140607.1 (ami-864d84ee)
+- install packages:
+
+```
+sudo apt-get update
+sudo apt-get install -y \
+    git \
+    curl \
+    build-essential \
+    ruby1.9.1-full \
+    libssl-dev \
+    libreadline-dev \
+    libxslt1-dev \
+    libxml2-dev \
+    libcurl4-openssl-dev \
+    zlib1g-dev \
+    libexpat1-dev \
+    libicu-dev
+```
+
+- install vagrant 1.4.3
+
+```
+wget https://dl.bintray.com/mitchellh/vagrant/vagrant_1.4.3_x86_64.deb
+sudo dpkg -i vagrant_1.4.3_x86_64.deb
+```
+
+- install vagrant plugins:
+
+```
+vagrant plugin install vagrant-aws
+vagrant plugin install --plugin-version 1.3.7 vagrant-berkshelf
+vagrant plugin install --plugin-version 1.3.1 vagrant-omnibus
+```
+
+more to come!
+
