@@ -73,7 +73,7 @@ See the Flapjack docs on [package building](http://flapjack.io/docs/1.0/developm
 
 ### AWS CLI Configuration
 
-If you want the build script to publish to packages.flapjack.io then you'll need to have set up a valid configuration for aws cli. You and do this as follows:
+If you want the build script to publish to packages.flapjack.io then you'll need to have set up a valid configuration for aws cli. You can do this as follows:
 
 ```
 ./configure_awscli \
@@ -106,3 +106,13 @@ If you don't want to upload the package you just built, export the skip_package_
 ```shell
 export skip_package_upload=true
 ```
+
+### Promote from Experimental to Main
+
+When testing of the package candidiate is completed, use the `promote` script to repackage the deb for the **main** component.
+You'll need the name of the candidate package, which will be in the output of `build`, or look in S3 to find it. Eg:
+
+```shell
+$ ./promote candidate_flapjack_1.0.0~rc6~20140820210002-master-precise-1_amd64.deb
+```
+
