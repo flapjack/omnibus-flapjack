@@ -65,7 +65,11 @@ $ bin/omnibus help
 
 ## Running within a Docker container
 
-You'll need a docker server to talk to. An easy way to do this is [using boot2docker](Docker.md). A complicated way is to use an EC2 instance, but that's what we use for the official packages. There's a [packer config](packer-ebs.json) for building AMIs we use.
+You'll need a docker server to talk to.
+An easy way to get a docker server going is using [boot2docker](http://boot2docker.io/).
+A more complicated way is to use an EC2 instance, and that's what we use for the official packages.
+There's a [packer config](packer-ebs.json) for building the AMIs we use.
+See the Flapjack docs on [package building](http://flapjack.io/docs/1.0/development/Package-Building/) and [getting going with boot2docker](http://flapjack.io/docs/1.0/development/Omnibus-In-Your-Docker/).
 
 ### AWS CLI Configuration
 
