@@ -119,21 +119,9 @@ build do
           "git pull && " +
           "git checkout #{build_ref} && " +
           "/opt/flapjack/embedded/bin/gem build flapjack.gemspec"
-          #"/opt/flapjack/embedded/bin/bundle install && " +
-          #"/opt/flapjack/embedded/bin/bundle exec " +
-          #"/opt/flapjack/embedded/bin/rake build"
   gem [ "install /var/cache/omnibus/src/flapjack/flapjack_source/flapjack*gem",
         "--bindir #{install_dir}/bin",
         "--no-rdoc --no-ri" ].join(" ")
-
-  #gem [ "install flapjack --version #{ENV['FLAPJACK_BUILD_TAG']}",
-  #      "--bindir #{install_dir}/bin",
-  #      "--no-rdoc --no-ri" ].join(" ")
-
-  #command "PATH=#{install_dir}/embedded/bin:$PATH" +
-  #        " #{install_dir}/embedded/bin/gem install flapjack --version #{ENV['FLAPJACK_BUILD_TAG']}" +
-  #        " --bindir #{install_dir}/bin" +
-  #        " --no-rdoc --no-ri"
 
   command "mkdir -p '#{etc_path}/init.d'"
 
@@ -141,8 +129,15 @@ build do
   command "cat >#{etc_path}/init.d/flapjack-nagios-receiver <<EOFLAPNAGIOS\n#{flapnagios.gsub(/\$/, '\\$')}EOFLAPNAGIOS"
   command "cat >#{etc_path}/init.d/flapper <<EOFLAPPER\n#{flapper.gsub(/\$/, '\\$')}EOFLAPPER"
 
+  # why do we touch? superstition?
   command "touch #{etc_path}/init.d/flapjack"
   command "touch #{etc_path}/init.d/flapjack-nagios-receiver"
   command "touch #{etc_path}/init.d/flapper"
+
+  command "gem_home=/`/opt/flapjack/embedded/bin/gem list --all --details flapjack | grep 'Installed at' | sed 's/^.* \///'` " +
+          "installed_gem=`ls -dtr ${gem_home}/gems/flapjack* | tail -1` " +
+          "cd ${installed_gem} && " +
+          "./build.sh"
+
 end
 
