@@ -46,6 +46,7 @@ time docker run -t --attach stdout --attach stderr --detach=false \
 flapjack/omnibus-ubuntu:${DISTRO_RELEASE} bash -c \
 'cd omnibus-flapjack ; \
 git pull ; \
+bundle update ; \
 bundle install --binstubs ; \
 bin/omnibus build --log-level=info flapjack ; \
 cd /omnibus-flapjack/pkg ; \
