@@ -134,7 +134,7 @@ build do
   command "touch #{etc_path}/init.d/flapjack-nagios-receiver"
   command "touch #{etc_path}/init.d/flapper"
 
-  command "gem_home=/`/opt/flapjack/embedded/bin/gem list --all --details flapjack | grep 'Installed at' | sed 's/^.* \///'` " +
+  command "gem_home=/`/opt/flapjack/embedded/bin/gem list --all --details flapjack | grep 'Installed at' | sed 's/^.* \\///'` " +
           "installed_gem=`ls -dtr ${gem_home}/gems/flapjack* | tail -1` " +
           "cd ${installed_gem} && " +
           "./build.sh"
