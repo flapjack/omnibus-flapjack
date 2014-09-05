@@ -46,7 +46,8 @@ time docker run -t --attach stdout --attach stderr --detach=false \
 -e "FLAPJACK_MAIN_PACKAGE_VERSION=${FLAPJACK_MAIN_PACKAGE_VERSION}" \
 -e "DISTRO_RELEASE=${DISTRO_RELEASE}" \
 flapjack/omnibus-ubuntu:${DISTRO_RELEASE} bash -c \
-'cd omnibus-flapjack ; \
+'export PATH=$PATH:/usr/local/go/bin ; \
+cd omnibus-flapjack ; \
 git pull ; \
 bundle update omnibus-software ; \
 bundle install --binstubs ; \
