@@ -45,16 +45,13 @@ time docker run -t --attach stdout --attach stderr --detach=false \
 -e "FLAPJACK_PACKAGE_VERSION=${FLAPJACK_PACKAGE_VERSION}" \
 -e "FLAPJACK_MAIN_PACKAGE_VERSION=${FLAPJACK_MAIN_PACKAGE_VERSION}" \
 -e "DISTRO_RELEASE=${DISTRO_RELEASE}" \
--e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" \
--e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" \
--e "AWS_OMNIBUS_CACHE_S3_BUCKET=${AWS_OMNIBUS_CACHE_S3_BUCKET}" \
 flapjack/omnibus-ubuntu:${DISTRO_RELEASE} bash -c \
 'export PATH=$PATH:/usr/local/go/bin ; \
 cd omnibus-flapjack ; \
 git pull ; \
 bundle update omnibus-software ; \
 bundle install --binstubs ; \
-bin/omnibus build --log-level=info --override use_s3_caching:true flapjack ; \
+bin/omnibus build --log-level=info --override use_s3_caching:false --override use_git_caching:true flapjack ; \
 cd /omnibus-flapjack/pkg ; \
 EXPERIMENTAL_FILENAME=$(ls flapjack_${FLAPJACK_PACKAGE_VERSION}*.deb) ; \
 dpkg-deb -R ${EXPERIMENTAL_FILENAME} repackage ; \
