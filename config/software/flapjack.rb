@@ -116,8 +116,9 @@ build do
 
   command "if [ ! -d flapjack_source ] ; then git clone https://github.com/flapjack/flapjack.git flapjack_source ; fi"
   command "cd flapjack_source && " +
-          "git pull && " +
+          "git fetch && " +
           "git checkout #{build_ref} && " +
+          "git pull && " +
           "/opt/flapjack/embedded/bin/gem build flapjack.gemspec"
   gem [ "install /var/cache/omnibus/src/flapjack/flapjack_source/flapjack*gem",
         "--bindir #{install_dir}/bin",
