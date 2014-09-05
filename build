@@ -12,8 +12,10 @@ FLAPJACK_BUILD_REF=$1
 DISTRO_RELEASE=$2
 VALID_COMPONENTS=(main experimental)
 
-echo "Adding user ubuntu to the docker group"
-sudo usermod -a -G docker ubuntu
+if which usermod ; then
+  echo "Adding user ubuntu to the docker group"
+  sudo usermod -a -G docker ubuntu
+fi
 
 echo "Determining FLAPJACK_BUILD_TAG..."
 FLAPJACK_FULL_VERSION=$(wget -qO - https://raw.githubusercontent.com/flapjack/flapjack/${FLAPJACK_BUILD_REF}/lib/flapjack/version.rb | grep 'VERSION' | cut -d '"' -f 2)
@@ -150,7 +152,7 @@ EOF
   aws s3 sync aptly/public s3://packages.flapjack.io/deb --delete --acl public-read --region us-east-1
 
   echo "Copying candidate deb for main to s3"
-  aws s3 cp pkg/candidate_flapjack_${FLAPJACK_PACKAGE_VERSION}*.deb s3://packages.flapjack.io/candidates --acl public-read --region us-east-1
+  aws s3 cp pkg/candidate_flapjack_${FLAPJACK_PACKAGE_VERSION}*.deb s3://packages.flapjack.io/candidates/ --acl public-read --region us-east-1
 
   echo "Done"
 fi
