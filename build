@@ -74,6 +74,16 @@ echo "Purging the container"
 docker rm ${container_id}
 
 if [ -z "${skip_package_upload}" ]; then
+  # Attempt to get lock file from S3
+  if aws s3 cp s3://packages.flapjack.io/flapjack_upload.lock flapjack_upload.lock 1>/dev/null ; then
+    echo "Could not get flapjack upload lock, someone else is updating the repository"
+    exit 4
+  else
+    echo "Starting package upload"
+    touch flapjack_upload.lock
+    aws s3 cp flapjack_upload.lock s3://packages.flapjack.io/flapjack_upload.lock 1>/dev/null
+  fi
+
   # Check if awscli exists
   if ! hash aws 2>/dev/null; then
     echo "Installing awscli"
@@ -159,6 +169,12 @@ EOF
 
   echo "Copying candidate deb for main to s3"
   aws s3 cp pkg/candidate_flapjack_${FLAPJACK_PACKAGE_VERSION}*.deb s3://packages.flapjack.io/candidates/ --acl public-read --region us-east-1
+
+  echo "Removing package upload lockfile"
+  if ! aws s3 rm s3://packages.flapjack.io/flapjack_upload.lock 1>/dev/null ; then
+    echo "Failed to remove lockfile - please remove s3://packages.flapjack.io/flapjack_upload.lock manually"
+    exit 5
+  fi
 
   echo "Done"
 fi
