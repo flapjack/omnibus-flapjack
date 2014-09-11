@@ -11,3 +11,4 @@ vendor/cookbooks
 .elasticbeanstalk/
 aptly.conf
 aptly/*
+flapjack_upload.lock

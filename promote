@@ -7,6 +7,16 @@ if [ $# -ne 1 ]; then
   exit 2
 fi
 
+# Attempt to get lock file from S3
+if aws s3 cp s3://packages.flapjack.io/flapjack_upload.lock flapjack_upload.lock 1>/dev/null ; then
+  echo "Could not get flapjack upload lock, someone else is updating the repository"
+  exit 4
+else
+  echo "Starting package upload"
+  touch flapjack_upload.lock
+  aws s3 cp flapjack_upload.lock s3://packages.flapjack.io/flapjack_upload.lock 1>/dev/null
+fi
+
 FILENAME=$1
 
 IFS="_" read -ra VERSION_ARRAY <<< "${FILENAME}"
@@ -14,7 +24,10 @@ IFS="_" read -ra VERSION_ARRAY <<< "${FILENAME}"
 VERSION=${VERSION_ARRAY[2]}
 DISTRO_RELEASE=$(echo ${VERSION} | cut -d '-' -f 3)
 MAIN_VERSION=$(echo ${VERSION} | cut -d "~" -f 1)-${DISTRO_RELEASE}
-FLAPJACK_MAJOR_VERSION=$(echo ${VERSION} | cut -d . -f 1,2)
+FLAPJACK_MAJOR_VERSION=v$(echo $VERSION |  cut -d . -f 1)
+if [ $FLAPJACK_MAJOR_VERSION == 'v0' ] ; then
+  FLAPJACK_MAJOR_VERSION='0.9'
+fi
 
 if [ -e "pkg/${FILENAME}" ] ; then
   echo "Copying candidate package from local pkg dir"
@@ -67,5 +80,11 @@ aws s3 sync aptly/public s3://packages.flapjack.io/deb --delete --acl public-rea
 
 echo "Remove the old s3 package"
 aws s3 rm s3://packages.flapjack.io/candidates/${FILENAME}
+
+echo "Removing package upload lockfile"
+if ! aws s3 rm s3://packages.flapjack.io/flapjack_upload.lock 1>/dev/null ; then
+  echo "Failed to remove lockfile - please remove s3://packages.flapjack.io/flapjack_upload.lock manually"
+  exit 5
+fi
 
 echo "Done"
