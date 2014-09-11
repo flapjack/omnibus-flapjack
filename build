@@ -20,7 +20,12 @@ fi
 echo "Determining FLAPJACK_BUILD_TAG..."
 FLAPJACK_FULL_VERSION=$(wget -qO - https://raw.githubusercontent.com/flapjack/flapjack/${FLAPJACK_BUILD_REF}/lib/flapjack/version.rb | grep 'VERSION' | cut -d '"' -f 2)
 : ${FLAPJACK_FULL_VERSION:?"Incorrect build_ref.  Tags should be specified as 'v1.0.0rc3'" }
-FLAPJACK_MAJOR_VERSION=$(echo $FLAPJACK_FULL_VERSION |  cut -d . -f 1,2)
+# Use v<major release> as a repo prefix, unless it's the 0.9 series.
+FLAPJACK_MAJOR_VERSION=v$(echo $FLAPJACK_FULL_VERSION |  cut -d . -f 1)
+if [ $FLAPJACK_MAJOR_VERSION == 'v0' ] ; then
+  FLAPJACK_MAJOR_VERSION='0.9'
+fi
+
 #put a ~ separator in before any alpha parts of the version string, eg "1.0.0rc3" -> "1.0.0~rc3"
 FLAPJACK_FULL_VERSION=$(echo $FLAPJACK_FULL_VERSION | sed -e 's/\([a-z]\)/~\1/')
 if $(echo $FLAPJACK_FULL_VERSION | grep -q '[a-zA-Z]') ; then
