@@ -8,13 +8,25 @@ if [ $# -ne 1 ]; then
 fi
 
 # Attempt to get lock file from S3
-if aws s3 cp s3://packages.flapjack.io/flapjack_upload.lock flapjack_upload.lock --acl public-read --region us-east-1 1>/dev/null ; then
-  echo "Could not get flapjack upload lock, someone else is updating the repository"
-  exit 4
-else
+i="0"
+while [ $i -lt 360 ]
+do
+  if ! aws s3 cp s3://packages.flapjack.io/flapjack_upload.lock flapjack_upload.lock --acl public-read --region us-east-1 1>/dev/null ; then
+    success='true'
+    break
+  fi
+  echo "Could not get flapjack upload lock, someone else is updating the repository: ${i}"
+  sleep 10
+  i=$[$i+1]
+done
+
+if [ ! -z "${success}" ] ; then
   echo "Starting package upload"
   touch flapjack_upload.lock
   aws s3 cp flapjack_upload.lock s3://packages.flapjack.io/flapjack_upload.lock --acl public-read --region us-east-1 1>/dev/null
+else
+  echo "Error: timed out trying to get flapjack_upload.lock"
+  exit 4
 fi
 
 FILENAME=$1
@@ -49,6 +61,10 @@ echo "New package is at ${MAIN_FILENAME}"
 echo "Retrieving aptly repo from S3"
 mkdir -p aptly
 aws s3 sync s3://packages.flapjack.io/aptly aptly --delete --acl public-read --region us-east-1
+
+echo "Checking aptly db for errors"
+aptly -config aptly.conf db recover
+aptly -config aptly.conf db cleanup
 
 echo "Adding pkg/${FILENAME} to the flapjack-${FLAPJACK_MAJOR_VERSION}-${DISTRO_RELEASE}-main repo"
 aptly -config=aptly.conf repo add flapjack-${FLAPJACK_MAJOR_VERSION}-${DISTRO_RELEASE}-main ${MAIN_FILENAME}
