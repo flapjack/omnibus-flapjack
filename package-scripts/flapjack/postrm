@@ -3,6 +3,10 @@
 # Perform necessary flapjack removal steps
 # after package is uninstalled.
 #
+if [ -f /etc/redhat-release ]; then 
+    # Better to exit than the break the full postuninstall 
+    exit 0
+fi
 
 rm /etc/init.d/flapjack /etc/init.d/flapjack-nagios-receiver /etc/init.d/flapper /etc/init.d/redis-flapjack
 update-rc.d flapjack remove
