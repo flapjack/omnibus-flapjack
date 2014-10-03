@@ -1,5 +1,6 @@
 name "flapjack"
 
+branch = ENV['FLAPJACK_BRANCH']
 build_ref = ENV['FLAPJACK_BUILD_REF']
 package_version = ENV['FLAPJACK_PACKAGE_VERSION']
 
@@ -116,7 +117,7 @@ build do
 
   command "if [ ! -d flapjack_source ] ; then git clone https://github.com/flapjack/flapjack.git flapjack_source ; fi"
   command "cd flapjack_source && " +
-          "git checkout master && " +
+          "git checkout #{branch} && " +
           "git pull && " +
           "git checkout #{build_ref} && " +
           "/opt/flapjack/embedded/bin/gem build flapjack.gemspec"
