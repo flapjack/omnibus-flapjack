@@ -16,8 +16,8 @@ unless (ENV["BUILD_REF"] && ! ENV["BUILD_REF"].empty?)
   raise "BUILD_REF must be set to the branch, tag, or commit to build"
 end
 build_ref      = ENV["BUILD_REF"]
-distro         = ENV["DISTRO"].empty? ? "ubuntu" : ENV["DISTRO"]
-distro_release = ENV["DISTRO_RELEASE"].empty? ? "trusty" : ENV["DISTRO_RELEASE"]
+distro         = (ENV["DISTRO"].nil? || ENV["DISTRO"].empty?) ? "ubuntu" : ENV["DISTRO"]
+distro_release = (ENV["DISTRO_RELEASE"].nil? || ENV["DISTRO_RELEASE"].empty?) ? "trusty" : ENV["DISTRO_RELEASE"]
 
 date             = Time.now.utc.strftime('%Y%m%d%H%M%S')
 valid_components = ['main', 'experimental']
@@ -110,15 +110,17 @@ task :build do
   docker_cmd.run_command
   docker_cmd.error!
   puts "Docker run completed."
+
   sleep 10 # one time I got "Could not find the file /omnibus-flapjack/pkg in container" and a while later it worked fine
+
   puts "Retrieving package from the container"
   container_id = `docker ps -l -q`.strip
   retrieve_pkg_cmd = Mixlib::ShellOut.new("docker cp #{container_id}:/omnibus-flapjack/pkg .")
   retrieve_pkg_cmd.run_command
   retrieve_pkg_cmd.error!
 
-  #puts "Purging the container"
-  #Mixlib::Shellout.new("docker rm #{container_id}").error!
+  puts "Purging the container"
+  Mixlib::Shellout.new("docker rm #{container_id}").error!
 
 end
 
