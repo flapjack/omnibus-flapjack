@@ -1,16 +1,15 @@
 #!/bin/bash
 set -e
 
-if [ $# -lt 2 ]; then
-  echo "Usage: `basename $0` build_ref distro_release branch"
-  echo "eg. `basename $0` 4deb3ef precise master"
+if [ $# -ne 2 ]; then
+  echo "Usage: `basename $0` build_ref distro_release"
+  echo "eg. `basename $0` 4deb3ef precise"
   exit 2
 fi
 
 DATE=$(date +%Y%m%d%H%M%S)
 FLAPJACK_BUILD_REF=$1
 DISTRO_RELEASE=$2
-FLAPJACK_BRANCH=$3
 VALID_COMPONENTS=(main experimental)
 
 if which usermod ; then
@@ -38,7 +37,6 @@ fi
 FLAPJACK_MAIN_PACKAGE_VERSION="$(echo ${FLAPJACK_PACKAGE_VERSION} | cut -d "~" -f 1)-${DISTRO_RELEASE}"
 
 echo
-echo "FLAPJACK_BRANCH: ${FLAPJACK_BRANCH}"
 echo "FLAPJACK_FULL_VERSION: ${FLAPJACK_FULL_VERSION}"
 echo "FLAPJACK_BUILD_REF: ${FLAPJACK_BUILD_REF}"
 echo "FLAPJACK_PACKAGE_VERSION: ${FLAPJACK_PACKAGE_VERSION}"
