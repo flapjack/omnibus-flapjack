@@ -8,6 +8,8 @@ raise "FLAPJACK_PACKAGE_VERSION must be set" unless package_version
 
 default_version package_version
 
+compile_go_components = package_version =~ /^0\.9\./ ? false : true
+
 etc_path = "#{install_dir}/embedded/etc"
 
 dependency "ruby"
@@ -99,21 +101,6 @@ exit $RETVAL
 FLAPPER
 
 build do
-  # Install all dependencies
-  #command "rm Gemfile.lock"
-  #command "PATH=#{install_dir}/embedded/bin:${PATH} ; export PATH"
-
-  #bundle "install --path=#{install_dir}/embedded/service/gem"
-  #command "PATH=#{install_dir}/embedded/bin:$PATH" +
-  #        " #{install_dir}/embedded/bin/bundle install" +
-  #        " --path=#{install_dir}/embedded/service/gem"
-
-  # Build + install the gem
-  #bundle "exec rake build"
-  #command "PATH=#{install_dir}/embedded/bin:$PATH" +
-  #        " #{install_dir}/embedded/bin/bundle install" +
-  #        " --path=#{install_dir}/embedded/service/gem"
-
   command "if [ ! -d flapjack_source ] ; then git clone https://github.com/flapjack/flapjack.git flapjack_source ; fi"
   command "cd flapjack_source && " +
           "git checkout master && " +
@@ -135,10 +122,15 @@ build do
   command "touch #{etc_path}/init.d/flapjack-nagios-receiver"
   command "touch #{etc_path}/init.d/flapper"
 
-  command "export gem_home=/`/opt/flapjack/embedded/bin/gem list --all --details flapjack | grep 'Installed at' | sed 's/^.* \\///'` ; " +
-          "export installed_gem=`ls -dtr ${gem_home}/gems/flapjack* | tail -1` ; " +
-          "cd ${installed_gem} && " +
-          "./build.sh"
+  if compile_go_components
+    command "export gem_home=/" + 
+            "`/opt/flapjack/embedded/bin/gem list --all --details flapjack | " + 
+            "  grep 'Installed at' | sed 's/^.* \\///'` ; " +
+            "echo \"gem_home: ${gem_home}\" ; " +
+            "export installed_gem=`ls -dtr ${gem_home}/gems/flapjack* | tail -1` ; " +
+            "cd ${installed_gem} && " +
+            "./build.sh"
+  end
 
 end
 
