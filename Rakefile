@@ -131,7 +131,7 @@ task :build do
     Mixlib::ShellOut.new("docker cp #{container_id}:/omnibus-flapjack/pkg .").run_command.error!
 
     puts "Purging the container"
-    Mixlib::Shellout.new("docker rm #{container_id}").run_command.error!
+    Mixlib::ShellOut.new("docker rm #{container_id}").run_command.error!
   end
 end
 
