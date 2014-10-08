@@ -26,7 +26,7 @@
     "inline": [
       "sleep 30",
       "sudo apt-get update",
-      "sudo apt-get install -y gnupg awscli git ruby",
+      "sudo apt-get install -y gnupg awscli git build-essential ruby1.9.1-full",
       "git clone https://github.com/flapjack/omnibus-flapjack.git && cd omnibus-flapjack",
       "gpg --batch --yes --import /tmp/pkg_signing_key",
       "gpg --batch --yes --keyserver keys.gnupg.net --recv-keys 2A194991",
@@ -37,6 +37,7 @@
       "echo 'deb http://repo.aptly.info/ squeeze main' | sudo tee /etc/apt/sources.list.d/aptly.list",
       "sudo apt-get update",
       "sudo apt-get install -y lxc-docker aptly",
+      "sudo gem install bundler",
       "sudo usermod -G docker ubuntu",
       "sudo docker pull flapjack/omnibus-ubuntu",
       "sudo docker images",
