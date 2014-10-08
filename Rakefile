@@ -22,6 +22,7 @@ date           = Time.now.utc.strftime('%Y%m%d%H%M%S')
 
 major_version   = nil
 package_version = nil
+distro_release  = nil
 
 task :default do
   sh %{rake -T}
@@ -46,7 +47,7 @@ task :build do
     puts "Adding user ubuntu to the docker group"
     unless dry_run
       useradd = Mixlib::ShellOut.new("sudo usermod -a -G docker ubuntu")
-      unless useradd.run
+      unless useradd.run_command
         puts "Error creating the docker user"
       end
     end
