@@ -121,7 +121,14 @@ task :build do
   puts "Executing: " + docker_cmd.inspect
   unless dry_run
     docker_cmd.run_command
-    docker_cmd.error!
+    puts "STDOUT: "
+    puts "#{docker_cmd.stdout}"
+    puts "STDERR: "
+    puts "#{docker_cmd.stderr}"
+    if docker_cmd.error?
+      puts "ERROR running docker command, exit code is #{docker_cmd.exitstatus}"
+      exit 1
+    end
     puts "Docker run completed."
 
     sleep 10 # one time I got "Could not find the file /omnibus-flapjack/pkg in container" and a while later it worked fine
@@ -178,9 +185,9 @@ task :publish do
   Mixlib::ShellOut.new("aws s3 cp #{local_lock} #{remote_lock} --acl public-read " +
                        "--region us-east-1").run_command.error!
 
-  unless File.file?("aptly.conf")
-    puts "Creating aptly.conf"
-    # Create aptly config file
+
+  puts "Creating aptly.conf"
+  # Create aptly config file
   aptly_config = <<-eos 
     {
       "rootDir": "#{FileUtils.pwd}/aptly",
@@ -196,8 +203,7 @@ task :publish do
       "downloadSourcePackages": false,
       "S3PublishEndpoints": {}
     }
-    eos
-  end
+  eos
   File.write('aptly.conf', aptly_config)
 
   FileUtils.mkdir_p('aptly')
@@ -248,8 +254,10 @@ task :publish do
   end
 
   puts "Creating directory index files for published packages"
-  if Mixlib::ShellOut.new('cd apt/public && ../../create_directory_listings .').run_command.error?
+  indexes = Mixlib::ShellOut.new('cd aptly/public && ../../create_directory_listings .')
+  if indexes.run_command.error?
     puts "Warning: Directory indexes failed to be created"
+    puts indexes.inspect
   end
 
   puts "Syncing the aptly db up to S3"
