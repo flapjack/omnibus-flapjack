@@ -38,6 +38,7 @@
       "sudo apt-get update",
       "sudo apt-get install -y lxc-docker aptly",
       "sudo gem install bundler",
+      "sudo gem install rake",
       "sudo usermod -G docker ubuntu",
       "sudo docker pull flapjack/omnibus-ubuntu",
       "sudo docker images",
