@@ -243,12 +243,12 @@ task :publish do
     puts "Repository already published, attempting an update"
     # Aptly checks the inode number to determine if packages are the same.  
     # As we sync from S3, our inode numbers change, so identical packages are deemed different.
-    Mixlib::ShellOut('aptly -config=aptly.conf -gpg-key="803709B6" -force-overwrite=true ' +
-                     "publish update #{distro_release} #{major_version}").run_command.error!
+    Mixlib::ShellOut.new('aptly -config=aptly.conf -gpg-key="803709B6" -force-overwrite=true ' +
+                         "publish update #{distro_release} #{major_version}").run_command.error!
   end
 
   puts "Creating directory index files for published packages"
-  if Mixlib::ShellOut('cd apt/public && ../../create_directory_listings .').run_command.error?
+  if Mixlib::ShellOut.new('cd apt/public && ../../create_directory_listings .').run_command.error?
     puts "Warning: Directory indexes failed to be created"
   end
 
