@@ -140,10 +140,10 @@ task :build do
     puts "#{docker_cmd.stdout}"
     puts "STDERR: "
     puts "#{docker_cmd.stderr}"
-#    if docker_cmd.error?
-#      puts "ERROR running docker command, exit code is #{docker_cmd.exitstatus}"
-#      exit 1
-#    end
+    if docker_cmd.error?
+      puts "ERROR running docker command, exit code is #{docker_cmd.exitstatus}"
+      exit 1
+    end
     puts "Docker run completed."
 
     sleep 10 # one time I got "Could not find the file /omnibus-flapjack/pkg in container" and a while later it worked fine
