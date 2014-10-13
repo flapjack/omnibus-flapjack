@@ -89,7 +89,7 @@ task :build do
   puts
   puts "Starting Docker container..."
 
-  omnibus_cmd = [
+  omnibus_cmd_ubuntu = [
     "export PATH=$PATH:/usr/local/go/bin",
     "cd omnibus-flapjack",
     "git pull",
@@ -106,6 +106,21 @@ task :build do
     "sed -i s##{package_version}##{main_package_version}#g repackage/opt/flapjack/version-manifest.txt",
     "dpkg-deb -b repackage candidate_${EXPERIMENTAL_FILENAME}"].join(" && ")
 
+  omnibus_cmd_centos = [
+    "export PATH=$PATH:/usr/local/go/bin",
+    "cd omnibus-flapjack",
+    "git pull",
+    "bundle update omnibus-software",
+    "bundle install --binstubs",
+    "bin/omnibus build --log-level=info " +
+      "--override use_s3_caching:false " +
+      "--override use_git_caching:true " +
+      "flapjack",
+    "cd /omnibus-flapjack/pkg" ].join(" && ")
+
+  omnibus_cmd = distro == 'ubuntu' ? omnibus_cmd_ubuntu : omnibus_cmd_centos
+
+
   docker_cmd = Mixlib::ShellOut.new([
     'docker', 'run', '-t', 
     '--attach', 'stdout',
@@ -115,8 +130,8 @@ task :build do
     '-e', "FLAPJACK_PACKAGE_VERSION=#{package_version}",
     '-e', "FLAPJACK_MAIN_PACKAGE_VERSION=#{main_package_version}",
     '-e', "DISTRO_RELEASE=#{distro_release}",
-    "flapjack/omnibus-ubuntu:#{distro_release}", 'bash', '-c',
-    "\'#{omnibus_cmd}\'"
+    "flapjack/omnibus-#{distro}:#{distro_release}", 'bash', '-l', '-c',
+    "\'#{omnibus_cmd}\'",'/bin/bash -l'
   ].join(" "), :timeout => 60 * 60)
   puts "Executing: " + docker_cmd.inspect
   unless dry_run
@@ -125,10 +140,10 @@ task :build do
     puts "#{docker_cmd.stdout}"
     puts "STDERR: "
     puts "#{docker_cmd.stderr}"
-    if docker_cmd.error?
-      puts "ERROR running docker command, exit code is #{docker_cmd.exitstatus}"
-      exit 1
-    end
+#    if docker_cmd.error?
+#      puts "ERROR running docker command, exit code is #{docker_cmd.exitstatus}"
+#      exit 1
+#    end
     puts "Docker run completed."
 
     sleep 10 # one time I got "Could not find the file /omnibus-flapjack/pkg in container" and a while later it worked fine
