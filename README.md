@@ -73,7 +73,7 @@ See the Flapjack docs on [package building](http://flapjack.io/docs/1.0/developm
 
 ### AWS CLI Configuration
 
-If you want the build script to publish to packages.flapjack.io then you'll need to have set up a valid configuration for aws cli. You can do this as follows:
+If you want the build rake task to publish to packages.flapjack.io then you'll need to have set up a valid configuration for aws cli. You can do this as follows:
 
 ```
 ./configure_awscli \
@@ -82,30 +82,56 @@ If you want the build script to publish to packages.flapjack.io then you'll need
   --default-region us-east-1
 ```
 
-### Build & Publish
+### Build
 
-Run the build script! It drives `docker`, `omnibus`, `aptly`, and `aws s3`. It takes the following two arguments:
+Run the `build` rake task. It drives `docker` and `omnibus` to build packages. You can also call the `build_and_publish` rake task (see below) if you want to also publish the package directly. 
 
-- **build ref** - the git reference to the version of flapjack you want to build. Can be a tag, branch, or sha. If a tag, it'll start with a v if it's a release tag, eg `v1.0.0rc5`
-- **distro release** - eg `precise`, `trusty` etc
+The following environment variables affect what `build` does:
 
-```shell
-$ ./build $build_ref $distro_release
+- `BUILD_REF`      - the branch, tag, or commit (on master) to build (Required). If a tag, it'll start with a v if it's a release tag, eg `v1.0.0rc5`
+- `DISTRO`         - only "ubuntu" is currently supported (Optional, Default: "ubuntu")
+- `DISTRO_RELEASE` - the release name, eg "precise" (Optional, Default: "trusy")
+- `DRY_RUN`        - if set, just shows what would be gone (Optional, Default: nil)
+
+Eg: 
+
+```
+export BUILD_REF="1.1.0"
+export DISTRO="ubuntu"
+export DISTRO_RELEASE="precise"
+bundle exec rake build
 ```
 
-eg
+### Publish
 
-```shell
-$ ./build v1.0.0rc6 precise
+Run the `publish` rake task to publish a previously built package. The package is added to the *experimental* component of your apt package repo.
+
+The following environment variable is required:
+
+- `PACKAGE_FILE` - the filename of the package file you've just built and want to publish
+
+Eg:
+
+```bash
+export PACKAGE_FILE=flapjack_1.1.0~+20141003112645-master-trusty-1_amd64.deb
+bundle exec rake build
 ```
 
-If you have your aws cli configured correctly then `build` will also add the resulting package to the *experimental* component of your apt package repo, with the specified distro release.
+### Build and Publish
 
-If you don't want the build script to upload the package after building, export the `skip_package_upload` environment variable before running `build`.
+The rake task `build_and_publish` just calls the `build` and `publish` rake tasks sequentially. You don't need to set the `PACKAGE_FILE` environment variable however, as the package meta data is already determined. 
 
-```shell
-export skip_package_upload=true
+The environment variables are as per the `build` rake task.
+
+Eg:
+
 ```
+export BUILD_REF="1.1.0"
+export DISTRO="ubuntu"
+export DISTRO_RELEASE="precise"
+bundle exec rake build_and_publish
+```
+
 
 ### Promote from Experimental to Main
 
