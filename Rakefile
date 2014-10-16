@@ -89,7 +89,7 @@ task :build do
   puts
   puts "Starting Docker container..."
 
-  omnibus_cmd = [
+  omnibus_cmd_ubuntu = [
     "export PATH=$PATH:/usr/local/go/bin",
     "cd omnibus-flapjack",
     "git pull",
@@ -106,6 +106,21 @@ task :build do
     "sed -i s##{package_version}##{main_package_version}#g repackage/opt/flapjack/version-manifest.txt",
     "dpkg-deb -b repackage candidate_${EXPERIMENTAL_FILENAME}"].join(" && ")
 
+  omnibus_cmd_centos = [
+    "export PATH=$PATH:/usr/local/go/bin",
+    "cd omnibus-flapjack",
+    "git pull",
+    "bundle update omnibus-software",
+    "bundle install --binstubs",
+    "bin/omnibus build --log-level=info " +
+      "--override use_s3_caching:false " +
+      "--override use_git_caching:true " +
+      "flapjack",
+    "cd /omnibus-flapjack/pkg" ].join(" && ")
+
+  omnibus_cmd = distro == 'ubuntu' ? omnibus_cmd_ubuntu : omnibus_cmd_centos
+
+
   docker_cmd = Mixlib::ShellOut.new([
     'docker', 'run', '-t', 
     '--attach', 'stdout',
@@ -115,8 +130,8 @@ task :build do
     '-e', "FLAPJACK_PACKAGE_VERSION=#{package_version}",
     '-e', "FLAPJACK_MAIN_PACKAGE_VERSION=#{main_package_version}",
     '-e', "DISTRO_RELEASE=#{distro_release}",
-    "flapjack/omnibus-ubuntu:#{distro_release}", 'bash', '-c',
-    "\'#{omnibus_cmd}\'"
+    "flapjack/omnibus-#{distro}:#{distro_release}", 'bash', '-l', '-c',
+    "\'#{omnibus_cmd}\'",'/bin/bash -l'
   ].join(" "), :timeout => 60 * 60)
   puts "Executing: " + docker_cmd.inspect
   unless dry_run
