@@ -122,7 +122,7 @@ task :build do
 
 
   docker_cmd = Mixlib::ShellOut.new([
-    'docker', 'run', '-t', 
+    'docker', 'run', '-t',
     '--attach', 'stdout',
     '--attach', 'stderr',
     '--detach=false',
@@ -131,7 +131,7 @@ task :build do
     '-e', "FLAPJACK_MAIN_PACKAGE_VERSION=#{main_package_version}",
     '-e', "DISTRO_RELEASE=#{distro_release}",
     "flapjack/omnibus-#{distro}:#{distro_release}", 'bash', '-l', '-c',
-    "\'#{omnibus_cmd}\'",'/bin/bash -l'
+    "\'#{omnibus_cmd}\'"
   ].join(" "), :timeout => 60 * 60)
   puts "Executing: " + docker_cmd.inspect
   unless dry_run
@@ -203,7 +203,7 @@ task :publish do
 
   puts "Creating aptly.conf"
   # Create aptly config file
-  aptly_config = <<-eos 
+  aptly_config = <<-eos
     {
       "rootDir": "#{FileUtils.pwd}/aptly",
       "downloadConcurrency": 4,
@@ -235,20 +235,20 @@ task :publish do
   valid_components = ['main', 'experimental']
 
   valid_components.each do |component|
-    if Mixlib::ShellOut.new("aptly -config=aptly.conf repo show " + 
+    if Mixlib::ShellOut.new("aptly -config=aptly.conf repo show " +
                             "flapjack-#{major_version}-#{distro_release}-#{component}"
                             ).run_command.error?
       Mixlib::ShellOut.new("aptly -config=aptly.conf repo create -distribution #{distro_release} " +
-                           "-architectures='i386,amd64' -component=#{component} " + 
+                           "-architectures='i386,amd64' -component=#{component} " +
                            "flapjack-#{major_version}-#{distro_release}-#{component}"
                            ).run_command.error!
     end
   end
 
-  puts "Adding pkg/flapjack_#{package_version}*.deb to the " + 
+  puts "Adding pkg/flapjack_#{package_version}*.deb to the " +
        "flapjack-#{major_version}-#{distro_release}-experimental repo"
   Mixlib::ShellOut.new("aptly -config=aptly.conf repo add " +
-                       "flapjack-#{major_version}-#{distro_release}-experimental " + 
+                       "flapjack-#{major_version}-#{distro_release}-experimental " +
                        "pkg/flapjack_#{package_version}*.deb").run_command.error!
 
 
@@ -262,7 +262,7 @@ task :publish do
   publish_cmd += " #{major_version}"
   if Mixlib::ShellOut.new(publish_cmd).run_command.error?
     puts "Repository already published, attempting an update"
-    # Aptly checks the inode number to determine if packages are the same.  
+    # Aptly checks the inode number to determine if packages are the same.
     # As we sync from S3, our inode numbers change, so identical packages are deemed different.
     Mixlib::ShellOut.new('aptly -config=aptly.conf -gpg-key="803709B6" -force-overwrite=true ' +
                          "publish update #{distro_release} #{major_version}").run_command.error!
@@ -276,7 +276,7 @@ task :publish do
   end
 
   puts "Syncing the aptly db up to S3"
-  Mixlib::ShellOut.new('aws s3 sync aptly s3://packages.flapjack.io/aptly ' + 
+  Mixlib::ShellOut.new('aws s3 sync aptly s3://packages.flapjack.io/aptly ' +
                        '--delete --acl public-read --region us-east-1').run_command.error!
 
   puts "Syncing the public packages repo up to S3"
@@ -284,7 +284,7 @@ task :publish do
                        '--delete --acl public-read --region us-east-1').run_command.error!
 
   puts "Copying candidate deb for main to s3"
-  Mixlib::ShellOut.new("aws s3 cp pkg/candidate_flapjack_#{package_version}*.deb " + 
+  Mixlib::ShellOut.new("aws s3 cp pkg/candidate_flapjack_#{package_version}*.deb " +
                        's3://packages.flapjack.io/candidates/ --acl public-read ' +
                        '--region us-east-1').run_command.error!
 
