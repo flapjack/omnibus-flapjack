@@ -388,7 +388,7 @@ task :publish do
     end
 
   when 'centos'
-    upload_rpm_cmd = Mixlib::ShellOut.new("aws s3 cp pkg/* s3://packages.flapjack.io/rpm/")
+    upload_rpm_cmd = Mixlib::ShellOut.new("aws s3 cp pkg s3://packages.flapjack.io/rpm/ --recursive")
     if upload_rpm_cmd.run_command.error?
       puts "Error: Failed to upload package file to s3"
       upload_rpm_cmd.error!
