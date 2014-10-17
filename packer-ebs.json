@@ -13,7 +13,7 @@
     "instance_type": "m3.medium",
     "ssh_username": "ubuntu",
 
-    "ami_name": "docker/flapjack/omnibus-ubuntu ebs-ssd {{timestamp}}"
+    "ami_name": "docker/flapjack/omnibus-flapjack ebs-ssd {{timestamp}}"
   }],
   "provisioners": [
   {
@@ -41,6 +41,7 @@
       "sudo gem install rake",
       "sudo usermod -G docker ubuntu",
       "sudo docker pull flapjack/omnibus-ubuntu",
+      "sudo docker pull flapjack/omnibus-centos",
       "sudo docker images",
       "sudo service docker stop",
       "sleep 5"
