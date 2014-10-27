@@ -32,10 +32,9 @@ completes packages will be available in `pkg/`, and with a bit of luck on your p
 ### Build
 
 ```shell
-bundle
-BUILD_REF=v1.0.0 DISTRO=ubuntu DISTRO_RELEASE=trusty bundle exec rake build_and_publish
-BUILD_REF=v1.0.0 DISTRO=centos DISTRO_RELEASE=6 bundle exec rake build_and_publish
-PACKAGE_FILE=flapjack-1.2.0_0.rc220141024003313-1.el6.x86_64.rpm bundle exec rake publish
+FLAPJACK_BUILD_REF="v1.0.0rc3" \
+FLAPJACK_PACKAGE_VERSION="1.0.0~rc3~20140727T125000-9b1e831-1" \
+bundle exec bin/omnibus build project flapjack
 ```
 
 ### Clean
