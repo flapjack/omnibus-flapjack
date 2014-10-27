@@ -259,7 +259,7 @@ def build_omnibus_cmd(pkg)
       "EXPERIMENTAL_FILENAME=$(ls flapjack_#{pkg.experimental_package_version}*.deb)",
       "dpkg -c ${EXPERIMENTAL_FILENAME} > /tmp/flapjack_files"
     ]
-    omnibus_cmd << verify_files.map { |f| "grep #{f} /tmp/flapjack_files" }
+    omnibus_cmd << verify_files.map { |f| "grep #{f} /tmp/flapjack_files &>/dev/null" }
 
     unless pkg.main_package_version.nil?
       omnibus_cmd << [
@@ -274,7 +274,7 @@ def build_omnibus_cmd(pkg)
         "EXPERIMENTAL_FILENAME=$(ls flapjack_#{pkg.experimental_package_version}*.deb)",
         "dpkg -c candidate_${EXPERIMENTAL_FILENAME} > /tmp/flapjack_files"
         ]
-      omnibus_cmd << verify_files.map { |f| "grep #{f} /tmp/flapjack_files" }
+      omnibus_cmd << verify_files.map { |f| "grep #{f} /tmp/flapjack_files &>/dev/null" }
     end
   when 'centos'
     # Centos package validation
@@ -282,7 +282,7 @@ def build_omnibus_cmd(pkg)
       "EXPERIMENTAL_FILENAME=$(ls flapjack-#{pkg.experimental_package_version}*.rpm)",
       "rpm -qpl ${EXPERIMENTAL_FILENAME} > /tmp/flapjack_files"
     ]
-    omnibus_cmd << verify_files.map { |f| "grep #{f} /tmp/flapjack_files" }
+    omnibus_cmd << verify_files.map { |f| "grep #{f} /tmp/flapjack_files &>/dev/null" }
 
     unless pkg.main_package_version.nil?
       omnibus_cmd << [
