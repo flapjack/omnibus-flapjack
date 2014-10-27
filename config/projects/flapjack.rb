@@ -7,9 +7,9 @@ homepage      "http://flapjack.io"
 install_dir   "/opt/flapjack"
 
 version = ENV['FLAPJACK_BUILD_REF']
-package_version = ENV['FLAPJACK_PACKAGE_VERSION']
+package_version = ENV['FLAPJACK_EXPERIMENTAL_PACKAGE_VERSION']
 raise "FLAPJACK_BUILD_REF must be set" unless version
-raise "FLAPJACK_PACKAGE_VERSION must be set" unless package_version
+raise "FLAPJACK_EXPERIMENTAL_PACKAGE_VERSION must be set" unless package_version
 
 build_version package_version
 build_iteration 1
@@ -36,4 +36,3 @@ dependency "yajl"
 dependency "zlib"
 dependency "nokogiri"
 dependency "flapjack"
-

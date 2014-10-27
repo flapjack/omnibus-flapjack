@@ -1,10 +1,10 @@
 name "flapjack"
 
 build_ref = ENV['FLAPJACK_BUILD_REF']
-package_version = ENV['FLAPJACK_PACKAGE_VERSION']
+package_version = ENV['FLAPJACK_EXPERIMENTAL_PACKAGE_VERSION']
 
 raise "FLAPJACK_BUILD_REF must be set" unless build_ref
-raise "FLAPJACK_PACKAGE_VERSION must be set" unless package_version
+raise "FLAPJACK_EXPERIMENTAL_PACKAGE_VERSION must be set" unless package_version
 
 default_version package_version
 
@@ -29,8 +29,8 @@ build do
         "--no-rdoc --no-ri" ].join(" ")
 
   if compile_go_components
-    command "export gem_home=/" + 
-            "`/opt/flapjack/embedded/bin/gem list --all --details flapjack | " + 
+    command "export gem_home=/" +
+            "`/opt/flapjack/embedded/bin/gem list --all --details flapjack | " +
             "  grep 'Installed at' | sed 's/^.* \\///'` ; " +
             "echo \"gem_home: ${gem_home}\" ; " +
             "export installed_gem=`ls -dtr ${gem_home}/gems/flapjack* | tail -1` ; " +
@@ -39,4 +39,3 @@ build do
   end
 
 end
-

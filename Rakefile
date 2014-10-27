@@ -103,11 +103,6 @@ class Package
     end
   end
 
-  #put a ~ separator in before any alpha parts of the version string, eg "1.0.0rc3" -> "1.0.0~rc3"
-  def full_version
-    @full_version = version.gsub(/^([0-9.]*)([a-z0-9.]*)$/) {$2.empty? ? $1 : "#{$1}~#{$2}"}
-  end
-
   def timestamp
     @timestamp ||= if truth_from_filename
       raise RuntimeError 'timestamp from filename unsupported'
@@ -116,22 +111,38 @@ class Package
     end
   end
 
-  def package_version
+  def experimental_package_version
     @package_version ||= if truth_from_filename
       package_name, package_version = package_file.split(major_delim)
       package_version.gsub(/#{minor_delim}1$/, '')
     else
-      # If we get a version that isn't an RC (contains an alpha), make
-      # @package_version full_version~+date-ref-release-1 so that it sorts above RCs
-      # ie, insert a + before the timestamp
-      op = full_version =~ /[a-zA-Z]/ ? '' : '+'
-      "#{full_version}~#{op}#{timestamp}#{minor_delim}#{build_ref}#{minor_delim}#{distro_release}"
+      first, second = version.match(/^([0-9.]*)([a-z0-9.]*)$/).captures
+      case @distro
+      when 'ubuntu', 'debian'
+        if second.empty?
+          # If we get a version that isn't an RC (contains an alpha), make
+          # the package version~+date-ref-release-1 so that it sorts above RCs
+          # ie, insert a + before the timestamp
+          "#{first}~+#{timestamp}#{minor_delim}#{build_ref}#{minor_delim}#{distro_release}"
+        else
+          "#{first}~#{second}~#{timestamp}#{minor_delim}#{build_ref}#{minor_delim}#{distro_release}"
+        end
+      when 'centos'
+        "#{first}#{minor_delim}0.#{second}#{timestamp}"
+      end
     end
   end
 
   def main_package_version
     # Only build a candidate package for main if the version isn't an RC (contains an alpha)
-    @main_package_version ||= full_version =~ /[a-zA-Z]/ ? nil: "#{version}#{minor_delim}#{distro_release}"
+    return nil if version =~ /[a-zA-Z]/
+    case distro
+    when 'ubuntu', 'debian'
+      @main_package_version ||= "#{version}#{minor_delim}#{distro_release}"
+    when 'centos'
+      # flapjack-1.2.0-1.el6.x86_64.rpm
+      @main_package_version ||= version
+    end
   end
 
   def initialize(options)
@@ -159,8 +170,7 @@ task :build do
   puts "major_delim:          #{pkg.major_delim}"
   puts "minor_delim:          #{pkg.minor_delim}"
   puts "version:              #{pkg.version}"
-  puts "full_version:         #{pkg.full_version}"
-  puts "package_version:      #{pkg.package_version}"
+  puts "package_version:      #{pkg.experimental_package_version}"
   puts pkg.main_package_version.nil? ? "Not building candidate for main - version contains an alpha" : "main_package_version: #{pkg.main_package_version}"
   puts
   puts "Starting Docker container..."
@@ -184,7 +194,7 @@ task :build do
     '--attach', 'stderr',
     '--detach=false',
     '-e', "FLAPJACK_BUILD_REF=#{pkg.build_ref}",
-    '-e', "FLAPJACK_PACKAGE_VERSION=#{pkg.package_version}",
+    '-e', "FLAPJACK_EXPERIMENTAL_PACKAGE_VERSION=#{pkg.experimental_package_version}",
     '-e', "FLAPJACK_MAIN_PACKAGE_VERSION=#{pkg.main_package_version}",
     '-e', "DISTRO_RELEASE=#{pkg.distro_release}",
     "flapjack/omnibus-#{pkg.distro}:#{pkg.distro_release}", 'bash', '-l', '-c',
@@ -233,10 +243,10 @@ def build_omnibus_cmd(pkg)
     case pkg.distro
     when 'ubuntu', 'debian'
       debian_build_main = [
-        "EXPERIMENTAL_FILENAME=$(ls flapjack_#{pkg.package_version}*.deb)",
+        "EXPERIMENTAL_FILENAME=$(ls flapjack_#{pkg.experimental_package_version}*.deb)",
         "dpkg-deb -R ${EXPERIMENTAL_FILENAME} repackage",
-        "sed -i s@#{pkg.package_version}-1@#{pkg.main_package_version}@g repackage/DEBIAN/control",
-        "sed -i s@#{pkg.package_version}@#{pkg.main_package_version}@g repackage/opt/flapjack/version-manifest.txt",
+        "sed -i s@#{pkg.experimental_package_version}-1@#{pkg.main_package_version}@g repackage/DEBIAN/control",
+        "sed -i s@#{pkg.experimental_package_version}@#{pkg.main_package_version}@g repackage/opt/flapjack/version-manifest.txt",
         "dpkg-deb -b repackage candidate_${EXPERIMENTAL_FILENAME}"
       ]
       omnibus_cmd.push(debian_build_main).flatten.join(" && ")
@@ -262,7 +272,7 @@ task :publish do
   puts "distro:          #{pkg.distro}"
   puts "distro_release:  #{pkg.distro_release}"
   puts "major_version:   #{pkg.major_version}"
-  puts "package_version: #{pkg.package_version}"
+  puts "package_version: #{pkg.experimental_package_version}"
   puts "file_suffix:     #{pkg.file_suffix}"
   puts "major_delim:     #{pkg.major_delim}"
   puts "minor_delim:     #{pkg.minor_delim}"
@@ -270,7 +280,7 @@ task :publish do
   raise "distro cannot be determined" unless pkg.distro
   raise "distro_release cannot be determined" unless pkg.distro_release
   raise "major_version cannot be determined" unless pkg.major_version
-  raise "package_version cannot be determined" unless pkg.package_version
+  raise "package_version cannot be determined" unless pkg.experimental_package_version
 
   if dry_run
     puts "Ending early due to DRY_RUN being set"
@@ -335,11 +345,11 @@ task :publish do
       end
     end
 
-    puts "Adding pkg/flapjack_#{pkg.package_version}*.deb to the " +
+    puts "Adding pkg/flapjack_#{pkg.experimental_package_version}*.deb to the " +
          "flapjack-#{pkg.major_version}-#{pkg.distro_release}-experimental repo"
     Mixlib::ShellOut.new("aptly -config=aptly.conf repo add " +
                          "flapjack-#{pkg.major_version}-#{pkg.distro_release}-experimental " +
-                         "pkg/flapjack_#{pkg.package_version}*.deb").run_command.error!
+                         "pkg/flapjack_#{pkg.experimental_package_version}*.deb").run_command.error!
 
 
     puts "Attempting the first publish for all components of the major version " +
@@ -380,7 +390,7 @@ task :publish do
   if %(ubuntu debian).include?(pkg.distro)
     # FIXME: limit to main
     puts "Copying candidate package for main to s3"
-    Mixlib::ShellOut.new("aws s3 cp pkg/candidate_flapjack_#{pkg.package_version}*.deb " +
+    Mixlib::ShellOut.new("aws s3 cp pkg/candidate_flapjack_#{pkg.experimental_package_version}*.deb " +
                          's3://packages.flapjack.io/candidates/ --acl public-read ' +
                          '--region us-east-1').run_command.error!
   end

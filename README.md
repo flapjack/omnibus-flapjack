@@ -32,9 +32,10 @@ completes packages will be available in `pkg/`, and with a bit of luck on your p
 ### Build
 
 ```shell
-FLAPJACK_BUILD_REF="v1.0.0rc3" \
-FLAPJACK_PACKAGE_VERSION="1.0.0~rc3~20140727T125000-9b1e831-1" \
-bundle exec bin/omnibus build project flapjack
+bundle
+BUILD_REF=v1.0.0 DISTRO=ubuntu DISTRO_RELEASE=trusty bundle exec rake build_and_publish
+BUILD_REF=v1.0.0 DISTRO=centos DISTRO_RELEASE=6 bundle exec rake build_and_publish
+PACKAGE_FILE=flapjack-1.2.0_0.rc220141024003313-1.el6.x86_64.rpm bundle exec rake publish
 ```
 
 ### Clean
@@ -84,7 +85,7 @@ If you want the build rake task to publish to packages.flapjack.io then you'll n
 
 ### Build
 
-Run the `build` rake task. It drives `docker` and `omnibus` to build packages. You can also call the `build_and_publish` rake task (see below) if you want to also publish the package directly. 
+Run the `build` rake task. It drives `docker` and `omnibus` to build packages. You can also call the `build_and_publish` rake task (see below) if you want to also publish the package directly.
 
 The following environment variables affect what `build` does:
 
@@ -93,7 +94,7 @@ The following environment variables affect what `build` does:
 - `DISTRO_RELEASE` - the release name, eg "precise" (Optional, Default: "trusy")
 - `DRY_RUN`        - if set, just shows what would be gone (Optional, Default: nil)
 
-Eg: 
+Eg:
 
 ```
 export BUILD_REF="1.1.0"
@@ -119,7 +120,7 @@ bundle exec rake build
 
 ### Build and Publish
 
-The rake task `build_and_publish` just calls the `build` and `publish` rake tasks sequentially. You don't need to set the `PACKAGE_FILE` environment variable however, as the package meta data is already determined. 
+The rake task `build_and_publish` just calls the `build` and `publish` rake tasks sequentially. You don't need to set the `PACKAGE_FILE` environment variable however, as the package meta data is already determined.
 
 The environment variables are as per the `build` rake task.
 
@@ -141,4 +142,3 @@ You'll need the name of the candidate package, which will be in the output of `b
 ```shell
 $ ./promote candidate_flapjack_1.0.0~rc6~20140820210002-master-precise-1_amd64.deb
 ```
-
