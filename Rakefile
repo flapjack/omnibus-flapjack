@@ -128,7 +128,7 @@ class Package
           "#{first}~#{second}~#{timestamp}#{minor_delim}#{build_ref}#{minor_delim}#{distro_release}"
         end
       when 'centos'
-        "#{first}#{minor_delim}0.#{second}#{timestamp}"
+        "#{first}#{minor_delim}0.#{timestamp}#{second}"
       end
     end
   end
