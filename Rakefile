@@ -195,6 +195,7 @@ task :build do
     '--detach=false',
     '-e', "FLAPJACK_BUILD_REF=#{pkg.build_ref}",
     '-e', "FLAPJACK_EXPERIMENTAL_PACKAGE_VERSION=#{pkg.experimental_package_version}",
+    '-e', "FLAPJACK_PACKAGE_VERSION=#{pkg.experimental_package_version}",
     '-e', "FLAPJACK_MAIN_PACKAGE_VERSION=#{pkg.main_package_version}",
     '-e', "DISTRO_RELEASE=#{pkg.distro_release}",
     "flapjack/omnibus-#{pkg.distro}:#{pkg.distro_release}", 'bash', '-l', '-c',
@@ -239,7 +240,9 @@ def build_omnibus_cmd(pkg)
     "cd /omnibus-flapjack/pkg"
   ]
 
-  unless pkg.main_package_version.nil?
+  if pkg.main_package_version.nil?
+    omnibus_cmd.join(" && ")
+  else
     case pkg.distro
     when 'ubuntu', 'debian'
       debian_build_main = [
@@ -252,8 +255,13 @@ def build_omnibus_cmd(pkg)
       omnibus_cmd.push(debian_build_main).flatten.join(" && ")
     when 'centos'
       centos_build_main = [
-        "ls"
-      #TODO: write me
+        "EXPERIMENTAL_FILENAME=$(ls flapjack-#{pkg.experimental_package_version}*.rpm)",
+        "cp -a ${EXPERIMENTAL_FILENAME} candidate_${EXPERIMENTAL_FILENAME}"
+        # "mkdir -p repackage",
+        # "cd repackage",
+        # "rpm2cpio ../${EXPERIMENTAL_FILENAME} | cpio -idmv",
+        # "sed -i s@#{pkg.experimental_package_version}-1@#{pkg.main_package_version}@g opt/flapjack/version-manifest.txt",
+        # "cpio -ovF ../candidate_${EXPERIMENTAL_FILENAME}"
       ]
       omnibus_cmd.push(centos_build_main).flatten.join(" && ")
     end
