@@ -5,4 +5,5 @@ gem 'omnibus', :github => 'opscode/omnibus', :branch => '3.0-stable'
 gem 'mixlib-log'
 gem 'mixlib-shellout', '>=1.6.0'
 gem 'rake'
+gem 'pry'
 
