@@ -240,22 +240,26 @@ def build_omnibus_cmd(pkg)
     "cd /omnibus-flapjack/pkg"
   ]
 
+  verify_files = [
+    "/opt/flapjack/bin/flapjack",
+    "/opt/flapjack/embedded/lib",
+    "/opt/flapjack/embedded/bin/redis-server",
+    "/etc/init.d/flapjack",
+    "/etc/init.d/redis-flapjack",
+    "/opt/flapjack/embedded/bin/redis-server",
+    "/opt/flapjack/embedded/bin/redis-server",
+    "/opt/flapjack/embedded/etc/redis/redis-flapjack.conf",
+    ".go$"
+  ]
+
   case pkg.distro
   when 'ubuntu', 'debian'
     # Ubuntu/debian package validation
     omnibus_cmd << [
       "EXPERIMENTAL_FILENAME=$(ls flapjack_#{pkg.experimental_package_version}*.deb)",
-      "dpkg -c ${EXPERIMENTAL_FILENAME} > /tmp/flapjack_files",
-      "grep /opt/flapjack/bin/flapjack /tmp/flapjack_files",
-      "grep /opt/flapjack/embedded/lib /tmp/flapjack_files",
-      "grep /opt/flapjack/embedded/bin/redis-server /tmp/flapjack_files",
-      "grep /etc/init.d/flapjack /tmp/flapjack_files",
-      "grep /etc/init.d/redis-flapjack /tmp/flapjack_files",
-      "grep /opt/flapjack/embedded/bin/redis-server /tmp/flapjack_files",
-      "grep /opt/flapjack/embedded/bin/redis-server /tmp/flapjack_files",
-      "grep /opt/flapjack/embedded/etc/redis/redis-flapjack.conf /tmp/flapjack_files",
-      "grep .go$ /tmp/flapjack_files"
+      "dpkg -c ${EXPERIMENTAL_FILENAME} > /tmp/flapjack_files"
     ]
+    omnibus_cmd << verify_files.map { |f| "grep #{f} /tmp/flapjack_files" }
 
     unless pkg.main_package_version.nil?
       omnibus_cmd << [
@@ -263,24 +267,22 @@ def build_omnibus_cmd(pkg)
         "dpkg-deb -R ${EXPERIMENTAL_FILENAME} repackage",
         "sed -i s@#{pkg.experimental_package_version}-1@#{pkg.main_package_version}@g repackage/DEBIAN/control",
         "sed -i s@#{pkg.experimental_package_version}@#{pkg.main_package_version}@g repackage/opt/flapjack/version-manifest.txt",
-        "dpkg-deb -b repackage candidate_${EXPERIMENTAL_FILENAME}",
-        "dpkg -c candidate_${EXPERIMENTAL_FILENAME} > /tmp/flapjack_files",
-        "grep /opt/flapjack/bin/flapjack /tmp/flapjack_files",
-        "grep /opt/flapjack/embedded/lib /tmp/flapjack_files",
-        "grep /opt/flapjack/embedded/bin/redis-server /tmp/flapjack_files",
-        "grep /etc/init.d/flapjack /tmp/flapjack_files",
-        "grep /etc/init.d/redis-flapjack /tmp/flapjack_files",
-        "grep /opt/flapjack/embedded/bin/redis-server /tmp/flapjack_files",
-        "grep /opt/flapjack/embedded/bin/redis-server /tmp/flapjack_files",
-        "grep /opt/flapjack/embedded/etc/redis/redis-flapjack.conf /tmp/flapjack_files",
-        "grep .go$ /tmp/flapjack_files"
+        "dpkg-deb -b repackage candidate_${EXPERIMENTAL_FILENAME}"
       ]
+      # Validate the newly created main candidate
+      omnibus_cmd << [
+        "EXPERIMENTAL_FILENAME=$(ls flapjack_#{pkg.experimental_package_version}*.deb)",
+        "dpkg -c candidate_${EXPERIMENTAL_FILENAME} > /tmp/flapjack_files"
+        ]
+      omnibus_cmd << verify_files.map { |f| "grep #{f} /tmp/flapjack_files" }
     end
   when 'centos'
     # Centos package validation
     omnibus_cmd << [
-      'ls'
+      "EXPERIMENTAL_FILENAME=$(ls flapjack-#{pkg.experimental_package_version}*.rpm)",
+      "rpm -qpl ${EXPERIMENTAL_FILENAME} > /tmp/flapjack_files"
     ]
+    omnibus_cmd << verify_files.map { |f| "grep #{f} /tmp/flapjack_files" }
 
     unless pkg.main_package_version.nil?
       omnibus_cmd << [
