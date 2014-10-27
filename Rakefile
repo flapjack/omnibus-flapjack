@@ -10,9 +10,11 @@
 # eg:
 #   bundle
 #   BUILD_REF=v1.0.0 DISTRO=ubuntu DISTRO_RELEASE=trusty bundle exec rake build_and_publish
-#   BUILD_REF=v1.0.0 DISTRO=ubuntu DISTRO_RELEASE=trusty bundle exec rake build_and_publish
+#   BUILD_REF=v1.0.0 DISTRO=centos DISTRO_RELEASE=6 bundle exec rake build_and_publish
+#   PACKAGE_FILE=flapjack-1.2.0_0.rc220141024003313-1.el6.x86_64.rpm bundle exec rake publish
 #
 # pkg/flapjack_1.1.0~+20141003112645-master-trusty-1_amd64.deb
+# pkg/flapjack_1.1.0~+20141003112645-master-centos-6-1_amd64.rpm
 
 require 'mixlib/shellout'
 
@@ -140,7 +142,6 @@ class Package
   end
 end
 
-
 desc "Build Flapjack packages"
 task :build do
 
@@ -174,36 +175,7 @@ task :build do
     end
   end
 
-  omnibus_cmd_ubuntu = [
-    "export PATH=$PATH:/usr/local/go/bin",
-    "cd omnibus-flapjack",
-    "git pull",
-    "bundle update omnibus-software",
-    "bundle install --binstubs",
-    "bin/omnibus build --log-level=info " +
-      "--override use_s3_caching:false " +
-      "--override use_git_caching:true " +
-      "flapjack",
-    "cd /omnibus-flapjack/pkg",
-    "EXPERIMENTAL_FILENAME=$(ls flapjack_#{pkg.package_version}*.deb)",
-    "dpkg-deb -R ${EXPERIMENTAL_FILENAME} repackage",
-    "sed -i s##{pkg.package_version}-1##{pkg.main_package_version}#g repackage/DEBIAN/control",
-    "sed -i s##{pkg.package_version}##{pkg.main_package_version}#g repackage/opt/flapjack/version-manifest.txt",
-    "dpkg-deb -b repackage candidate_${EXPERIMENTAL_FILENAME}"].join(" && ")
-
-  omnibus_cmd_centos = [
-    "export PATH=$PATH:/usr/local/go/bin",
-    "cd omnibus-flapjack",
-    "git pull",
-    "bundle update omnibus-software",
-    "bundle install --binstubs",
-    "bin/omnibus build --log-level=info " +
-      "--override use_s3_caching:false " +
-      "--override use_git_caching:true " +
-      "flapjack",
-    "cd /omnibus-flapjack/pkg" ].join(" && ")
-
-  omnibus_cmd = ['ubuntu'].include?(pkg.distro) ? omnibus_cmd_ubuntu : omnibus_cmd_centos
+  omnibus_cmd = build_omnibus_cmd(pkg)
 
   docker_cmd = Mixlib::ShellOut.new([
     'docker', 'run', '-t',
@@ -241,13 +213,49 @@ task :build do
   end
 end
 
+def build_omnibus_cmd(pkg)
+  omnibus_cmd = [
+    "if [[ -f /opt/rh/ruby193/enable ]]; then source /opt/rh/ruby193/enable; fi",
+    "export PATH=$PATH:/usr/local/go/bin",
+    "cd omnibus-flapjack",
+    "git pull",
+    "bundle update omnibus-software",
+    "bundle install --binstubs",
+    "bin/omnibus build --log-level=info " +
+      "--override use_s3_caching:false " +
+      "--override use_git_caching:true " +
+      "flapjack",
+    "cd /omnibus-flapjack/pkg"
+  ]
+
+  unless pkg.main_package_version.nil?
+    case pkg.distro
+    when 'ubuntu', 'debian'
+      debian_build_main = [
+        "EXPERIMENTAL_FILENAME=$(ls flapjack_#{pkg.package_version}*.deb)",
+        "dpkg-deb -R ${EXPERIMENTAL_FILENAME} repackage",
+        "sed -i s@#{pkg.package_version}-1@#{pkg.main_package_version}@g repackage/DEBIAN/control",
+        "sed -i s@#{pkg.package_version}@#{pkg.main_package_version}@g repackage/opt/flapjack/version-manifest.txt",
+        "dpkg-deb -b repackage candidate_${EXPERIMENTAL_FILENAME}"
+      ]
+      omnibus_cmd.push(debian_build_main).flatten.join(" && ")
+    when 'centos'
+      centos_build_main = [
+        "ls"
+      #TODO: write me
+      ]
+      omnibus_cmd.push(centos_build_main).flatten.join(" && ")
+    end
+  end
+end
+
 desc "Publish a Flapjack package (to experimental)"
 task :publish do
   # flapjack_1.1.0~+20141003112645-master-trusty-1_amd64.deb
   # flapjack-1.2.0~rc1~20141017011950_master_6-1.el6.x86_64.rpm
 
   pkg ||= Package.new(
-    :package_file   => ENV['PACKAGE_FILE'],
+    :package_file   => ENV['PACKAGE_FILE']
   )
 
   puts "distro:          #{pkg.distro}"
@@ -269,57 +277,44 @@ task :publish do
   end
 
   case pkg.distro
-  when 'ubuntu'
-    # Attempt to get lock file from S3
-    remote_lock   = 's3://packages.flapjack.io/flapjack_upload.lock'
-    local_lock    = 'flapjack_upload.lock'
-    obtained_lock = false
-    (1..360).each do |i|
-      if Mixlib::ShellOut.new("aws s3 cp #{remote_lock} #{local_lock} " +
-        "--acl public-read --region us-east-1").run_command.error?
-        obtained_lock = true
-        break
-      end
-      puts "Could not get flapjack upload lock, someone else is updating the repository: #{i}"
-      sleep 10
-    end
+  when 'ubuntu', 'debian'
+      local_dir   = 'aptly'
+      remote_dir  = 's3://packages.flapjack.io/aptly'
+      lockfile    = 'flapjack_upload_deb.lock'
 
-    unless obtained_lock
-      puts "Error: timed out trying to get flapjack_upload.lock"
-      exit 4
-    end
+      puts "Creating aptly.conf"
+      # Create aptly config file
+      aptly_config = <<-eos
+        {
+          "rootDir": "#{FileUtils.pwd}/#{local_dir}",
+          "downloadConcurrency": 4,
+          "downloadSpeedLimit": 0,
+          "architectures": [],
+          "dependencyFollowSuggests": false,
+          "dependencyFollowRecommends": false,
+          "dependencyFollowAllVariants": false,
+          "dependencyFollowSource": false,
+          "gpgDisableSign": false,
+          "gpgDisableVerify": false,
+          "downloadSourcePackages": false,
+          "S3PublishEndpoints": {}
+        }
+      eos
+      File.write('aptly.conf', aptly_config)
+  when 'centos'
+    local_dir   = 'createrepo'
+    remote_dir  = 's3://packages.flapjack.io/rpmtest'
+    lockfile    = 'flapjack_upload_rpm.lock'
 
-    puts "Starting package upload"
-    Mixlib::ShellOut.new("touch #{local_lock}").run_command.error!
-    Mixlib::ShellOut.new("aws s3 cp #{local_lock} #{remote_lock} --acl public-read " +
-                         "--region us-east-1").run_command.error!
+    # TODO: install & configure createrepo
+  end
 
+  get_lock(lockfile)
 
-    puts "Creating aptly.conf"
-    # Create aptly config file
-    aptly_config = <<-eos
-      {
-        "rootDir": "#{FileUtils.pwd}/aptly",
-        "downloadConcurrency": 4,
-        "downloadSpeedLimit": 0,
-        "architectures": [],
-        "dependencyFollowSuggests": false,
-        "dependencyFollowRecommends": false,
-        "dependencyFollowAllVariants": false,
-        "dependencyFollowSource": false,
-        "gpgDisableSign": false,
-        "gpgDisableVerify": false,
-        "downloadSourcePackages": false,
-        "S3PublishEndpoints": {}
-      }
-    eos
-    File.write('aptly.conf', aptly_config)
+  sync_packages_to_local(local_dir, remote_dir)
 
-    FileUtils.mkdir_p('aptly')
-    puts "Syncing down aptly dir"
-    Mixlib::ShellOut.new("aws s3 sync s3://packages.flapjack.io/aptly aptly --delete " +
-                         "--acl public-read --region us-east-1").run_command.error!
-
+  case pkg.distro
+  when 'ubuntu', 'debian'
     puts "Checking aptly db for errors"
     Mixlib::ShellOut.new("aptly -config aptly.conf db recover").run_command.error!
     Mixlib::ShellOut.new("aptly -config aptly.conf db cleanup").run_command.error!
@@ -345,6 +340,7 @@ task :publish do
                          "flapjack-#{pkg.major_version}-#{pkg.distro_release}-experimental " +
                          "pkg/flapjack_#{pkg.package_version}*.deb").run_command.error!
 
+
     puts "Attempting the first publish for all components of the major version " +
          "of the given distro release"
     publish_cmd = 'aptly -config=aptly.conf publish repo -architectures="i386,amd64" ' +
@@ -361,31 +357,9 @@ task :publish do
                            "publish update #{pkg.distro_release} #{pkg.major_version}").run_command.error!
     end
 
-    puts "Creating directory index files for published packages"
-    indexes = Mixlib::ShellOut.new('cd aptly/public && ../../create_directory_listings .')
-    if indexes.run_command.error?
-      puts "Warning: Directory indexes failed to be created"
-      puts indexes.inspect
-    end
+    create_indexes('aptly/public', '../../create_directory_listings')
 
-    puts "Syncing the aptly db up to S3"
-    Mixlib::ShellOut.new('aws s3 sync aptly s3://packages.flapjack.io/aptly ' +
-                         '--delete --acl public-read --region us-east-1').run_command.error!
-
-    puts "Syncing the public packages repo up to S3"
-    Mixlib::ShellOut.new('aws s3 sync aptly/public s3://packages.flapjack.io/deb ' +
-                         '--delete --acl public-read --region us-east-1').run_command.error!
-
-    puts "Copying candidate deb for main to s3"
-    Mixlib::ShellOut.new("aws s3 cp pkg/candidate_flapjack_#{pkg.package_version}*.deb " +
-                         's3://packages.flapjack.io/candidates/ --acl public-read ' +
-                         '--region us-east-1').run_command.error!
-
-    puts "Removing package upload lockfile"
-    if Mixlib::ShellOut.new("aws s3 rm #{remote_lock} --region us-east-1").run_command.error?
-      puts "Failed to remove lockfile - please remove #{remote_lock} manually"
-      exit 5
-    end
+    sync_packages_to_remote('aptly/public', 's3://packages.flapjack.io/deb')
 
   when 'centos'
     upload_rpm_cmd = Mixlib::ShellOut.new("aws s3 cp pkg s3://packages.flapjack.io/rpm/ --recursive")
@@ -393,10 +367,80 @@ task :publish do
       puts "Error: Failed to upload package file to s3"
       upload_rpm_cmd.error!
     end
+
+    create_indexes(local_dir, '../create_directory_listings')
   else
     puts "Error: I don't know how to publish for distro #{pkg.distro}"
     exit 1
   end
+
+  sync_packages_to_remote(local_dir, remote_dir)
+
+  if %(ubuntu debian).include?(pkg.distro)
+    # FIXME: limit to main
+    puts "Copying candidate package for main to s3"
+    Mixlib::ShellOut.new("aws s3 cp pkg/candidate_flapjack_#{pkg.package_version}*.deb " +
+                         's3://packages.flapjack.io/candidates/ --acl public-read ' +
+                         '--region us-east-1').run_command.error!
+  end
+
+  release_lock(lockfile)
+end
+
+#FIXME: generate list_script automatically
+def create_indexes(local_dir, list_script)
+  puts "Creating directory index files for published packages"
+  indexes = Mixlib::ShellOut.new("cd #{local_dir} && #{list_script} .")
+  if indexes.run_command.error?
+    puts "Warning: Directory indexes failed to be created"
+    puts indexes.inspect
+  end
+end
+
+def get_lock(lockfile)
+  # Attempt to get lock file from S3
+  obtained_lock = false
+  (1..360).each do |i|
+    if Mixlib::ShellOut.new("aws s3 cp s3://packages.flapjack.io/#{lockfile} #{lockfile}" +
+      "--acl public-read --region us-east-1").run_command.error?
+      obtained_lock = true
+      break
+    end
+    puts "Could not get flapjack upload lock, someone else is updating the repository: #{i}"
+    sleep 10
+  end
+
+  unless obtained_lock
+    puts "Error: timed out trying to get #{lockfile}"
+    exit 4
+  end
+
+  puts "Starting package upload"
+  Mixlib::ShellOut.new("touch #{lockfile}").run_command.error!
+  Mixlib::ShellOut.new("aws s3 cp #{lockfile} s3://packages.flapjack.io/#{lockfile} --acl public-read " +
+                       "--region us-east-1").run_command.error!
+end
+
+def release_lock(lockfile)
+  puts "Removing package upload lockfile"
+  if Mixlib::ShellOut.new("aws s3 rm s3://packages.flapjack.io/#{lockfile} --region us-east-1").run_command.error?
+    puts "Failed to remove lockfile - please remove s3://packages.flapjack.io/#{lockfile} manually"
+    exit 5
+  end
+end
+
+def sync_packages_to_local(local_dir, remote_dir)
+  FileUtils.mkdir_p(local_dir)
+
+  puts "Syncing down #{remote_dir} to #{local_dir}"
+  Mixlib::ShellOut.new("aws s3 sync #{remote_dir} #{local_dir} --delete " +
+                       "--acl public-read --region us-east-1").run_command.error!
+end
+
+def sync_packages_to_remote(local_dir, remote_dir)
+  puts "Syncing #{local_dir} up to #{remote_dir}"
+  Mixlib::ShellOut.new("aws s3 sync #{local_dir} #{remote_dir} " +
+                       "--delete --acl public-read --region us-east-1").run_command.error!
 end
 
 desc "Promote a published Flapjack package (from experimental to main)"
@@ -405,4 +449,3 @@ end
 
 desc "Build and publish Flapjack packages"
 task :build_and_publish => [ :build, :publish ]
-

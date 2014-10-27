@@ -11,4 +11,6 @@ vendor/cookbooks
 .elasticbeanstalk/
 aptly.conf
 aptly/*
-flapjack_upload.lock
+createrepo/*
+flapjack_upload_deb.lock
+flapjack_upload_rpm.lock
