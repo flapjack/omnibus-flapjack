@@ -130,7 +130,8 @@ class Package
   end
 
   def main_package_version
-    @main_package_version ||= "#{version}#{minor_delim}#{distro_release}"
+    # Only build a candidate package for main if the version isn't an RC (contains an alpha)
+    @main_package_version ||= full_version =~ /[a-zA-Z]/ ? nil: "#{version}#{minor_delim}#{distro_release}"
   end
 
   def initialize(options)
@@ -160,7 +161,7 @@ task :build do
   puts "version:              #{pkg.version}"
   puts "full_version:         #{pkg.full_version}"
   puts "package_version:      #{pkg.package_version}"
-  puts "main_package_version: #{pkg.main_package_version}"
+  puts pkg.main_package_version.nil? ? "Not building candidate for main - version contains an alpha" : "main_package_version: #{pkg.main_package_version}"
   puts
   puts "Starting Docker container..."
 
