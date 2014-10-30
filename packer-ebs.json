@@ -30,7 +30,7 @@
     "inline": [
       "sleep 30",
       "sudo apt-get update",
-      "sudo apt-get install -y gnupg awscli git build-essential ruby1.9.1-full",
+      "sudo apt-get install -y gnupg awscli git build-essential ruby1.9.1-full createrepo",
       "git clone https://github.com/flapjack/omnibus-flapjack.git && cd omnibus-flapjack",
       "gpg --batch --yes --import /tmp/pkg_signing_key",
       "gpg --batch --yes --keyserver keys.gnupg.net --recv-keys 2A194991",
