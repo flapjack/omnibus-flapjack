@@ -122,7 +122,7 @@ class Package
 
   def main_package_version
     # Only build a candidate package for main if the version isn't an RC (contains an alpha)
-    return nil if package_version =~ /[a-zA-Z]/
+    return nil if experimental_package_version =~ /[a-zA-Z]/
     case distro
     when 'ubuntu', 'debian'
       @main_package_version ||= "#{version}#{major_delim}#{distro_release}"
