@@ -61,6 +61,10 @@ class Publish
     end
 
     def sync_packages_to_remote(local_dir, remote_dir)
+      unless File.directory?(local_dir)
+        puts "Error, local_dir does not exist (#{local_dir}) pwd: #{FileUtils.pwd}"
+        return false
+      end
       puts "Syncing #{local_dir} up to #{remote_dir}"
       Mixlib::ShellOut.new("aws s3 sync #{local_dir} #{remote_dir} " +
                            "--delete --acl public-read --region us-east-1").run_command.error!
