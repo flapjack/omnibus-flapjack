@@ -17,6 +17,7 @@
 # pkg/flapjack_1.1.0~+20141003112645-master-centos-6-1_amd64.rpm
 $:.push(File.expand_path(File.join(__FILE__, '..', 'lib')))
 require 'mixlib/shellout'
+require 'package'
 require 'publish'
 
 dry_run = (ENV["DRY_RUN"].nil? || ENV["DRY_RUN"].empty?) ? false : true
@@ -24,135 +25,6 @@ pkg = nil
 
 task :default do
   sh %{rake -T}
-end
-
-class Package
-
-  attr_reader :build_ref, :package_file, :truth_from_filename
-
-  def distro
-    return @distro if @distro
-    if (@package_file && !@package_file.empty?)
-      @distro = case @package_file.split('.').last
-      when 'deb'
-        'ubuntu'
-      when 'rpm'
-        'centos'
-      else
-        nil
-      end
-    else
-      return nil
-    end
-  end
-
-  def distro_release
-    @distro_release ||= if truth_from_filename
-      experimental_package_version.split(minor_delim).last
-    end
-  end
-
-  def file_suffix
-    if @truth_from_filename
-      return @package_file.split('.').last
-    end
-    case distro
-    when 'ubuntu'
-      'deb'
-    when 'centos'
-      'rpm'
-    else
-      nil
-    end
-  end
-
-  def major_delim
-    return @major_delim ||= ['ubuntu'].include?(distro) ? '_' : '-'
-  end
-
-  def minor_delim
-    return @minor_delim ||= ['ubuntu'].include?(distro) ? '-' : '_'
-  end
-
-  def version
-    return @version if @version
-    if truth_from_filename
-      raise RuntimeError 'version from filename is unsupported'
-    else
-      version_url = "https://raw.githubusercontent.com/flapjack/flapjack/" +
-                    "#{build_ref}/lib/flapjack/version.rb"
-      version_cmd = Mixlib::ShellOut.new("wget -qO - #{version_url} | grep VERSION | cut -d '\"' -f 2")
-      version_cmd.run_command
-      version_cmd.error!
-      version = version_cmd.stdout.strip
-      unless version.length > 0
-        raise "Incorrect build_ref.  Tags should be specified as 'v1.0.0rc3'"
-      end
-      @version = version
-    end
-  end
-
-  # Use v<major release> as a repo prefix, unless it's the 0.9 series.
-  def major_version
-    @major_version ||= if truth_from_filename
-      version_with_date = experimental_package_version.split(@minor_delim).first
-      major, minor = version_with_date.split('.')
-      major == '0' ? "0.#{minor}" : "v#{major}"
-    else
-      major, minor = version.split('.')
-      major == '0' ? "0.#{minor}" : "v#{major}"
-    end
-  end
-
-  def timestamp
-    @timestamp ||= if truth_from_filename
-      raise RuntimeError 'timestamp from filename unsupported'
-    else
-      Time.now.utc.strftime('%Y%m%d%H%M%S')
-    end
-  end
-
-  def experimental_package_version
-    @experimental_package_version ||= if truth_from_filename
-      package_name, package_version = package_file.split(major_delim)
-      package_version.gsub(/#{minor_delim}1$/, '')
-    else
-      first, second = version.match(/^([0-9.]*)([a-z0-9.]*)$/).captures
-      case @distro
-      when 'ubuntu', 'debian'
-        if second.empty?
-          # If we get a version that isn't an RC (contains an alpha), make
-          # the package version~+date-ref-release-1 so that it sorts above RCs
-          # ie, insert a + before the timestamp
-          "#{first}~+#{timestamp}#{minor_delim}#{build_ref}#{minor_delim}#{distro_release}"
-        else
-          "#{first}~#{second}~#{timestamp}#{minor_delim}#{build_ref}#{minor_delim}#{distro_release}"
-        end
-      when 'centos'
-        "#{first}#{major_delim}0.#{timestamp}#{second}"
-      end
-    end
-  end
-
-  def main_package_version
-    # Only build a candidate package for main if the version isn't an RC (contains an alpha)
-    return nil if version =~ /[a-zA-Z]/
-    case distro
-    when 'ubuntu', 'debian'
-      @main_package_version ||= "#{version}#{minor_delim}#{distro_release}"
-    when 'centos'
-      # flapjack-1.2.0-1.el6.x86_64.rpm
-      @main_package_version ||= version
-    end
-  end
-
-  def initialize(options)
-    @build_ref      = options[:build_ref]
-    @distro         = options[:distro]
-    @distro_release = options[:distro_release]
-    @package_file   = options[:package_file]
-    @truth_from_filename = @package_file && !@package_file.nil?
-  end
 end
 
 desc "Build Flapjack packages"
@@ -302,9 +174,6 @@ end
 
 desc "Publish a Flapjack package (to experimental)"
 task :publish do
-  # flapjack_1.1.0~+20141003112645-master-trusty-1_amd64.deb
-  # flapjack-1.2.0~rc1~20141017011950_master_6-1.el6.x86_64.rpm
-
   pkg ||= Package.new(
     :package_file   => ENV['PACKAGE_FILE']
   )
@@ -357,6 +226,8 @@ task :publish do
     remote_dir  = 's3://packages.flapjack.io/rpmtest'
     lockfile    = 'flapjack_upload_rpm.lock'
 
+    Mixlib::ShellOut.new("yum install -y createrepo").run_command.error!
+
     # TODO: install & configure createrepo
   end
 
@@ -366,58 +237,14 @@ task :publish do
 
   case pkg.distro
   when 'ubuntu', 'debian'
-    puts "Checking aptly db for errors"
-    Mixlib::ShellOut.new("aptly -config aptly.conf db recover").run_command.error!
-    Mixlib::ShellOut.new("aptly -config aptly.conf db cleanup").run_command.error!
-
-    puts "Creating all components for the distro release if they don't exist"
-
-    valid_components = ['main', 'experimental']
-
-    valid_components.each do |component|
-      if Mixlib::ShellOut.new("aptly -config=aptly.conf repo show " +
-                              "flapjack-#{pkg.major_version}-#{pkg.distro_release}-#{component}"
-                              ).run_command.error?
-        Mixlib::ShellOut.new("aptly -config=aptly.conf repo create -distribution #{pkg.distro_release} " +
-                             "-architectures='i386,amd64' -component=#{component} " +
-                             "flapjack-#{pkg.major_version}-#{pkg.distro_release}-#{component}"
-                             ).run_command.error!
-      end
-    end
-
-    puts "Adding pkg/flapjack_#{pkg.experimental_package_version}*.deb to the " +
-         "flapjack-#{pkg.major_version}-#{pkg.distro_release}-experimental repo"
-    Mixlib::ShellOut.new("aptly -config=aptly.conf repo add " +
-                         "flapjack-#{pkg.major_version}-#{pkg.distro_release}-experimental " +
-                         "pkg/flapjack_#{pkg.experimental_package_version}*.deb").run_command.error!
-
-
-    puts "Attempting the first publish for all components of the major version " +
-         "of the given distro release"
-    publish_cmd = 'aptly -config=aptly.conf publish repo -architectures="i386,amd64" ' +
-                  '-gpg-key="803709B6" -component=, '
-    valid_components.each do |component|
-      publish_cmd += "flapjack-#{pkg.major_version}-#{pkg.distro_release}-#{component} "
-    end
-    publish_cmd += " #{pkg.major_version}"
-    if Mixlib::ShellOut.new(publish_cmd).run_command.error?
-      puts "Repository already published, attempting an update"
-      # Aptly checks the inode number to determine if packages are the same.
-      # As we sync from S3, our inode numbers change, so identical packages are deemed different.
-      Mixlib::ShellOut.new('aptly -config=aptly.conf -gpg-key="803709B6" -force-overwrite=true ' +
-                           "publish update #{pkg.distro_release} #{pkg.major_version}").run_command.error!
-    end
+    Publish.add_to_deb_repo(pkg)
 
     Publish.create_indexes('aptly/public', '../../create_directory_listings')
 
     Publish.sync_packages_to_remote('aptly/public', 's3://packages.flapjack.io/deb')
 
   when 'centos'
-    upload_rpm_cmd = Mixlib::ShellOut.new("aws s3 cp pkg s3://packages.flapjack.io/rpm/ --recursive")
-    if upload_rpm_cmd.run_command.error?
-      puts "Error: Failed to upload package file to s3"
-      upload_rpm_cmd.error!
-    end
+    Publish.add_to_rpm_repo(pkg)
 
     Publish.create_indexes(local_dir, '../create_directory_listings')
   else
@@ -437,8 +264,6 @@ task :publish do
 
   Publish.release_lock(lockfile)
 end
-
-
 
 desc "Promote a published Flapjack package (from experimental to main)"
 task :promote do
