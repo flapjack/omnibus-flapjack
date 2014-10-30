@@ -102,7 +102,7 @@ class Package
           "#{first}~#{second}~#{timestamp}#{minor_delim}#{build_ref}#{minor_delim}#{distro_release}"
         end
       when 'centos'
-        "#{first}#{major_delim}0.#{timestamp}#{second}"
+        "#{first}#{minor_delim}0.#{timestamp}#{second}"
       end
     end
   end
@@ -112,7 +112,7 @@ class Package
     return nil if version =~ /[a-zA-Z]/
     case distro
     when 'ubuntu', 'debian'
-      @main_package_version ||= "#{version}#{minor_delim}#{distro_release}"
+      @main_package_version ||= "#{version}#{major_delim}#{distro_release}"
     when 'centos'
       # flapjack-1.2.0-1.el6.x86_64.rpm
       @main_package_version ||= version
