@@ -119,13 +119,13 @@ class Publish
 
       releases = %w(6)
       arches = %w(i386 x86_64)
-      flapjack_version = %w(v1)
+      flapjack_version = %w(v1) # FIXME: use pkg.major_version ?
       components = %w(flapjack flapjack-experimental)
 
       base_dir = 'createrepo'
       FileUtils.mkdir_p(base_dir)
-      Dir.chdir(base_dir)
-      list_dir = FileUtils.mkdir_p('lists')
+      list_dir = 'lists'
+      FileUtils.mkdir_p(list_dir)
 
       puts "Creating rpm repositories"
       arches.each do |arch|
@@ -133,7 +133,7 @@ class Publish
           flapjack_version.each do |fl_version|
             components.each do |component|
               # eg v1/flapjack/centos/6/x86_64
-              local_dir = File.join(fl_version, component, 'centos', version, arch)
+              local_dir = File.join(base_dir, fl_version, component, 'centos', version, arch)
 
               unless File.exist?(local_dir)
                 puts "New RPM repo: #{local_dir}"
@@ -151,7 +151,7 @@ class Publish
 
                 # Build yum repository config file for user systems
                 repo_filename = [fl_version, component, 'centos', version].join('-')
-                File.open(File.join(list_dir, repo_filename), 'w') do |f|
+                File.open(File.join(base_dir, list_dir, repo_filename), 'w') do |f|
                   f.puts "[#{repo_filename}]"
                   f.puts "Name=#{repo_filename}"
                   f.puts "baseurl=http://packages.flapjack.io/rpm/#{local_dir}/$basearch"
@@ -168,10 +168,10 @@ class Publish
       name = [ pkg.major_version, component, 'centos', pkg.distro_release, 'x86_64' ]
 
       puts "Adding pkg/flapjack-#{pkg.experimental_package_version}*.rpm to the #{name.join('-')} repo"
-      Mixlib::ShellOut.new("cp ../pkg/flapjack-#{pkg.experimental_package_version}*.rpm #{File.join(name)}/.").run_command.error!
+      Mixlib::ShellOut.new("cp pkg/flapjack-#{pkg.experimental_package_version}*.rpm #{File.join(base_dir, *name)}/.").run_command.error!
 
       puts "Updating #{name.join('-')} repo"
-      Dir.chdir(File.join(name)) do
+      Dir.chdir(File.join(base_dir, *name)) do
         Mixlib::ShellOut.new('createrepo .').run_command.error!
       end
     end
