@@ -82,7 +82,7 @@ task :build do
     puts "STDERR: "
     puts "#{docker_cmd.stderr}"
     if docker_cmd.error?
-      puts "ERROR running docker command, exit code is #{docker_cmd.exitstatus}"
+      puts "ERROR running docker command, exit status is #{docker_cmd.exitstatus}"
       exit 1
     end
     puts "Docker run completed."
@@ -175,7 +175,7 @@ end
 desc "Publish a Flapjack package (to experimental)"
 task :publish do
   pkg ||= Package.new(
-    :package_file   => ENV['PACKAGE_FILE']
+    :package_file => ENV['PACKAGE_FILE']
   )
 
   puts "distro:          #{pkg.distro}"
@@ -196,6 +196,8 @@ task :publish do
     exit 1
   end
 
+  start_dir = FileUtils.pwd
+
   case pkg.distro
   when 'ubuntu', 'debian'
       local_dir   = 'aptly'
@@ -206,7 +208,7 @@ task :publish do
       # Create aptly config file
       aptly_config = <<-eos
         {
-          "rootDir": "#{FileUtils.pwd}/#{local_dir}",
+          "rootDir": "#{start_dir}/#{local_dir}",
           "downloadConcurrency": 4,
           "downloadSpeedLimit": 0,
           "architectures": [],
@@ -244,7 +246,7 @@ task :publish do
   when 'centos'
     Publish.add_to_rpm_repo(pkg)
 
-    Publish.create_indexes(local_dir, '../create_directory_listings')
+    Publish.create_indexes(local_dir, './create_directory_listings')
   else
     puts "Error: I don't know how to publish for distro #{pkg.distro}"
     exit 1

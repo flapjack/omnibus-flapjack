@@ -8,15 +8,17 @@ class Publish
         puts "Error, local_dir does not exist (#{local_dir}) pwd: #{FileUtils.pwd}"
         return
       end
-      unless File.file?(list_script)
-        puts "Error, list_script does not exist (#{list_script}) pwd: #{FileUtils.pwd}"
-        return
-      end
-      puts "Creating directory index files for published packages"
-      indexes = Mixlib::ShellOut.new("cd #{local_dir} && #{list_script} .")
-      if indexes.run_command.error?
-        puts "Warning: Directory indexes failed to be created"
-        puts indexes.inspect
+      Dir.chdir(local_dir) do
+        unless File.file?(list_script)
+          puts "Error, list_script does not exist (#{list_script}) pwd: #{FileUtils.pwd}"
+          return
+        end
+        puts "Creating directory index files for published packages"
+        indexes = Mixlib::ShellOut.new("#{list_script} .")
+        if indexes.run_command.error?
+          puts "Warning: Directory indexes failed to be created"
+          puts indexes.inspect
+        end
       end
     end
 
