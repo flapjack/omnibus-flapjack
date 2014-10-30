@@ -90,10 +90,18 @@ class Package
     end
   end
 
-  def experimental_package_version
-    @experimental_package_version ||= if truth_from_filename
+  def package_version
+    @package_version ||= if truth_from_filename
       package_name, package_version = package_file.split(major_delim)
       package_version.gsub(/#{minor_delim}1$/, '')
+    else
+      nil
+    end
+  end
+
+  def experimental_package_version
+    @experimental_package_version ||= if truth_from_filename
+      package_version
     else
       first, second = version.match(/^([0-9.]*)([a-z0-9.]*)$/).captures
       case @distro
