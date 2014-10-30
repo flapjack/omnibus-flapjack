@@ -15,8 +15,9 @@
 #
 # pkg/flapjack_1.1.0~+20141003112645-master-trusty-1_amd64.deb
 # pkg/flapjack_1.1.0~+20141003112645-master-centos-6-1_amd64.rpm
-
+$:.push(File.expand_path(File.join(__FILE__, '..', 'lib')))
 require 'mixlib/shellout'
+require 'publish'
 
 dry_run = (ENV["DRY_RUN"].nil? || ENV["DRY_RUN"].empty?) ? false : true
 pkg = nil
@@ -47,7 +48,7 @@ class Package
 
   def distro_release
     @distro_release ||= if truth_from_filename
-      package_version.split(minor_delim).last
+      experimental_package_version.split(minor_delim).last
     end
   end
 
@@ -94,7 +95,7 @@ class Package
   # Use v<major release> as a repo prefix, unless it's the 0.9 series.
   def major_version
     @major_version ||= if truth_from_filename
-      version_with_date = package_version.split(@minor_delim).first
+      version_with_date = experimental_package_version.split(@minor_delim).first
       major, minor = version_with_date.split('.')
       major == '0' ? "0.#{minor}" : "v#{major}"
     else
@@ -112,7 +113,7 @@ class Package
   end
 
   def experimental_package_version
-    @package_version ||= if truth_from_filename
+    @experimental_package_version ||= if truth_from_filename
       package_name, package_version = package_file.split(major_delim)
       package_version.gsub(/#{minor_delim}1$/, '')
     else
@@ -359,9 +360,9 @@ task :publish do
     # TODO: install & configure createrepo
   end
 
-  get_lock(lockfile)
+  Publish.get_lock(lockfile)
 
-  sync_packages_to_local(local_dir, remote_dir)
+  Publish.sync_packages_to_local(local_dir, remote_dir)
 
   case pkg.distro
   when 'ubuntu', 'debian'
@@ -407,9 +408,9 @@ task :publish do
                            "publish update #{pkg.distro_release} #{pkg.major_version}").run_command.error!
     end
 
-    create_indexes('aptly/public', '../../create_directory_listings')
+    Publish.create_indexes('aptly/public', '../../create_directory_listings')
 
-    sync_packages_to_remote('aptly/public', 's3://packages.flapjack.io/deb')
+    Publish.sync_packages_to_remote('aptly/public', 's3://packages.flapjack.io/deb')
 
   when 'centos'
     upload_rpm_cmd = Mixlib::ShellOut.new("aws s3 cp pkg s3://packages.flapjack.io/rpm/ --recursive")
@@ -418,13 +419,13 @@ task :publish do
       upload_rpm_cmd.error!
     end
 
-    create_indexes(local_dir, '../create_directory_listings')
+    Publish.create_indexes(local_dir, '../create_directory_listings')
   else
     puts "Error: I don't know how to publish for distro #{pkg.distro}"
     exit 1
   end
 
-  sync_packages_to_remote(local_dir, remote_dir)
+  Publish.sync_packages_to_remote(local_dir, remote_dir)
 
   if %(ubuntu debian).include?(pkg.distro)
     # FIXME: limit to main
@@ -434,64 +435,10 @@ task :publish do
                          '--region us-east-1').run_command.error!
   end
 
-  release_lock(lockfile)
+  Publish.release_lock(lockfile)
 end
 
-#FIXME: generate list_script automatically
-def create_indexes(local_dir, list_script)
-  puts "Creating directory index files for published packages"
-  indexes = Mixlib::ShellOut.new("cd #{local_dir} && #{list_script} .")
-  if indexes.run_command.error?
-    puts "Warning: Directory indexes failed to be created"
-    puts indexes.inspect
-  end
-end
 
-def get_lock(lockfile)
-  # Attempt to get lock file from S3
-  obtained_lock = false
-  (1..360).each do |i|
-    if Mixlib::ShellOut.new("aws s3 cp s3://packages.flapjack.io/#{lockfile} #{lockfile}" +
-      "--acl public-read --region us-east-1").run_command.error?
-      obtained_lock = true
-      break
-    end
-    puts "Could not get flapjack upload lock, someone else is updating the repository: #{i}"
-    sleep 10
-  end
-
-  unless obtained_lock
-    puts "Error: timed out trying to get #{lockfile}"
-    exit 4
-  end
-
-  puts "Starting package upload"
-  Mixlib::ShellOut.new("touch #{lockfile}").run_command.error!
-  Mixlib::ShellOut.new("aws s3 cp #{lockfile} s3://packages.flapjack.io/#{lockfile} --acl public-read " +
-                       "--region us-east-1").run_command.error!
-end
-
-def release_lock(lockfile)
-  puts "Removing package upload lockfile"
-  if Mixlib::ShellOut.new("aws s3 rm s3://packages.flapjack.io/#{lockfile} --region us-east-1").run_command.error?
-    puts "Failed to remove lockfile - please remove s3://packages.flapjack.io/#{lockfile} manually"
-    exit 5
-  end
-end
-
-def sync_packages_to_local(local_dir, remote_dir)
-  FileUtils.mkdir_p(local_dir)
-
-  puts "Syncing down #{remote_dir} to #{local_dir}"
-  Mixlib::ShellOut.new("aws s3 sync #{remote_dir} #{local_dir} --delete " +
-                       "--acl public-read --region us-east-1").run_command.error!
-end
-
-def sync_packages_to_remote(local_dir, remote_dir)
-  puts "Syncing #{local_dir} up to #{remote_dir}"
-  Mixlib::ShellOut.new("aws s3 sync #{local_dir} #{remote_dir} " +
-                       "--delete --acl public-read --region us-east-1").run_command.error!
-end
 
 desc "Promote a published Flapjack package (from experimental to main)"
 task :promote do
