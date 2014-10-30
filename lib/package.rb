@@ -21,7 +21,12 @@ class Package
 
   def distro_release
     @distro_release ||= if truth_from_filename
-      experimental_package_version.split(minor_delim).last
+      case distro
+      when 'ubuntu' || 'debian'
+        experimental_package_version.split(minor_delim).last
+      when 'centos'
+        @package_file.split('.')[-3].split('el')[1]
+      end
     end
   end
 
@@ -109,7 +114,7 @@ class Package
 
   def main_package_version
     # Only build a candidate package for main if the version isn't an RC (contains an alpha)
-    return nil if version =~ /[a-zA-Z]/
+    return nil if package_version =~ /[a-zA-Z]/
     case distro
     when 'ubuntu', 'debian'
       @main_package_version ||= "#{version}#{major_delim}#{distro_release}"
