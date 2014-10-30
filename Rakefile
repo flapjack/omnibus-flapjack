@@ -246,7 +246,7 @@ task :publish do
   when 'centos'
     Publish.add_to_rpm_repo(pkg)
 
-    Publish.create_indexes(local_dir, './create_directory_listings')
+    Publish.create_indexes(local_dir, '../create_directory_listings')
   else
     puts "Error: I don't know how to publish for distro #{pkg.distro}"
     exit 1
