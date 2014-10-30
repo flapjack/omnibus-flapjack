@@ -226,9 +226,7 @@ task :publish do
     remote_dir  = 's3://packages.flapjack.io/rpmtest'
     lockfile    = 'flapjack_upload_rpm.lock'
 
-    Mixlib::ShellOut.new("apt-get install -y createrepo").run_command.error!
-
-    # TODO: install & configure createrepo
+    # TODO: configure createrepo?
   end
 
   Publish.get_lock(lockfile)
