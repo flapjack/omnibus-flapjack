@@ -127,7 +127,14 @@ class Publish
                 puts "New RPM repo: #{local_dir}"
                 FileUtils.mkdir_p local_dir
                 Dir.chdir(local_dir) do
-                  Mixlib::ShellOut.new('createrepo .').run_command.error!
+                  createrepo_cmd = Mixlib::ShellOut.new('createrepo .')
+                  unless createrepo_cmd.run_command
+                    puts "Error running 'createrepo .', exit status is #{createrepo_cmd.exitstatus}"
+                    puts "PWD:    #{FileUtils.pwd}"
+                    puts "STDOUT: #{createrepo_cmd.stdout}"
+                    puts "STDERR: #{createrepo_cmd.stderr}"
+                    exit 1
+                  end
                 end
 
                 # Build yum repository config file for user systems
