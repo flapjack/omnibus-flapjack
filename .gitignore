@@ -14,3 +14,4 @@ aptly/*
 createrepo/*
 flapjack_upload_deb.lock
 flapjack_upload_rpm.lock
+Gemfile.lock
