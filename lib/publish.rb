@@ -114,12 +114,6 @@ class Publish
       FileUtils.mkdir_p(base_dir)
       Dir.chdir(base_dir)
       list_dir = FileUtils.mkdir_p('lists')
-      # https://packages.flapjack.io/lists/v1-flapjack-centos-6
-
-      # Create repos
-      # add deb
-      # update only changed repo
-      # only one at a time
 
       puts "Creating rpm repositories"
       arches.each do |arch|
