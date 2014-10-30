@@ -4,6 +4,14 @@ class Publish
   class << self
     #FIXME: generate list_script automatically
     def create_indexes(local_dir, list_script)
+      unless File.directory?(local_dir)
+        puts "Error, local_dir does not exist (#{local_dir}) pwd: #{FileUtils.pwd}"
+        return
+      end
+      unless File.file?(list_script)
+        puts "Error, list_script does not exist (#{list_script}) pwd: #{FileUtils.pwd}"
+        return
+      end
       puts "Creating directory index files for published packages"
       indexes = Mixlib::ShellOut.new("cd #{local_dir} && #{list_script} .")
       if indexes.run_command.error?
