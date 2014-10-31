@@ -126,8 +126,6 @@ class Publish
 
       base_dir = 'createrepo'
       FileUtils.mkdir_p(base_dir)
-      list_dir = 'lists'
-      FileUtils.mkdir_p(list_dir)
 
       puts "Creating rpm repositories"
       arches.each do |arch|
@@ -149,15 +147,6 @@ class Publish
                     puts "STDERR: #{createrepo_cmd.stderr}"
                     exit 1
                   end
-                end
-
-                # Build yum repository config file for user systems
-                repo_filename = [fl_version, component, 'centos', version].join('-')
-                File.open(File.join(base_dir, list_dir, repo_filename), 'w') do |f|
-                  f.puts "[#{repo_filename}]"
-                  f.puts "Name=#{repo_filename}"
-                  f.puts "baseurl=http://packages.flapjack.io/rpm/#{local_dir}/$basearch"
-                  f.puts "enabled=1"
                 end
               end
             end
