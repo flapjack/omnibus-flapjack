@@ -225,7 +225,7 @@ task :publish do
       File.write('aptly.conf', aptly_config)
   when 'centos'
     local_dir   = 'createrepo'
-    remote_dir  = 's3://packages.flapjack.io/rpmtest'
+    remote_dir  = 's3://packages.flapjack.io/rpm'
     lockfile    = 'flapjack_upload_rpm.lock'
 
     # TODO: configure createrepo?
