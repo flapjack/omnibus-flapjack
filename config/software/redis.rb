@@ -235,8 +235,8 @@ build do
   command "mkdir -p '#{etc_path}/init.d'"
 
   command "cat >#{etc_path}/redis/redis-flapjack.conf <<EOCONFIG\n#{config.gsub(/\$/, '\\$')}EOCONFIG"
-  command "if [ -f /etc/redhat-release ]; then cat >#{etc_path}/init.d/redis-flapjack <<EOINIT\n#{rpm_init.gsub(/\$/, '\\$')}EOINIT; fi"
-  command "if ! [ -f /etc/redhat-release ]; then cat >#{etc_path}/init.d/redis-flapjack <<EOINIT\n#{deb_init.gsub(/\$/, '\\$')}EOINIT; fi"
+  command "cat >#{etc_path}/init.d/redis-flapjack-rpm <<EOINIT\n#{rpm_init.gsub(/\$/, '\\$')}EOINIT"
+  command "cat >#{etc_path}/init.d/redis-flapjack-deb <<EOINIT\n#{deb_init.gsub(/\$/, '\\$')}EOINIT"
 
   command "touch #{etc_path}/redis/redis-flapjack.conf"
   command "touch #{etc_path}/init.d/redis-flapjack"
