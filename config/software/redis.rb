@@ -34,7 +34,7 @@ appendfsync everysec
 no-appendfsync-on-rewrite no
 CONFIG
 
-init = <<-INIT
+deb_init = <<-INIT
 #! /bin/sh
 ### BEGIN INIT INFO
 # Provides:   redis-flapjack
@@ -112,6 +112,121 @@ esac
 exit 0
 INIT
 
+rpm_init = <<-INIT
+#!/bin/bash
+#
+# redis-flapjack	Persistent key-value db for Flapjack
+#
+# chkconfig: 2345 80 30
+# description: Persistent key-value db for Flapjack
+# processname: redis-flapjack
+# pidfile: /var/run/flapjack/redis-flapjack.pid
+# config: /opt/flapjack/embedded/etc/redis/redis-flapjack.conf
+
+### BEGIN INIT INFO
+# Provides:   redis-flapjack
+# Required-Start: $syslog $remote_fs
+# Required-Stop:  $syslog $remote_fs
+# Should-Start:   $local_fs
+# Should-Stop:    $local_fs
+# Default-Start:  2 3 4 5
+# Default-Stop:   0 1 6
+# Short-Description:  redis-flapjack - Persistent key-value db for Flapjack
+# Description:    redis-flapjack - Persistent key-value db for Flapjack
+### END INIT INFO
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+RETVAL=0
+PATH=/opt/flapjack/embedded/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+DAEMON=/opt/flapjack/embedded/bin/redis-server
+DAEMON_ARGS=/opt/flapjack/embedded/etc/redis/redis-flapjack.conf
+NAME=redis-server
+DESC=redis-server
+
+RUNDIR=/var/run/flapjack
+PIDFILE=$RUNDIR/redis-flapjack.pid
+
+start() {
+    [ -x $DAEMON ] || exit 5
+    [ -f $DAEMON_ARGS ] || exit 6
+    echo -n "Starting $NAME: "
+    daemon --user flapjack --pidfile $PIDFILE $DAEMON $DAEMON_ARGS &
+    retval=$?
+    echo
+    [ $retval -eq 0 ] && touch $PIDFILE
+}
+
+stop() {
+    echo -n $"Stopping $NAME: "
+    if [ -n "`pgrep $NAME`" ] ; then
+        killproc $NAME
+    RETVAL=3
+    else
+        failure $"Stopping $DAEMON"
+    fi
+    retval=$?
+    echo
+    [ $retval -eq 0 ] && rm -f $PIDFILE
+}
+
+restart() {
+    stop
+    start
+}
+
+reload() {
+    restart
+}
+
+force_reload() {
+    restart
+}
+
+rh_status() {
+    # run checks to determine if the service is running or use generic status
+    status $DAEMON
+}
+
+rh_status_q() {
+    rh_status >/dev/null 2>&1
+}
+
+
+case "$1" in
+    start)
+        rh_status_q && exit 0
+        $1
+        ;;
+    stop)
+        rh_status_q || exit 0
+        $1
+        ;;
+    restart)
+        $1
+        ;;
+    reload)
+        rh_status_q || exit 7
+        $1
+        ;;
+    force-reload)
+        force_reload
+        ;;
+    status)
+        rh_status
+        ;;
+    condrestart|try-restart)
+        rh_status_q || exit 0
+        restart
+        ;;
+    *)
+        echo $"Usage: $0 {start|stop|status|restart|condrestart|try-restart|reload|force-reload}"
+        exit 2
+esac
+exit $?
+INIT
+
 build do
   command ["make -j #{max_build_jobs}", make_args].join(" ")
   command ["make install", make_args].join(" ")
@@ -120,9 +235,9 @@ build do
   command "mkdir -p '#{etc_path}/init.d'"
 
   command "cat >#{etc_path}/redis/redis-flapjack.conf <<EOCONFIG\n#{config.gsub(/\$/, '\\$')}EOCONFIG"
-  command "cat >#{etc_path}/init.d/redis-flapjack <<EOINIT\n#{init.gsub(/\$/, '\\$')}EOINIT"
+  command "if [ -f /etc/redhat-release ]; then cat >#{etc_path}/init.d/redis-flapjack <<EOINIT\n#{rpm_init.gsub(/\$/, '\\$')}EOINIT; fi"
+  command "if ! [ -f /etc/redhat-release ]; then cat >#{etc_path}/init.d/redis-flapjack <<EOINIT\n#{deb_init.gsub(/\$/, '\\$')}EOINIT; fi"
 
   command "touch #{etc_path}/redis/redis-flapjack.conf"
   command "touch #{etc_path}/init.d/redis-flapjack"
 end
-
