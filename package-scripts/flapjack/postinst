@@ -4,15 +4,6 @@
 # after package is installed.
 #
 
-if [ -f /etc/redhat-release ]; then 
-    # Better to exit than the break the full postinstall 
-    exit 0
-
-
-fi
-
-    
-
 INSTALLER_DIR=`dirname $0`
 DEST_DIR=/opt/flapjack
 CONFIG_DIR=/etc/flapjack
@@ -36,8 +27,6 @@ if [ ! -e /etc/flapjack/flapjack_config.yaml ] ; then
   echo "Creating /etc/flapjack/flapjack_config.yaml"
   cp ${FLAPJACK_GEM_DIR}/etc/flapjack_config.yaml.example ${CONFIG_DIR}/flapjack_config.yaml
 fi
-
-# Copy in init scripts (FIXME: support OS's other than Ubunbu)
 
 if [ ! -e /etc/init.d/redis-flapjack ] ; then
   echo "Creating /etc/init.d/redis-flapjack"
@@ -63,8 +52,13 @@ if [ ! -e /etc/init.d/flapper ] ; then
   chmod u+x /etc/init.d/flapper
 fi
 
-update-rc.d redis-flapjack defaults 94 06 >/dev/null || exit $?
-update-rc.d flapjack defaults 95 05 >/dev/null || exit $?
+if [ -f /etc/redhat-release ]; then
+  chkconfig --add redis-flapjack
+  chkconfig --add flapjack
+else
+  update-rc.d redis-flapjack defaults 94 06 >/dev/null || exit $?
+  update-rc.d flapjack defaults 95 05 >/dev/null || exit $?
+fi
 
 echo "Setting paths"
 if [ ! -e /etc/profile.d/flapjack.sh ] ; then
@@ -88,4 +82,3 @@ echo
 echo "Flapjack should now be running. Visit http://localhost:3080/"
 
 exit 0
-

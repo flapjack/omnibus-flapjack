@@ -227,8 +227,6 @@ task :publish do
     local_dir   = 'createrepo'
     remote_dir  = 's3://packages.flapjack.io/rpm'
     lockfile    = 'flapjack_upload_rpm.lock'
-
-    # TODO: configure createrepo?
   end
 
   Publish.get_lock(lockfile)

@@ -3,13 +3,6 @@
 # Perform necessary flapjack removal steps
 # prior to package removal
 #
-
-
-if [ -f /etc/redhat-release ]; then 
-    # Better to exit than the break the full preuninstall 
-    exit 0
-fi
-
 echo "Stopping flapjack"
 /etc/init.d/flapjack stop
 
