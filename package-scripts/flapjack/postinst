@@ -35,7 +35,11 @@ fi
 
 if [ ! -e /etc/init.d/redis-flapjack ] ; then
   echo "Creating /etc/init.d/redis-flapjack"
-  cp ${DEST_DIR}/embedded/etc/init.d/redis-flapjack /etc/init.d/redis-flapjack
+  if [ -f /etc/redhat-release ]; then
+    cp ${DEST_DIR}/embedded/etc/init.d/redis-flapjack-rpm /etc/init.d/redis-flapjack
+  else
+    cp ${DEST_DIR}/embedded/etc/init.d/redis-flapjack-deb /etc/init.d/redis-flapjack
+  fi
   chmod u+x /etc/init.d/redis-flapjack
 fi
 
