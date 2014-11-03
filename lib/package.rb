@@ -6,14 +6,15 @@ class Package
   def distro
     return @distro if @distro
     if (@package_file && !@package_file.empty?)
-      @distro = case @package_file.split('.').last
-      when 'deb'
+      @distro = case
+      when @package_file.match(/wheezy/)
+        'debian'
+      when @package_file.match(/(precise|trusty)/)
         'ubuntu'
-      when 'rpm'
+      when @package_file.match(/rpm$/)
         'centos'
       else
         nil
-      end
     else
       return nil
     end
@@ -35,7 +36,7 @@ class Package
       return @package_file.split('.').last
     end
     case distro
-    when 'ubuntu'
+    when 'ubuntu', 'debian'
       'deb'
     when 'centos'
       'rpm'
@@ -45,11 +46,11 @@ class Package
   end
 
   def major_delim
-    return @major_delim ||= ['ubuntu'].include?(distro) ? '_' : '-'
+    return @major_delim ||= ['ubuntu', 'debian'].include?(distro) ? '_' : '-'
   end
 
   def minor_delim
-    return @minor_delim ||= ['ubuntu'].include?(distro) ? '-' : '_'
+    return @minor_delim ||= ['ubuntu', 'debian'].include?(distro) ? '-' : '_'
   end
 
   def version
