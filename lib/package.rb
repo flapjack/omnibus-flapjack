@@ -15,6 +15,7 @@ class Package
         'centos'
       else
         nil
+      end
     else
       return nil
     end
