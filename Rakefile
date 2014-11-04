@@ -253,8 +253,7 @@ task :publish do
 
   Publish.sync_packages_to_remote(local_dir, remote_dir)
 
-  if %(ubuntu debian).include?(pkg.distro)
-    # FIXME: limit to main
+  unless Dir.glob("pkg/candidate_flapjack_#{pkg.experimental_package_version}*").empty?
     puts "Copying candidate package for main to s3"
     Mixlib::ShellOut.new("aws s3 cp pkg/candidate_flapjack_#{pkg.experimental_package_version}*.deb " +
                          's3://packages.flapjack.io/candidates/ --acl public-read ' +
