@@ -24,7 +24,7 @@ class Package
   def distro_release
     @distro_release ||= if truth_from_filename
       case distro
-      when 'ubuntu' || 'debian'
+      when 'ubuntu', 'debian'
         experimental_package_version.split(minor_delim).last
       when 'centos'
         @package_file.split('.')[-3].split('el')[1]
@@ -124,10 +124,10 @@ class Package
 
   def main_package_version
     # Only build a candidate package for main if the version isn't an RC (contains an alpha)
-    return nil if experimental_package_version =~ /[a-zA-Z]/
+    return nil if version =~ /[a-zA-Z]/
     case distro
     when 'ubuntu', 'debian'
-      @main_package_version ||= "#{version}#{major_delim}#{distro_release}"
+      @main_package_version ||= "#{version}#{minor_delim}#{distro_release}"
     when 'centos'
       # flapjack-1.2.0-1.el6.x86_64.rpm
       @main_package_version ||= version

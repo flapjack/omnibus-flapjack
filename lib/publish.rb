@@ -72,7 +72,7 @@ class Publish
                            "--delete --acl public-read --region us-east-1").run_command.error!
     end
 
-    def add_to_deb_repo(pkg)
+    def add_to_deb_repo(pkg, component = 'experimental')
       puts "Checking aptly db for errors"
       Mixlib::ShellOut.new("aptly -config aptly.conf db recover").run_command.error!
       Mixlib::ShellOut.new("aptly -config aptly.conf db cleanup").run_command.error!
@@ -81,30 +81,30 @@ class Publish
 
       valid_components = ['main', 'experimental']
 
-      valid_components.each do |component|
+      valid_components.each do |comp|
         if Mixlib::ShellOut.new("aptly -config=aptly.conf repo show " +
-                                "flapjack-#{pkg.major_version}-#{pkg.distro_release}-#{component}"
+                                "flapjack-#{pkg.major_version}-#{pkg.distro_release}-#{comp}"
                                 ).run_command.error?
           Mixlib::ShellOut.new("aptly -config=aptly.conf repo create -distribution #{pkg.distro_release} " +
-                               "-architectures='i386,amd64' -component=#{component} " +
-                               "flapjack-#{pkg.major_version}-#{pkg.distro_release}-#{component}"
+                               "-architectures='i386,amd64' -component=#{comp} " +
+                               "flapjack-#{pkg.major_version}-#{pkg.distro_release}-#{comp}"
                                ).run_command.error!
         end
       end
 
+      # FIXME: wrong filename
       puts "Adding pkg/flapjack_#{pkg.experimental_package_version}*.deb to the " +
-           "flapjack-#{pkg.major_version}-#{pkg.distro_release}-experimental repo"
+           "flapjack-#{pkg.major_version}-#{pkg.distro_release}-#{component} repo"
       Mixlib::ShellOut.new("aptly -config=aptly.conf repo add " +
-                           "flapjack-#{pkg.major_version}-#{pkg.distro_release}-experimental " +
+                           "flapjack-#{pkg.major_version}-#{pkg.distro_release}-#{component} " +
                            "pkg/flapjack_#{pkg.experimental_package_version}*.deb").run_command.error!
-
 
       puts "Attempting the first publish for all components of the major version " +
            "of the given distro release"
       publish_cmd = 'aptly -config=aptly.conf publish repo -architectures="i386,amd64" ' +
                     '-gpg-key="803709B6" -component=, '
-      valid_components.each do |component|
-        publish_cmd += "flapjack-#{pkg.major_version}-#{pkg.distro_release}-#{component} "
+      valid_components.each do |comp|
+        publish_cmd += "flapjack-#{pkg.major_version}-#{pkg.distro_release}-#{comp} "
       end
       publish_cmd += " #{pkg.major_version}"
       if Mixlib::ShellOut.new(publish_cmd).run_command.error?
@@ -116,12 +116,10 @@ class Publish
       end
     end
 
-    def add_to_rpm_repo(pkg)
-      require 'fileutils'
-
+    def add_to_rpm_repo(pkg, component = 'experimental')
       releases = %w(6)
       arches = %w(i386 x86_64)
-      flapjack_version = %w(v1) # FIXME: use pkg.major_version ?
+      flapjack_version = %w(v1)
       components = %w(flapjack flapjack-experimental)
 
       base_dir = 'createrepo'
@@ -131,9 +129,9 @@ class Publish
       arches.each do |arch|
         releases.each do |version|
           flapjack_version.each do |fl_version|
-            components.each do |component|
+            components.each do |comp|
               # eg v1/flapjack/centos/6/x86_64
-              local_dir = File.join(base_dir, fl_version, component, 'centos', version, arch)
+              local_dir = File.join(base_dir, fl_version, comp, 'centos', version, arch)
 
               unless File.exist?(local_dir)
                 puts "New RPM repo: #{local_dir}"
@@ -154,10 +152,18 @@ class Publish
         end
       end
 
-      component = pkg.main_package_version.nil? ? 'flapjack-experimental' : 'flapjack'
+      component = case component
+      when 'experimental'
+        'flapjack-experimental'
+      when 'main'
+        'flapjack'
+      else
+        raise 'Unknown component for upload'
+      end
       # FIXME: don't hardcode arch
       name = [ pkg.major_version, component, 'centos', pkg.distro_release, 'x86_64' ]
 
+      # FIXME: wrong filename for main packages
       puts "Adding pkg/flapjack-#{pkg.experimental_package_version}*.rpm to the #{name.join('-')} repo"
       Mixlib::ShellOut.new("cp pkg/flapjack-#{pkg.experimental_package_version}*.rpm #{File.join(base_dir, *name)}/.").run_command.error!
 

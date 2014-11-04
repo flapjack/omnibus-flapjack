@@ -19,6 +19,7 @@ $:.push(File.expand_path(File.join(__FILE__, '..', 'lib')))
 require 'mixlib/shellout'
 require 'package'
 require 'publish'
+require 'fileutils'
 
 dry_run = (ENV["DRY_RUN"].nil? || ENV["DRY_RUN"].empty?) ? false : true
 pkg = nil
@@ -265,6 +266,107 @@ end
 
 desc "Promote a published Flapjack package (from experimental to main)"
 task :promote do
+  pkg ||= Package.new(
+    :package_file => ENV['PACKAGE_FILE']
+  )
+
+  puts "distro:          #{pkg.distro}"
+  puts "distro_release:  #{pkg.distro_release}"
+  puts "major_version:   #{pkg.major_version}"
+  puts "package_version: #{pkg.experimental_package_version}"
+  puts "file_suffix:     #{pkg.file_suffix}"
+  puts "major_delim:     #{pkg.major_delim}"
+  puts "minor_delim:     #{pkg.minor_delim}"
+
+  raise "distro cannot be determined" unless pkg.distro
+  raise "distro_release cannot be determined" unless pkg.distro_release
+  raise "major_version cannot be determined" unless pkg.major_version
+  raise "package_version cannot be determined" unless pkg.experimental_package_version
+
+  if dry_run
+    puts "Ending early due to DRY_RUN being set"
+    exit 1
+  end
+
+  start_dir = FileUtils.pwd
+
+  case pkg.distro
+  when 'ubuntu', 'debian'
+      local_dir   = 'aptly'
+      remote_dir  = 's3://packages.flapjack.io/aptly'
+      lockfile    = 'flapjack_upload_deb.lock'
+
+      puts "Creating aptly.conf"
+      # Create aptly config file
+      aptly_config = <<-eos
+        {
+          "rootDir": "#{start_dir}/#{local_dir}",
+          "downloadConcurrency": 4,
+          "downloadSpeedLimit": 0,
+          "architectures": [],
+          "dependencyFollowSuggests": false,
+          "dependencyFollowRecommends": false,
+          "dependencyFollowAllVariants": false,
+          "dependencyFollowSource": false,
+          "gpgDisableSign": false,
+          "gpgDisableVerify": false,
+          "downloadSourcePackages": false,
+          "S3PublishEndpoints": {}
+        }
+      eos
+      File.write('aptly.conf', aptly_config)
+  when 'centos'
+    local_dir   = 'createrepo'
+    remote_dir  = 's3://packages.flapjack.io/rpm'
+    lockfile    = 'flapjack_upload_rpm.lock'
+  end
+
+  Publish.get_lock(lockfile)
+
+  filename = ENV['PACKAGE_FILE']
+  if File.file?("pkg/#{filename}")
+    puts "Package was found locally"
+  else
+    puts "Package was not found locally.  Downloading from S3"
+    Mixlib::ShellOut.new("aws s3 cp s3://packages.flapjack.io/candidates/#{filename} pkg/." +
+                         "--acl public-read --region us-east-1").run_command.error!
+  end
+
+  version, _, ending = filename.match(/flapjack_((\d|\.)+).+(-\w+-1_.+)/).captures
+  main_filename = "flapjack#{pkg.major_delim}#{version}#{ending}"
+
+
+  FileUtils.copy("pkg/#{filename}", "pkg/#{main_filename}")
+  puts "Main package file is at pkg/#{main_filename}"
+
+  exit
+  Publish.sync_packages_to_local(local_dir, remote_dir)
+
+  # FIXME: will this work?  Doesn't this hardcode experimental?
+  case pkg.distro
+  when 'ubuntu', 'debian'
+    Publish.add_to_deb_repo(pkg, 'main')
+
+    Publish.create_indexes('aptly/public', '../../create_directory_listings')
+
+    Publish.sync_packages_to_remote('aptly/public', 's3://packages.flapjack.io/deb')
+
+  when 'centos'
+    Publish.add_to_rpm_repo(pkg, 'main')
+
+    Publish.create_indexes(local_dir, '../create_directory_listings')
+  else
+    puts "Error: I don't know how to publish for distro #{pkg.distro}"
+    exit 1
+  end
+
+  Publish.sync_packages_to_remote(local_dir, remote_dir)
+
+  puts "Removing the old S3 package"
+  Mixlib::ShellOut.new("aws s3 rm s3://packages.flapjack.io/candidates/#{filename} " +
+                       "--region us-east-1").run_command.error!
+
+  Publish.release_lock(lockfile)
 end
 
 desc "Build and publish Flapjack packages"
