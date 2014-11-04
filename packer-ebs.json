@@ -45,6 +45,7 @@
       "sudo gem install rake",
       "sudo usermod -G docker ubuntu",
       "sudo docker pull flapjack/omnibus-ubuntu",
+      "sudo docker pull flapjack/omnibus-debian",
       "sudo docker pull flapjack/omnibus-centos",
       "sudo docker images",
       "sudo service docker stop",
