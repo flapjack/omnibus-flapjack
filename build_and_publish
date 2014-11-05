@@ -46,7 +46,7 @@ rescue
   log_url = "http://#{log_dst}"
 end
 
-message = "#{build_ref} for #{distro} #{distro_release} package building completed (experimental) in #{duration_string}, log: #{log_url}"
+message = "Flapjack #{build_ref} for #{distro} #{distro_release} package building completed (experimental) in #{duration_string}, log: #{log_url}"
 
 puts 'sending message to #flapjack: ' + message
 bot = Cinch::Bot.new do
