@@ -51,14 +51,14 @@ build do
     "echo \"gem_home: ${gem_home}\" ; " +
     "export installed_gem=`ls -dtr ${gem_home}/gems/flapjack* | tail -1` ; " +
     "cd ${installed_gem} && " +
-    "if [ ! -d hiredis ] ; then git clone https://github.com/redis/hiredis.git hiredis ; fi" +
+    "if [ ! -d hiredis ] ; then git clone https://github.com/redis/hiredis.git hiredis ; fi && " +
     "cd hiredis && " +
     "make hiredis-example && " +
-    "cd .. " +
-    "if [ ! -d flapjackfeeder ] ; then git clone https://github.com/flapjack/flapjackfeeder.git flapjackfeeder ; fi" +
+    "cd .. && " +
+    "if [ ! -d flapjackfeeder ] ; then git clone https://github.com/flapjack/flapjackfeeder.git flapjackfeeder ; fi && " +
     "cd flapjackfeeder && " +
     "(cd src ; gcc -fPIC -g -O2 -DHAVE_CONFIG_H -DNSCORE -o flapjackfeeder.o flapjackfeeder.c -shared -fPIC ../../hiredis/libhiredis.a ;strip flapjackfeeder.o) && " +
-    "cd .. " +
-    "cp flapjackfeeder/src/flapjackfeeder.o ." +
+    "cd .. && " +
+    "cp flapjackfeeder/src/flapjackfeeder.o . && " +
     "rm -r flapjackfeeder hiredis"
 end
