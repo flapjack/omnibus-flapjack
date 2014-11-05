@@ -32,13 +32,14 @@ log_dst = "packages.flapjack.io/build_logs/#{log}"
 puts "Done. Uploading log to #{log_dst}"
 Mixlib::ShellOut.new("aws s3 cp #{log} s3://#{log_dst}").run_command.error!
 
-message = "Completed building and publishing of experimental Flapjack package: #{build_ref} for #{distro} #{distro_release}, build log: http://#{log_dst}"
+message = "#{build_ref} for #{distro} #{distro_release} package building completed (experimental) log: http://#{log_dst}"
 
 puts 'sending message to #flapjack: ' + message
 bot = Cinch::Bot.new do
   configure do |c|
     c.server = "irc.freenode.org"
     c.channels = ["#flapjack"]
+    c.nick = 'roberta'
   end
 
   on :connect do |connection|
