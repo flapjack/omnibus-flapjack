@@ -35,17 +35,30 @@ build do
           "export installed_gem=`ls -dtr ${gem_home}/gems/flapjack* | tail -1` ; " +
           "cd ${installed_gem}"
   if compile_go_components
-    command "./build.sh"
+    command "export gem_home=/" +
+      "`/opt/flapjack/embedded/bin/gem list --all --details flapjack | " +
+      "  grep 'Installed at' | sed 's/^.* \\///'` ; " +
+      "echo \"gem_home: ${gem_home}\" ; " +
+      "export installed_gem=`ls -dtr ${gem_home}/gems/flapjack* | tail -1` ; " +
+      "cd ${installed_gem} && " +
+      "./build.sh"
   end
-  # Build flapjackfeeder, as per https://github.com/flapjack/flapjackfeeder
-  command "if [ ! -d hiredis ] ; then git clone https://github.com/redis/hiredis.git hiredis ; fi"
-  command "cd hiredis && " +
-          "make hiredis-example && " +
-          "cd .. "
 
-  command "if [ ! -d flapjackfeeder ] ; then git clone https://github.com/flapjack/flapjackfeeder.git flapjackfeeder ; fi"
-  command "cd flapjackfeeder && " +
-          "(cd src ; gcc -fPIC -g -O2 -DHAVE_CONFIG_H -DNSCORE -o flapjackfeeder.o flapjackfeeder.c -shared -fPIC ../../hiredis/libhiredis.a ;strip flapjackfeeder.o) && " +
-          "cd .. "
-          "cp flapjackfeeder/src/flapjackfeeder.o ."
+  # Build flapjackfeeder, as per https://github.com/flapjack/flapjackfeeder
+  command "export gem_home=/" +
+    "`/opt/flapjack/embedded/bin/gem list --all --details flapjack | " +
+    "  grep 'Installed at' | sed 's/^.* \\///'` ; " +
+    "echo \"gem_home: ${gem_home}\" ; " +
+    "export installed_gem=`ls -dtr ${gem_home}/gems/flapjack* | tail -1` ; " +
+    "cd ${installed_gem} && " +
+    "if [ ! -d hiredis ] ; then git clone https://github.com/redis/hiredis.git hiredis ; fi" +
+    "cd hiredis && " +
+    "make hiredis-example && " +
+    "cd .. " +
+    "if [ ! -d flapjackfeeder ] ; then git clone https://github.com/flapjack/flapjackfeeder.git flapjackfeeder ; fi" +
+    "cd flapjackfeeder && " +
+    "(cd src ; gcc -fPIC -g -O2 -DHAVE_CONFIG_H -DNSCORE -o flapjackfeeder.o flapjackfeeder.c -shared -fPIC ../../hiredis/libhiredis.a ;strip flapjackfeeder.o) && " +
+    "cd .. " +
+    "cp flapjackfeeder/src/flapjackfeeder.o ." +
+    "rm -r flapjackfeeder hiredis"
 end
