@@ -2,6 +2,7 @@
 
 require 'mixlib/shellout'
 require 'cinch'
+require 'open-uri'
 
 # Wrapper for the build_and_publish rake task
 # Assumes you have permission to packages.flapjack.io S3 bucket for writing
@@ -32,7 +33,13 @@ log_dst = "packages.flapjack.io/build_logs/#{log}"
 puts "Done. Uploading log to #{log_dst}"
 Mixlib::ShellOut.new("aws s3 cp #{log} s3://#{log_dst}").run_command.error!
 
-message = "#{build_ref} for #{distro} #{distro_release} package building completed (experimental) log: http://#{log_dst}"
+begin
+  log_url = open("http://is.gd/create.php?format=simple&url=http://#{log_dst}").first
+rescue
+  log_url = "http://#{log_dst}"
+end
+
+message = "#{build_ref} for #{distro} #{distro_release} package building completed (experimental) log: #{log_url}"
 
 puts 'sending message to #flapjack: ' + message
 bot = Cinch::Bot.new do
