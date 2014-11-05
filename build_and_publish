@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
 require 'mixlib/shellout'
+require 'cinch'
 
 # Wrapper for the build_and_publish rake task
 # Assumes you have permission to packages.flapjack.io S3 bucket for writing
@@ -19,14 +20,31 @@ end
 log = "flapjack_#{build_ref}-#{tstamp}-#{distro}-#{distro_release}.log"
 
 Mixlib::ShellOut.new("echo 'Running build of #{build_ref} on #{distro} " +
-  "#{distro_release} at #{tstamp}' | tee -a #{log}").run_command.error!
+  "#{distro_release} at #{tstamp}' | tee -a #{log}").run_command
 
 Mixlib::ShellOut.new("su - ubuntu -c \"cd omnibus-flapjack && BUILD_REF=#{build_ref} DISTRO=#{distro} " +
-  "DISTRO_RELEASE=#{distro_release} time bundle exec rake build_and_publish 2>&1 | tee #{log}\"").run_command.error!
+  "DISTRO_RELEASE=#{distro_release} time bundle exec rake build_and_publish 2>&1 | tee #{log}\"").run_command
 
 Mixlib::ShellOut.new("echo 'FINISHED #{build_ref} on #{distro} " +
-  "#{distro_release} AT `date` (uptime: `uptime`)' | tee #{log}").run_command.error!
+  "#{distro_release} AT `date` (uptime: `uptime`)' | tee #{log}").run_command
 
 log_dst = "packages.flapjack.io/build_logs/#{log}"
 puts "Done. Uploading log to #{log_dst}"
-Mixlib::ShellOut.new("su - ubuntu -c 'aws s3 cp #{log} s3://#{log_dst}'").run_command.error!
+Mixlib::ShellOut.new("su - ubuntu -c 'aws s3 cp #{log} s3://#{log_dst}'").run_command
+
+message = "Completed building and publishing of Flapjack #{build_ref} for #{distro} #{distro_release}, build log: http://#{log_dst}"
+
+puts 'sending message to #flapjack: ' + message
+bot = Cinch::Bot.new do
+  configure do |c|
+    c.server = "irc.freenode.org"
+    c.channels = ["#flapjack"]
+  end
+
+  on :connect do |connection|
+    Channel('#flapjack').send(message)
+    bot.quit
+  end
+end
+
+bot.start
