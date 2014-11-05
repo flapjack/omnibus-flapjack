@@ -18,6 +18,17 @@ dependency "nokogiri"
 relative_path "flapjack"
 
 build do
+  # Build flapjackfeeder, as per https://github.com/flapjack/flapjackfeeder
+  command "if [ ! -d hiredis ] ; then git clone https://github.com/redis/hiredis.git hiredis ; fi"
+  command "cd hiredis && " +
+          "make hiredis-example && " +
+          "cd .. "
+
+  command "if [ ! -d flapjackfeeder ] ; then git clone https://github.com/flapjack/flapjackfeeder.git flapjackfeeder ; fi"
+  command "cd flapjackfeeder && " +
+          "(cd src ; gcc -fPIC -g -O2 -DHAVE_CONFIG_H -DNSCORE -o flapjackfeeder.o flapjackfeeder.c -shared -fPIC ../../hiredis/libhiredis.a ;strip flapjackfeeder.o) && " +
+          "cd .. "
+
   command "if [ ! -d flapjack_source ] ; then git clone https://github.com/flapjack/flapjack.git flapjack_source ; fi"
   command "cd flapjack_source && " +
           "git checkout master && " +
