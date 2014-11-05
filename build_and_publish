@@ -25,8 +25,8 @@ Mixlib::ShellOut.new("echo 'Running build of #{build_ref} on #{distro} " +
 Mixlib::ShellOut.new("BUILD_REF=#{build_ref} DISTRO=#{distro} " +
   "DISTRO_RELEASE=#{distro_release} time bundle exec rake build_and_publish 2>&1 | tee -a #{log}", :timeout => 60 * 60 * 3).run_command.error!
 
-Mixlib::ShellOut.new("echo 'FINISHED #{build_ref} on #{distro} " +
-  "#{distro_release} AT `date` (uptime: `uptime`)' | tee -a #{log}").run_command.error!
+Mixlib::ShellOut.new("echo 'Finished #{build_ref} on #{distro} " +
+  "#{distro_release} at #{Time.now.utc.iso8601}' | tee -a #{log}").run_command.error!
 
 log_dst = "packages.flapjack.io/build_logs/#{log}"
 puts "Done. Uploading log to #{log_dst}"
