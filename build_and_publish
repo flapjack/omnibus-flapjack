@@ -32,7 +32,7 @@ log_dst = "packages.flapjack.io/build_logs/#{log}"
 puts "Done. Uploading log to #{log_dst}"
 Mixlib::ShellOut.new("su - ubuntu -c 'aws s3 cp #{log} s3://#{log_dst}'").run_command
 
-message = "Completed building and publishing of Flapjack #{build_ref} for #{distro} #{distro_release}, build log: http://#{log_dst}"
+message = "Completed building and publishing of experimental Flapjack package: #{build_ref} for #{distro} #{distro_release}, build log: http://#{log_dst}"
 
 puts 'sending message to #flapjack: ' + message
 bot = Cinch::Bot.new do
