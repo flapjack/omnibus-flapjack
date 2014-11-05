@@ -6,4 +6,5 @@ gem 'mixlib-log'
 gem 'mixlib-shellout', '>=1.6.0'
 gem 'rake'
 gem 'pry'
+gem 'cinch'
 
