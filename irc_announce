@@ -1,0 +1,26 @@
+#!/usr/bin/env ruby
+
+require 'cinch'
+
+unless ARGV.length > 0
+  puts "give me a message to send or I won't do nothing"
+  exit 1
+end
+
+message = ARGV.join(' ')
+
+puts 'sending message: ' + message
+bot = Cinch::Bot.new do
+  configure do |c|
+    c.server = "irc.freenode.org"
+    c.channels = ["#flapjack"]
+  end
+
+  on :connect do |connection|
+    Channel('#flapjack').send(message)
+    bot.quit
+  end
+end
+
+bot.start
+
