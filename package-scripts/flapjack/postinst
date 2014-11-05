@@ -33,6 +33,11 @@ if [ ! -e /etc/flapjack/flapjack_config.yaml ] ; then
   cp ${FLAPJACK_GEM_DIR}/etc/flapjack_config.yaml.example ${CONFIG_DIR}/flapjack_config.yaml
 fi
 
+if [ ! -e /usr/local/lib/flapjackfeeder.o ] ; then
+  echo "Creating /usr/local/lib/flapjackfeeder.o"
+  cp ${FLAPJACK_GEM_DIR}/flapjackfeeder.o /usr/local/lib/flapjackfeeder.o
+fi
+
 if [ ! -e /etc/init.d/redis-flapjack ] ; then
   echo "Creating /etc/init.d/redis-flapjack"
   if [ -f /etc/redhat-release ]; then
