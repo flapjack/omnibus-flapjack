@@ -2,12 +2,16 @@
 
 require 'mixlib/shellout'
 require 'cinch'
+require 'open-uri'
+require 'chronic_duration'
 
 # Wrapper for the build_and_publish rake task
 # Assumes you have permission to packages.flapjack.io S3 bucket for writing
 
 distro, distro_release, build_ref = ARGV
-tstamp = Time.now.utc.strftime('%Y%m%dT%H%M%S')
+
+start_time = Time.now.utc
+tstamp = start_time.strftime('%Y%m%dT%H%M%S')
 
 unless distro && distro_release && build_ref
   puts "Must be called with the following arguments:"
@@ -25,20 +29,31 @@ Mixlib::ShellOut.new("echo 'Running build of #{build_ref} on #{distro} " +
 Mixlib::ShellOut.new("BUILD_REF=#{build_ref} DISTRO=#{distro} " +
   "DISTRO_RELEASE=#{distro_release} time bundle exec rake build_and_publish 2>&1 | tee -a #{log}", :timeout => 60 * 60 * 3).run_command.error!
 
+finish_time = Time.now.utc
+duration = finish_time - start_time
+duration_string = ChronicDuration.output(duration.round(0), :format => :short)
+
 Mixlib::ShellOut.new("echo 'Finished #{build_ref} on #{distro} " +
-  "#{distro_release} at #{Time.now.utc.iso8601}' | tee -a #{log}").run_command.error!
+  "#{distro_release} at #{Time.now.utc.iso8601}, duration: #{duration_string}' | tee -a #{log}").run_command.error!
 
 log_dst = "packages.flapjack.io/build_logs/#{log}"
 puts "Done. Uploading log to #{log_dst}"
 Mixlib::ShellOut.new("aws s3 cp #{log} s3://#{log_dst}").run_command.error!
 
-message = "Completed building and publishing of experimental Flapjack package: #{build_ref} for #{distro} #{distro_release}, build log: http://#{log_dst}"
+begin
+  log_url = open("http://is.gd/create.php?format=simple&url=http://#{log_dst}").first
+rescue
+  log_url = "http://#{log_dst}"
+end
+
+message = "Flapjack #{build_ref} for #{distro} #{distro_release} package building completed (experimental) in #{duration_string}, log: #{log_url}"
 
 puts 'sending message to #flapjack: ' + message
 bot = Cinch::Bot.new do
   configure do |c|
     c.server = "irc.freenode.org"
     c.channels = ["#flapjack"]
+    c.nick = 'roberta'
   end
 
   on :connect do |connection|
