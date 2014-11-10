@@ -12,6 +12,7 @@
 #   BUILD_REF=v1.0.0 DISTRO=ubuntu DISTRO_RELEASE=trusty bundle exec rake build_and_publish
 #   BUILD_REF=v1.0.0 DISTRO=centos DISTRO_RELEASE=6 bundle exec rake build_and_publish
 #   PACKAGE_FILE=flapjack-1.2.0_0.rc220141024003313-1.el6.x86_64.rpm bundle exec rake publish
+#   PACKAGE_FILE=flapjack-1.2.0_0.rc220141024003313-1.el6.x86_64.rpm bundle exec rake promote
 #
 # pkg/flapjack_1.1.0~+20141003112645-master-trusty-1_amd64.deb
 # pkg/flapjack_1.1.0~+20141003112645-master-centos-6-1_amd64.rpm
@@ -255,7 +256,7 @@ task :publish do
 
   unless Dir.glob("pkg/candidate_flapjack_#{pkg.experimental_package_version}*").empty?
     puts "Copying candidate package for main to s3"
-    Mixlib::ShellOut.new("aws s3 cp pkg/candidate_flapjack_#{pkg.experimental_package_version}*.deb " +
+    Mixlib::ShellOut.new("aws s3 cp pkg/candidate_flapjack#{pkg.major_delim}#{pkg.experimental_package_version}*.deb " +
                          's3://packages.flapjack.io/candidates/ --acl public-read ' +
                          '--region us-east-1').run_command.error!
   end
@@ -327,7 +328,7 @@ task :promote do
     puts "Package was found locally"
   else
     puts "Package was not found locally.  Downloading from S3"
-    Mixlib::ShellOut.new("aws s3 cp s3://packages.flapjack.io/candidates/#{filename} pkg/." +
+    Mixlib::ShellOut.new("aws s3 cp s3://packages.flapjack.io/candidates/candidate_#{filename} pkg/." +
                          "--acl public-read --region us-east-1").run_command.error!
   end
 
@@ -335,13 +336,11 @@ task :promote do
   main_filename = "flapjack#{pkg.major_delim}#{version}#{ending}"
 
 
-  FileUtils.copy("pkg/#{filename}", "pkg/#{main_filename}")
+  FileUtils.copy("pkg/candidate_#{filename}", "pkg/#{main_filename}")
   puts "Main package file is at pkg/#{main_filename}"
 
-  exit
   Publish.sync_packages_to_local(local_dir, remote_dir)
 
-  # FIXME: will this work?  Doesn't this hardcode experimental?
   case pkg.distro
   when 'ubuntu', 'debian'
     Publish.add_to_deb_repo(pkg, 'main')
@@ -362,7 +361,7 @@ task :promote do
   Publish.sync_packages_to_remote(local_dir, remote_dir)
 
   puts "Removing the old S3 package"
-  Mixlib::ShellOut.new("aws s3 rm s3://packages.flapjack.io/candidates/#{filename} " +
+  Mixlib::ShellOut.new("aws s3 rm s3://packages.flapjack.io/candidates/candidate_#{filename} " +
                        "--region us-east-1").run_command.error!
 
   Publish.release_lock(lockfile)

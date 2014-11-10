@@ -92,7 +92,6 @@ class Publish
         end
       end
 
-      # FIXME: wrong filename
       puts "Adding pkg/flapjack_#{pkg.experimental_package_version}*.deb to the " +
            "flapjack-#{pkg.major_version}-#{pkg.distro_release}-#{component} repo"
       Mixlib::ShellOut.new("aptly -config=aptly.conf repo add " +
@@ -163,7 +162,6 @@ class Publish
       # FIXME: don't hardcode arch
       name = [ pkg.major_version, component, 'centos', pkg.distro_release, 'x86_64' ]
 
-      # FIXME: wrong filename for main packages
       puts "Adding pkg/flapjack-#{pkg.experimental_package_version}*.rpm to the #{name.join('-')} repo"
       Mixlib::ShellOut.new("cp pkg/flapjack-#{pkg.experimental_package_version}*.rpm #{File.join(base_dir, *name)}/.").run_command.error!
 
