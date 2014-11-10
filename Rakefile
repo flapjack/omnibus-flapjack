@@ -328,7 +328,7 @@ task :promote do
     puts "Package was found locally"
   else
     puts "Package was not found locally.  Downloading from S3"
-    Mixlib::ShellOut.new("aws s3 cp s3://packages.flapjack.io/candidates/candidate_#{filename} pkg/." +
+    Mixlib::ShellOut.new("aws s3 cp s3://packages.flapjack.io/candidates/candidate_#{filename} pkg/. " +
                          "--acl public-read --region us-east-1").run_command.error!
   end
 
