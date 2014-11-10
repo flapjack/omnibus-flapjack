@@ -94,7 +94,7 @@ case "$1" in
 
   status)
   echo -n "$DESC is "
-  if start-stop-daemon --stop --quiet --signal 0 --name ${NAME} --pidfile ${PIDFILE}
+  if start-stop-daemon --status --quiet --signal 0 --name ${NAME} --pidfile ${PIDFILE}
   then
     echo "running"
   else
