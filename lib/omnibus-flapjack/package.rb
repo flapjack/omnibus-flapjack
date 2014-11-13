@@ -86,8 +86,25 @@ module OmnibusFlapjack
       end
     end
 
+    # we're only building on 64 bit platforms currently...
+    def arch
+      return @arch if @arch
+      @arch = case distro
+      when 'ubuntu', 'debian'
+        'amd64'
+      when 'centos'
+        'x86_64'
+      end
+    end
+
     def main_filename
-      "flapjack#{major_delim}#{version}othercrap"
+      return nil unless version.match(/^[\d\.]+$/)
+      case distro
+      when 'ubuntu', 'debian'
+        "flapjack_#{version}-#{distro_release}_#{arch}.#{file_suffix}"
+      when 'centos'
+        "flapjack-#{version}_1.el#{distro_release}.#{arch}.#{file_suffix}"
+      end
     end
 
     # Use v<major release> as a repo prefix, unless it's the 0.9 series.

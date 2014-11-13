@@ -5,10 +5,10 @@ describe 'Package' do
   describe 'Truth from Filename' do
     describe 'Ubuntu' do
 
-
       it 'extracts data from the filename of a final ubuntu package filename' do
         filename = 'flapjack_1.2.0~+20141107124706-v1.2.0-trusty-1_amd64.deb'
         pkg = OmnibusFlapjack::Package.new(:package_file => filename)
+        puts pkg.inspect
         expect(pkg.package_file).to eq(filename)
         expect(pkg.version).to eq('1.2.0')
         expect(pkg.distro).to eq('ubuntu')
@@ -32,7 +32,6 @@ describe 'Package' do
         expect(pkg.version).to eq('1.2.0')
         expect(pkg.distro).to eq('ubuntu')
         expect(pkg.distro_release).to eq('trusty')
-        expect(pkg.main_filename).to eq(nil)
       end
     end
 
@@ -56,13 +55,12 @@ describe 'Package' do
         expect(pkg.main_filename).to eq(nil)
       end
 
-      it 'extracts data from the filename of a development ubuntu package filename' do
+      it 'extracts data from the filename of a development package filename' do
         filename = 'flapjack_1.2.0~+20141106050911-master-wheezy-1_amd64.deb'
         pkg = OmnibusFlapjack::Package.new(:package_file => filename)
         expect(pkg.version).to eq('1.2.0')
         expect(pkg.distro).to eq('debian')
         expect(pkg.distro_release).to eq('wheezy')
-        expect(pkg.main_filename).to eq(nil)
       end
     end
 
@@ -83,6 +81,8 @@ describe 'Package' do
         expect(pkg.version).to eq('1.2.0rc2')
         expect(pkg.distro).to eq('centos')
         expect(pkg.distro_release).to eq('6')
+        expect(pkg.file_suffix).to eq('rpm')
+        expect(pkg.main_filename).to eq(nil)
       end
 
     end
