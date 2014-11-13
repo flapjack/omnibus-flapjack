@@ -141,3 +141,13 @@ You'll need the name of the candidate package, which will be in the output of `b
 ```shell
 $ ./promote candidate_flapjack_1.0.0~rc6~20140820210002-master-precise-1_amd64.deb
 ```
+
+### Tests
+
+Tests are fairly minimal right now, would you like to expand them? Check out the spec directory! Run with:
+
+```
+bundle install
+bundle exec rspec
+```
+

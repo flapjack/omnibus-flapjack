@@ -9,3 +9,6 @@ gem 'pry'
 gem 'cinch'
 gem 'chronic_duration'
 
+group :development, :test do
+  gem 'rspec'
+end
