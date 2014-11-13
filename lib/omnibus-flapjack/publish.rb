@@ -163,8 +163,19 @@ module OmnibusFlapjack
         # FIXME: don't hardcode arch
         name = [ pkg.major_version, component, 'centos', pkg.distro_release, 'x86_64' ]
 
-        puts "Adding pkg/flapjack-#{pkg.experimental_package_version}*.rpm to the #{name.join('-')} repo"
-        Mixlib::ShellOut.new("cp pkg/flapjack-#{pkg.experimental_package_version}*.rpm #{File.join(base_dir, *name)}/.").run_command.error!
+        #puts "Adding pkg/flapjack-#{pkg.experimental_package_version}*.rpm to the #{name.join('-')} repo"
+        #Mixlib::ShellOut.new("cp pkg/flapjack-#{pkg.experimental_package_version}*.rpm #{File.join(base_dir, *name)}/.").run_command.error!
+        source_file = case component
+        when 'flapjack-experimental'
+          pkg.package_file
+        when 'flapjack'
+          pkg.main_filename
+        else
+          raise 'Unknown component to add package to'
+        end
+
+        puts "Adding pkg/#{source_file} to the #{name.join('-')} repo"
+        Mixlib::ShellOut.new("cp pkg/#{source_file} #{File.join(base_dir, *name)}/.").run_command.error!
 
         puts "Updating #{name.join('-')} repo"
         Dir.chdir(File.join(base_dir, *name)) do

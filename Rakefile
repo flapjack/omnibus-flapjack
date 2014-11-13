@@ -231,28 +231,28 @@ task :publish do
     lockfile    = 'flapjack_upload_rpm.lock'
   end
 
-  Publish.get_lock(lockfile)
+  OmnibusFlapjack::Publish.get_lock(lockfile)
 
-  Publish.sync_packages_to_local(local_dir, remote_dir)
+  OmnibusFlapjack::Publish.sync_packages_to_local(local_dir, remote_dir)
 
   case pkg.distro
   when 'ubuntu', 'debian'
-    Publish.add_to_deb_repo(pkg)
+    OmnibusFlapjack::Publish.add_to_deb_repo(pkg)
 
-    Publish.create_indexes('aptly/public', '../../create_directory_listings')
+    OmnibusFlapjack::Publish.create_indexes('aptly/public', '../../create_directory_listings')
 
-    Publish.sync_packages_to_remote('aptly/public', 's3://packages.flapjack.io/deb')
+    OmnibusFlapjack::Publish.sync_packages_to_remote('aptly/public', 's3://packages.flapjack.io/deb')
 
   when 'centos'
-    Publish.add_to_rpm_repo(pkg)
+    OmnibusFlapjack::Publish.add_to_rpm_repo(pkg)
 
-    Publish.create_indexes(local_dir, '../create_directory_listings')
+    OmnibusFlapjack::Publish.create_indexes(local_dir, '../create_directory_listings')
   else
     puts "Error: I don't know how to publish for distro #{pkg.distro}"
     exit 1
   end
 
-  Publish.sync_packages_to_remote(local_dir, remote_dir)
+  OmnibusFlapjack::Publish.sync_packages_to_remote(local_dir, remote_dir)
 
   unless Dir.glob("pkg/candidate_flapjack_#{pkg.experimental_package_version}*").empty?
     puts "Copying candidate package for main to s3"
@@ -261,7 +261,7 @@ task :publish do
                          '--region us-east-1').run_command.error!
   end
 
-  Publish.release_lock(lockfile)
+  OmnibusFlapjack::Publish.release_lock(lockfile)
 end
 
 desc "Promote a published Flapjack package (from experimental to main)"
@@ -323,10 +323,10 @@ task :promote do
     lockfile    = 'flapjack_upload_rpm.lock'
   end
 
-  Publish.get_lock(lockfile)
+  OmnibusFlapjack::Publish.get_lock(lockfile)
 
   filename = ENV['PACKAGE_FILE']
-  if File.file?("pkg/#{filename}")
+  if File.file?("pkg/candidate_#{filename}")
     puts "Package was found locally"
   else
     puts "Package was not found locally.  Downloading from S3"
@@ -335,38 +335,35 @@ task :promote do
                          "--acl public-read --region us-east-1").run_command.error!
   end
 
-  version, _, ending = filename.match(/flapjack_((\d|\.)+).+(-\w+-1_.+)/).captures
-  main_filename = "flapjack#{pkg.major_delim}#{version}#{ending}"
+  FileUtils.copy("pkg/candidate_#{filename}", "pkg/#{pkg.main_filename}")
+  puts "Main package file is at pkg/#{pkg.main_filename}"
 
-  FileUtils.copy("pkg/candidate_#{filename}", "pkg/#{main_filename}")
-  puts "Main package file is at pkg/#{main_filename}"
-
-  Publish.sync_packages_to_local(local_dir, remote_dir)
+  OmnibusFlapjack::Publish.sync_packages_to_local(local_dir, remote_dir)
 
   case pkg.distro
   when 'ubuntu', 'debian'
-    Publish.add_to_deb_repo(pkg, 'main')
+    OmnibusFlapjack::Publish.add_to_deb_repo(pkg, 'main')
 
-    Publish.create_indexes('aptly/public', '../../create_directory_listings')
+    OmnibusFlapjack::Publish.create_indexes('aptly/public', '../../create_directory_listings')
 
-    Publish.sync_packages_to_remote('aptly/public', 's3://packages.flapjack.io/deb')
+    OmnibusFlapjack::Publish.sync_packages_to_remote('aptly/public', 's3://packages.flapjack.io/deb')
 
   when 'centos'
-    Publish.add_to_rpm_repo(pkg, 'main')
+    OmnibusFlapjack::Publish.add_to_rpm_repo(pkg, 'main')
 
-    Publish.create_indexes(local_dir, '../create_directory_listings')
+    OmnibusFlapjack::Publish.create_indexes(local_dir, '../create_directory_listings')
   else
     puts "Error: I don't know how to publish for distro #{pkg.distro}"
     exit 1
   end
 
-  Publish.sync_packages_to_remote(local_dir, remote_dir)
+  OmnibusFlapjack::Publish.sync_packages_to_remote(local_dir, remote_dir)
 
   puts "Removing the old S3 package"
   Mixlib::ShellOut.new("aws s3 rm s3://packages.flapjack.io/candidates/candidate_#{filename} " +
                        "--region us-east-1").run_command.error!
 
-  Publish.release_lock(lockfile)
+  OmnibusFlapjack::Publish.release_lock(lockfile)
 end
 
 desc "Build and publish Flapjack packages"
