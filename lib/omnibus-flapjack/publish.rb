@@ -93,11 +93,20 @@ module OmnibusFlapjack
           end
         end
 
-        puts "Adding pkg/flapjack_#{pkg.experimental_package_version}*.deb to the " +
+        source_file = case component
+        when 'experimental'
+          pkg.package_file
+        when 'main'
+          pkg.main_filename
+        else
+          raise 'Unknown component to add package to'
+        end
+
+        puts "Adding pkg/#{source_file} to the " +
              "flapjack-#{pkg.major_version}-#{pkg.distro_release}-#{component} repo"
         Mixlib::ShellOut.new("aptly -config=aptly.conf repo add " +
                              "flapjack-#{pkg.major_version}-#{pkg.distro_release}-#{component} " +
-                             "pkg/flapjack_#{pkg.experimental_package_version}*.deb").run_command.error!
+                             "pkg/#{source_file}").run_command.error!
 
         puts "Attempting the first publish for all components of the major version " +
              "of the given distro release"
