@@ -172,8 +172,6 @@ module OmnibusFlapjack
         # FIXME: don't hardcode arch
         name = [ pkg.major_version, component, 'centos', pkg.distro_release, 'x86_64' ]
 
-        #puts "Adding pkg/flapjack-#{pkg.experimental_package_version}*.rpm to the #{name.join('-')} repo"
-        #Mixlib::ShellOut.new("cp pkg/flapjack-#{pkg.experimental_package_version}*.rpm #{File.join(base_dir, *name)}/.").run_command.error!
         source_file = case component
         when 'flapjack-experimental'
           pkg.package_file
