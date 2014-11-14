@@ -102,6 +102,8 @@ module OmnibusFlapjack
           raise 'Unknown component to add package to'
         end
 
+        raise "Source package file doesn't exist [#{source_file}]" unless File.file?("pkg/#{source_file}")
+
         puts "Adding pkg/#{source_file} to the " +
              "flapjack-#{pkg.major_version}-#{pkg.distro_release}-#{component} repo"
         Mixlib::ShellOut.new("aptly -config=aptly.conf repo add " +
@@ -180,6 +182,8 @@ module OmnibusFlapjack
         else
           raise 'Unknown component to add package to'
         end
+
+        raise "Source package file doesn't exist [#{source_file}]" unless File.file?("pkg/#{source_file}")
 
         puts "Adding pkg/#{source_file} to the #{name.join('-')} repo"
         Mixlib::ShellOut.new("cp pkg/#{source_file} #{File.join(base_dir, *name)}/.").run_command.error!
