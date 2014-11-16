@@ -13,8 +13,10 @@ PROGNAME=$(basename $0)
 if [ -f /etc/redhat-release ]; then
   groupadd flapjack
   adduser --system --gid flapjack --no-create-home flapjack
+  INITDDIR="/etc/rc.d/init.d"
 else
   adduser --system --group --no-create-home flapjack
+  INITDDIR="/etc/init.d"
 fi
 
 function error_exit
@@ -38,40 +40,32 @@ if [ ! -e /usr/local/lib/flapjackfeeder.o ] ; then
   cp ${FLAPJACK_GEM_DIR}/flapjackfeeder.o /usr/local/lib/flapjackfeeder.o
 fi
 
-if [ ! -e /etc/init.d/redis-flapjack ] ; then
-  echo "Creating /etc/init.d/redis-flapjack"
+if [ ! -e ${INITDDIR}/redis-flapjack ] ; then
+  echo "Creating ${INITDDIR}/redis-flapjack"
   if [ -f /etc/redhat-release ]; then
-    cp ${DEST_DIR}/embedded/etc/init.d/redis-flapjack-rpm /etc/init.d/redis-flapjack
+    cp ${DEST_DIR}/embedded/etc/init.d/redis-flapjack-rpm ${INITDDIR}/redis-flapjack
   else
-    cp ${DEST_DIR}/embedded/etc/init.d/redis-flapjack-deb /etc/init.d/redis-flapjack
+    cp ${DEST_DIR}/embedded/etc/init.d/redis-flapjack-deb ${INITDDIR}/redis-flapjack
   fi
-  chmod u+x /etc/init.d/redis-flapjack
+  chmod u+x ${INITDDIR}/redis-flapjack
 fi
 
-if [ ! -e /etc/init.d/flapjack ] ; then
-  echo "Creating /etc/init.d/flapjack"
-  cp ${FLAPJACK_GEM_DIR}/dist/etc/init.d/flapjack /etc/init.d/flapjack
-  chmod u+x /etc/init.d/flapjack
+if [ ! -e ${INITDDIR}/flapjack ] ; then
+  echo "Creating ${INITDDIR}/flapjack"
+  cp ${FLAPJACK_GEM_DIR}/dist/etc/init.d/flapjack ${INITDDIR}/flapjack
+  chmod u+x ${INITDDIR}/flapjack
 fi
 
-if [ ! -e /etc/init.d/flapjack-nagios-receiver ] ; then
-  echo "Creating /etc/init.d/flapjack-nagios-receiver"
-  cp ${FLAPJACK_GEM_DIR}/dist/etc/init.d/flapjack-nagios-receiver /etc/init.d/flapjack-nagios-receiver
-  chmod u+x /etc/init.d/flapjack-nagios-receiver
+if [ ! -e ${INITDDIR}/flapjack-nagios-receiver ] ; then
+  echo "Creating ${INITDDIR}/flapjack-nagios-receiver"
+  cp ${FLAPJACK_GEM_DIR}/dist/etc/init.d/flapjack-nagios-receiver ${INITDDIR}/flapjack-nagios-receiver
+  chmod u+x ${INITDDIR}/flapjack-nagios-receiver
 fi
 
-if [ ! -e /etc/init.d/flapper ] ; then
-  echo "Creating /etc/init.d/flapper"
-  cp ${FLAPJACK_GEM_DIR}/dist/etc/init.d/flapper /etc/init.d/flapper
-  chmod u+x /etc/init.d/flapper
-fi
-
-if [ -f /etc/redhat-release ]; then
-  chkconfig --add redis-flapjack
-  chkconfig --add flapjack
-else
-  update-rc.d redis-flapjack defaults 94 06 >/dev/null || exit $?
-  update-rc.d flapjack defaults 95 05 >/dev/null || exit $?
+if [ ! -e ${INITDDIR}/flapper ] ; then
+  echo "Creating ${INITDDIR}/flapper"
+  cp ${FLAPJACK_GEM_DIR}/dist/etc/init.d/flapper ${INITDDIR}/flapper
+  chmod u+x ${INITDDIR}/flapper
 fi
 
 echo "Setting paths"
@@ -82,17 +76,35 @@ EOF
   chmod 644 /etc/profile.d/flapjack.sh
 fi
 
-echo "Starting redis-flapjack"
-/etc/init.d/redis-flapjack start || exit $?
+if [ -f /etc/redhat-release ]; then
+  echo "In order to have flapjack start on reboot, run the following commands:"
+  echo "  chkconfig --add redis-flapjack"
+  echo "  chkconfig --add flapjack"
+  echo
+  echo "You can now start redis and flapjack as follows:"
+  echo "  ${INITDDIR}/redis-flapjack start"
+  echo "  ${INITDDIR}/flapjack start"
+else
+  update-rc.d redis-flapjack defaults 94 06 >/dev/null || exit $?
+  update-rc.d flapjack defaults 95 05 >/dev/null || exit $?
+  echo "Starting redis-flapjack"
+  ${INITDDIR}/redis-flapjack start || exit $?
 
-echo "Starting flapjack"
-/etc/init.d/flapjack start || exit $?
+  echo "Starting flapjack"
+  ${INITDDIR}/flapjack start || exit $?
+fi
+
 
 echo "Thank you for installing flapjack!"
 echo
 echo "Log in again to have /opt/flapjack/bin added to your PATH or run:"
 echo "  export PATH=$PATH:/opt/flapjack/bin"
 echo
-echo "Flapjack should now be running. Visit http://localhost:3080/"
+
+if [ -f /etc/redhat-release ]; then
+  echo "Once you've started Redis and Flapjack (see above) you'll be able to visit http://localhost:3080/"
+else
+  echo "Flapjack should now be running. Visit http://localhost:3080/"
+fi
 
 exit 0
