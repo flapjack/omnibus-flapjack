@@ -4,10 +4,6 @@ friendly_name "Flapjack"
 maintainer    "Lindsay Holmwood, Jesse Reynolds, Ali Graham, Sarah Kowalik"
 homepage      "http://flapjack.io"
 
-package :rpm do
-  signing_passphrase ''
-end
-
 install_dir   "/opt/flapjack"
 
 version = ENV['FLAPJACK_BUILD_REF']
