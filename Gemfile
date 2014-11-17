@@ -8,6 +8,7 @@ gem 'rake'
 gem 'pry'
 gem 'cinch'
 gem 'chronic_duration'
+gem 'json'
 
 group :development, :test do
   gem 'rspec'
