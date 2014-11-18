@@ -1,11 +1,11 @@
 
 name "redis"
-default_version "2.8.3"
+default_version "2.8.17"
 
-source :url => "http://download.redis.io/releases/redis-2.8.3.tar.gz",
-       :md5 => "6327e6786130b556b048beef0edbdfa7"
+source :url => "http://download.redis.io/releases/redis-#{version}.tar.gz",
+       :md5 => "69023c3005664602268a5e2dbe23425c"
 
-relative_path "redis-2.8.3"
+relative_path "redis-2.8.17"
 
 etc_path = "#{install_dir}/embedded/etc"
 
