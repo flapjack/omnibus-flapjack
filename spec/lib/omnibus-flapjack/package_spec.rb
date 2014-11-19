@@ -2,7 +2,25 @@ require 'spec_helper'
 require 'omnibus-flapjack/package'
 
 describe 'Package' do
-  describe 'Truth from Filename' do
+
+  describe 'Truth from params' do
+    describe 'Ubuntu' do
+      it 'generates package attributes from passed parameters' do
+        pkg = OmnibusFlapjack::Package.new(:build_ref => 'v1.2.0', :distro => 'ubuntu', :distro_release => 'trusty')
+        expect(pkg.package_file).to match(/flapjack_1\.2\.0~\+\d{14}-v1\.2\.0-trusty-1_amd64\.deb/)
+        expect(pkg.version).to eq('1.2.0')
+        expect(pkg.distro).to eq('ubuntu')
+        expect(pkg.distro_release).to eq('trusty')
+        expect(pkg.file_suffix).to eq('deb')
+        expect(pkg.main_filename).to eq('flapjack_1.2.0-trusty_amd64.deb')
+      end
+    end
+
+    describe 'CentOS' do
+    end
+  end
+
+  describe 'Truth from filename' do
     describe 'Ubuntu' do
 
       it 'extracts data from the filename of a final ubuntu package filename' do

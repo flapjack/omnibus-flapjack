@@ -1,10 +1,11 @@
 #!/usr/bin/env ruby
 
 require 'mixlib/shellout'
+require 'open-uri'
 
 module OmnibusFlapjack
   class Package
-    attr_reader :build_ref, :package_file, :truth_from_filename
+    attr_reader :build_ref, :truth_from_filename
 
     def distro
       return @distro if @distro
@@ -75,14 +76,16 @@ module OmnibusFlapjack
       else
         version_url = "https://raw.githubusercontent.com/flapjack/flapjack/" +
                       "#{build_ref}/lib/flapjack/version.rb"
-        version_cmd = Mixlib::ShellOut.new("wget -qO - #{version_url} | grep VERSION | cut -d '\"' -f 2")
-        version_cmd.run_command
-        version_cmd.error!
-        version = version_cmd.stdout.strip
+        open(version_url) {|f|
+          f.each_line {|line|
+            next unless line =~ /VERSION.*=.*"(.*)"/
+            @version = $1
+          }
+        }
         unless version.length > 0
           raise "Incorrect build_ref.  Tags should be specified as 'v1.0.0rc3'"
         end
-        version
+        @version
       end
     end
 
@@ -97,9 +100,19 @@ module OmnibusFlapjack
       end
     end
 
+    def package_file
+      @package_file ||= case distro
+      when 'ubuntu', 'debian'
+        "flapjack_#{experimental_package_version}-1_#{arch}.#{file_suffix}"
+      when 'centos'
+        "flapjack-#{experimental_package_version}_1.el#{distro_release}.#{arch}.#{file_suffix}"
+      end
+    end
+
     def main_filename
+      return @main_filename if @main_filename
       return nil unless version.match(/^[\d\.]+$/)
-      case distro
+      @main_filename = case distro
       when 'ubuntu', 'debian'
         "flapjack_#{version}-#{distro_release}_#{arch}.#{file_suffix}"
       when 'centos'
@@ -160,12 +173,12 @@ module OmnibusFlapjack
     def main_package_version
       # Only build a candidate package for main if the version isn't an RC (contains an alpha)
       return nil if version =~ /[a-zA-Z]/
-      case distro
+      @main_package_version ||= case distro
       when 'ubuntu', 'debian'
-        @main_package_version ||= "#{version}#{minor_delim}#{distro_release}"
+        "#{version}#{minor_delim}#{distro_release}"
       when 'centos'
         # flapjack-1.2.0-1.el6.x86_64.rpm
-        @main_package_version ||= version
+        version
       end
     end
 
