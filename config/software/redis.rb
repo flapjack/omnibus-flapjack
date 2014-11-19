@@ -228,7 +228,7 @@ exit $?
 INIT
 
 build do
-  command ["make -j #{max_build_jobs}", make_args].join(" ")
+  command ["make -j #{workers}", make_args].join(" ")
   command ["make install", make_args].join(" ")
 
   command "mkdir -p '#{etc_path}/redis'"
