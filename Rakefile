@@ -73,7 +73,7 @@ task :build do
     '-e', "FLAPJACK_PACKAGE_VERSION=#{pkg.experimental_package_version}",
     '-e', "FLAPJACK_MAIN_PACKAGE_VERSION=#{pkg.main_package_version}",
     '-e', "DISTRO_RELEASE=#{pkg.distro_release}",
-    "flapjack/omnibus-#{pkg.distro}:#{pkg.distro_release}-omnibus4", 'bash', '-l', '-c',
+    "flapjack/omnibus-#{pkg.distro}:#{pkg.distro_release}", 'bash', '-l', '-c',
     "\'#{omnibus_cmd}\'"
   ].join(" "), :timeout => 60 * 60)
   puts "Executing: " + docker_cmd.inspect
