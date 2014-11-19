@@ -105,7 +105,7 @@ module OmnibusFlapjack
       when 'ubuntu', 'debian'
         "flapjack_#{experimental_package_version}-1_#{arch}.#{file_suffix}"
       when 'centos'
-        "flapjack-#{experimental_package_version}_1.el#{distro_release}.#{arch}.#{file_suffix}"
+        "flapjack-#{experimental_package_version}-1.el#{distro_release}.#{arch}.#{file_suffix}"
       end
     end
 
