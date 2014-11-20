@@ -128,7 +128,7 @@ module OmnibusFlapjack
       end
 
       def add_to_rpm_repo(pkg, component = 'experimental')
-        releases = %w(6)
+        releases = %w(6 7)
         arches = %w(i386 x86_64)
         flapjack_version = %w(v1)
         components = %w(flapjack flapjack-experimental)
