@@ -366,5 +366,41 @@ task :promote do
   OmnibusFlapjack::Publish.release_lock(lockfile)
 end
 
-desc "Build and publish Flapjack packages"
-task :build_and_publish => [ :build, :publish ]
+desc "Test a flapjack package, using vagrant-flapjack"
+task :test do
+  pkg ||= OmnibusFlapjack::Package.new(
+    :package_file => ENV['PACKAGE_FILE']
+  )
+
+  puts "distro:          #{pkg.distro}"
+  puts "distro_release:  #{pkg.distro_release}"
+  puts "major_version:   #{pkg.major_version}"
+  puts "package_version: #{pkg.experimental_package_version}"
+  puts "file_suffix:     #{pkg.file_suffix}"
+  puts "major_delim:     #{pkg.major_delim}"
+  puts "minor_delim:     #{pkg.minor_delim}"
+
+  raise "distro cannot be determined" unless pkg.distro
+  raise "distro_release cannot be determined" unless pkg.distro_release
+  raise "major_version cannot be determined" unless pkg.major_version
+  raise "package_version cannot be determined" unless pkg.experimental_package_version
+
+  if dry_run
+    puts "Ending early due to DRY_RUN being set"
+    exit 1
+  end
+
+  Mixlib::ShellOut.new("git clone https://github.com/flapjack/vagrant-flapjack.git")
+  Dir.chdir('vagrant-flapjack') do
+    Mixlib::ShellOut.new("flapjack_component=experimental distro_release=#{pkg.distro_release} vagrant up")
+
+    serverspec = Mixlib::ShellOut.new("bundle exec rake serverspec")
+    puts serverspec
+
+    capybara = Mixlib::ShellOut.new("bundle exec rake serverspec")
+    puts capybara
+  end
+end
+
+desc "Build, publish and test Flapjack packages"
+task :build_and_publish => [ :build, :publish, :test]
