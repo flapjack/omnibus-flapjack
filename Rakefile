@@ -392,6 +392,7 @@ task :test do
 
   Mixlib::ShellOut.new("git clone https://github.com/flapjack/vagrant-flapjack.git")
   Dir.chdir('vagrant-flapjack') do
+    Mixlib::ShellOut.new("bundle")
     Mixlib::ShellOut.new("flapjack_component=experimental distro_release=#{pkg.distro_release} vagrant up")
 
     serverspec = Mixlib::ShellOut.new("bundle exec rake serverspec")
