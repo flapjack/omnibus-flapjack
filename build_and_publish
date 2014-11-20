@@ -27,6 +27,9 @@ log = "flapjack_#{build_ref}-#{tstamp}-#{distro}-#{distro_release}.log"
 Mixlib::ShellOut.new("echo 'Running build of #{build_ref} on #{distro} " +
   "#{distro_release} at #{tstamp}' | tee -a #{log}").run_command.error!
 
+build_success = nil
+rake = nil
+
 build_duration = Benchmark.realtime do
   rake = Mixlib::ShellOut.new("BUILD_REF=#{build_ref} DISTRO=#{distro} " +
     "DISTRO_RELEASE=#{distro_release} bundle exec rake build_and_publish 2>&1 | " +
