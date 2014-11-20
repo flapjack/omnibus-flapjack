@@ -393,15 +393,17 @@ task :test do
   Mixlib::ShellOut.new("git clone https://github.com/flapjack/vagrant-flapjack.git")
   Dir.chdir('vagrant-flapjack') do
     Mixlib::ShellOut.new("bundle")
-    Mixlib::ShellOut.new("flapjack_component=experimental distro_release=#{pkg.distro_release} vagrant up")
+    Mixlib::ShellOut.new("flapjack_component=experimental distro_release=#{pkg.distro_release} vagrant up --provider=docker")
 
     serverspec = Mixlib::ShellOut.new("bundle exec rake serverspec")
     puts serverspec
 
     capybara = Mixlib::ShellOut.new("bundle exec rake serverspec")
     puts capybara
+
+    Mixlib::ShellOut.new("vagrant destroy")
   end
 end
 
 desc "Build, publish and test Flapjack packages"
-task :build_and_publish => [ :build, :publish, :test]
+task :build_and_publish => [ :build, :publish]
