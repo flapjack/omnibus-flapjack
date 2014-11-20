@@ -4,6 +4,7 @@ require 'mixlib/shellout'
 require 'cinch'
 require 'open-uri'
 require 'chronic_duration'
+require 'benchmark'
 
 # Wrapper for the build_and_publish rake task
 # Assumes you have permission to packages.flapjack.io S3 bucket for writing
@@ -26,19 +27,24 @@ log = "flapjack_#{build_ref}-#{tstamp}-#{distro}-#{distro_release}.log"
 Mixlib::ShellOut.new("echo 'Running build of #{build_ref} on #{distro} " +
   "#{distro_release} at #{tstamp}' | tee -a #{log}").run_command.error!
 
-Mixlib::ShellOut.new("BUILD_REF=#{build_ref} DISTRO=#{distro} " +
-  "DISTRO_RELEASE=#{distro_release} time bundle exec rake build_and_publish 2>&1 | tee -a #{log}", :timeout => 60 * 60 * 3).run_command.error!
+build_duration = Benchmark.realtime do
+  rake = Mixlib::ShellOut.new("BUILD_REF=#{build_ref} DISTRO=#{distro} " +
+    "DISTRO_RELEASE=#{distro_release} bundle exec rake build_and_publish 2>&1 | " +
+    "tee -a #{log}", :timeout => 60 * 60 * 3)
+  rake.run_command
+  build_success = !rake.error?
+end
 
-finish_time = Time.now.utc
-duration = finish_time - start_time
-duration_string = ChronicDuration.output(duration.round(0), :format => :short)
+duration_string = ChronicDuration.output(build_duration.round(0), :format => :short)
+success_string = build_success ? 'Successful' : 'Failed'
 
-Mixlib::ShellOut.new("echo 'Finished #{build_ref} on #{distro} " +
-  "#{distro_release} at #{Time.now.utc.iso8601}, duration: #{duration_string}' | tee -a #{log}").run_command.error!
+Mixlib::ShellOut.new("echo '#{success_string} build of #{build_ref} on #{distro} " +
+  "#{distro_release} at #{Time.now.utc.iso8601}, duration: #{duration_string}' | tee -a #{log}").run_command
 
 log_dst = "packages.flapjack.io/build_logs/#{log}"
 puts "Done. Uploading log to #{log_dst}"
-Mixlib::ShellOut.new("aws s3 cp #{log} s3://#{log_dst}").run_command.error!
+log_upload = Mixlib::ShellOut.new("aws s3 cp #{log} s3://#{log_dst}")
+log_upload.run_command
 
 begin
   log_url = open("http://is.gd/create.php?format=simple&url=http://#{log_dst}").first
@@ -46,7 +52,7 @@ rescue
   log_url = "http://#{log_dst}"
 end
 
-message = "Flapjack #{build_ref} for #{distro} #{distro_release} package building completed (experimental) in #{duration_string}, log: #{log_url}"
+message = "#{success_string} build of Flapjack #{build_ref} for #{distro} #{distro_release} package (experimental) in #{duration_string}, log: #{log_url}"
 
 puts 'sending message to #flapjack: ' + message
 bot = Cinch::Bot.new do
