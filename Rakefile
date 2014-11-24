@@ -106,6 +106,7 @@ def build_omnibus_cmd(pkg)
     "export PATH=$PATH:/usr/local/go/bin",
     "cd omnibus-flapjack",
     "git pull",
+    "bundle update omnibus",
     "bundle update omnibus-software",
     "bundle install --binstubs",
     "bin/omnibus build --log-level=info " +
