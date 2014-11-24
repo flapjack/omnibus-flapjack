@@ -399,7 +399,7 @@ task :test do
     serverspec = Mixlib::ShellOut.new("bundle exec rake serverspec")
     puts serverspec
 
-    capybara = Mixlib::ShellOut.new("bundle exec rake serverspec")
+    capybara = Mixlib::ShellOut.new("bundle exec rake capybara")
     puts capybara
 
     Mixlib::ShellOut.new("vagrant destroy")
