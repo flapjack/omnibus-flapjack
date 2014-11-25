@@ -386,25 +386,85 @@ task :test do
   raise "major_version cannot be determined" unless pkg.major_version
   raise "package_version cannot be determined" unless pkg.experimental_package_version
 
-  if dry_run
-    puts "Ending early due to DRY_RUN being set"
-    exit 1
+  case pkg.distro
+  when 'ubuntu', 'debian'
+    test_cmd = [
+      "dpkg -i /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
+      # Install a second time to check that the uninstall procedure works
+      "dpkg -i /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
+      "apt-get update || true",
+      "DEBIAN_FRONTEND=noninteractive apt-get install -y ruby1.9.1-full git nagios3 phantomjs net-tools",
+      # Install libraries for nokogiri compilation required during bundle
+      "DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential curl libssl-dev libreadline-dev libxslt1-dev libxml2-dev libcurl4-openssl-dev zlib1g-dev libexpat1-dev libicu-dev",
+      "echo broker_module=/usr/local/lib/flapjackfeeder.o redis_host=localhost,redis_port=6380 >> /etc/nagios3/nagios.cfg",
+      "sed -i -r s/enable_notifications=1/enable_notifications=0/ /etc/nagios3/nagios.cfg",
+      "service nagios3 restart"
+    ]
+    image = "#{pkg.distro}:#{pkg.distro_release}"
+  when 'centos'
+    epel_url = case pkg.distro_release
+    when '6'
+      "http://download.fedoraproject.org/pub/epel/6/#{pkg.arch}/epel-release-6-8.noarch.rpm"
+    when '7'
+      "rpm -ivh http://download.fedoraproject.org/pub/epel/7/#{pkg.arch}/e/epel-release-7-2.noarch.rpm"
+    end
+
+    test_cmd = [
+      "rpm -ivh #{epel_url}",
+      "yum install -y centos-release-SCL",
+      "yum groupinstall -y 'Development Tools'",
+      "yum install -y openssl-devel ruby193 ruby193-ruby-devel tar nagios which",
+      "echo \"export PATH=\${PATH}:/opt/rh/ruby193/root/usr/local/bin\" | tee -a /opt/rh/ruby193/enable",
+      "cp /opt/rh/ruby193/enable /etc/profile.d/ruby193.sh",
+      "source /opt/rh/ruby193/enable",
+      "rpm -ivh /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
+      "rpm -ev flapjack",
+      "rpm -ivh /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
+      "service redis-flapjack start",
+      "service flapjack start",
+      "echo broker_module=/usr/local/lib/flapjackfeeder.o redis_host=localhost,redis_port=6380 >> /etc/nagios/nagios.cfg",
+      "sed -i -r s/enable_notifications=1/enable_notifications=0/ /etc/nagios/nagios.cfg",
+      "service nagios start"
+    ]
+    image = "#{pkg.distro}:#{pkg.distro}#{pkg.distro_release}"
   end
 
-  Mixlib::ShellOut.new("git clone https://github.com/flapjack/vagrant-flapjack.git")
-  Dir.chdir('vagrant-flapjack') do
-    Mixlib::ShellOut.new("bundle")
-    Mixlib::ShellOut.new("flapjack_component=experimental distro_release=#{pkg.distro_release} vagrant up --provider=docker")
+  test_cmd << [
+    "cd /mnt/omnibus-flapjack",
+    "gem install bundler --no-ri --no-rdoc",
+    "bundle",
+    "(bundle exec rspec spec/serverspec || true)"
+    # "(bundle exec rspec spec/capybara || true)"
+  ]
 
-    serverspec = Mixlib::ShellOut.new("bundle exec rake serverspec")
-    puts serverspec
+  test_cmd = test_cmd.flatten.join(" && ")
 
-    capybara = Mixlib::ShellOut.new("bundle exec rake capybara")
-    puts capybara
-
-    Mixlib::ShellOut.new("vagrant destroy")
+  docker_cmd = Mixlib::ShellOut.new([
+    'docker', 'run', '-t',
+    '--attach', 'stdout',
+    '--attach', 'stderr',
+    '--rm',
+    "-v #{Dir.pwd}:/mnt/omnibus-flapjack",
+    "#{image}", 'bash', '-l', '-c',
+    "\'#{test_cmd}\'"
+  ].join(" "), :timeout => 60 * 60)
+  puts "Executing: " + docker_cmd.inspect
+  unless dry_run
+    docker_cmd.run_command
+    puts "STDOUT: "
+    puts "#{docker_cmd.stdout}"
+    puts "STDERR: "
+    puts "#{docker_cmd.stderr}"
+    if docker_cmd.error?
+      puts "ERROR running docker command, exit status is #{docker_cmd.exitstatus}"
+      exit 1
+    end
+    puts "Test with docker completed."
   end
 end
 
-desc "Build, publish and test Flapjack packages"
-task :build_and_publish => [ :build, :publish]
+desc "Build and test Flapjack packages"
+task :build_and_test => [ :build, :test ]
+
+desc "Build, and publish Flapjack packages"
+task :build_and_publish => [ :build, :publish ]

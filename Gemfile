@@ -12,4 +12,10 @@ gem 'json'
 
 group :development, :test do
   gem 'rspec'
+  gem 'serverspec'
+  gem 'specinfra'
+  gem 'capybara'
+  gem 'selenium-webdriver', require: false
+  gem 'poltergeist', require: false
+  gem 'pry-rescue'
 end
