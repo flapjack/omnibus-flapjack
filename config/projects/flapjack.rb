@@ -5,6 +5,8 @@ maintainer    "Lindsay Holmwood, Jesse Reynolds, Ali Graham, Sarah Kowalik"
 homepage      "http://flapjack.io"
 
 package :rpm do
+  # This is the same key as used for the Debian repository signing, which uses a blank passphrase.
+  # This field requires a value to be activated, but is otherwise unused.
   signing_passphrase '1234'
 end
 

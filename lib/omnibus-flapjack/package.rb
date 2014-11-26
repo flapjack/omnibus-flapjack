@@ -105,7 +105,7 @@ module OmnibusFlapjack
       when 'ubuntu', 'debian'
         "flapjack_#{experimental_package_version}-1_#{arch}.#{file_suffix}"
       when 'centos'
-        "flapjack-#{experimental_package_version}.el#{distro_release}-1.#{arch}.#{file_suffix}"
+        "flapjack-#{experimental_package_version}-1.#{arch}.#{file_suffix}"
       end
     end
 
@@ -165,7 +165,7 @@ module OmnibusFlapjack
             "#{first}~#{second}~#{timestamp}#{minor_delim}#{build_ref}#{minor_delim}#{distro_release}"
           end
         when 'centos'
-          "#{first}#{minor_delim}0.#{timestamp}#{second}"
+          "#{first}#{minor_delim}0.#{timestamp}#{second}.el#{distro_release}"
         end
       end
     end
@@ -177,8 +177,7 @@ module OmnibusFlapjack
       when 'ubuntu', 'debian'
         "#{version}#{minor_delim}#{distro_release}"
       when 'centos'
-        # flapjack-1.2.0-1.el6.x86_64.rpm
-        version
+        "#{version}.el#{distro_release}"
       end
     end
 
