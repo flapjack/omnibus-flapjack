@@ -72,6 +72,7 @@ task :build do
     '-e', "FLAPJACK_EXPERIMENTAL_PACKAGE_VERSION=#{pkg.experimental_package_version}",
     '-e', "FLAPJACK_MAIN_PACKAGE_VERSION=#{pkg.main_package_version}",
     '-e', "DISTRO_RELEASE=#{pkg.distro_release}",
+    "-v", "#{Dir.home}/.gnupg:/root/.gnupg",
     "flapjack/omnibus-#{pkg.distro}:#{pkg.distro_release}", 'bash', '-l', '-c',
     "\'#{omnibus_cmd}\'"
   ].join(" "), :timeout => 60 * 60)
@@ -105,6 +106,7 @@ def build_omnibus_cmd(pkg)
     "export PATH=$PATH:/usr/local/go/bin",
     "cd omnibus-flapjack",
     "git pull",
+    "cp .rpmmacros ~/.rpmmacros",
     "bundle update omnibus",
     "bundle update omnibus-software",
     "bundle install --binstubs",

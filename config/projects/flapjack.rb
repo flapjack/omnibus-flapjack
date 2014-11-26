@@ -5,7 +5,7 @@ maintainer    "Lindsay Holmwood, Jesse Reynolds, Ali Graham, Sarah Kowalik"
 homepage      "http://flapjack.io"
 
 package :rpm do
-  signing_passphrase ''
+  signing_passphrase '1234'
 end
 
 install_dir   "/opt/flapjack"
