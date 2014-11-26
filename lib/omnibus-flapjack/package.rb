@@ -31,7 +31,7 @@ module OmnibusFlapjack
         when 'ubuntu', 'debian'
           experimental_package_version.split(minor_delim).last
         when 'centos'
-          @package_file.split('.')[-3].split('el')[1]
+          @package_file.split('.')[-3].match(/el(.+)-1/)[1]
         end
       end
     end
@@ -105,7 +105,7 @@ module OmnibusFlapjack
       when 'ubuntu', 'debian'
         "flapjack_#{experimental_package_version}-1_#{arch}.#{file_suffix}"
       when 'centos'
-        "flapjack-#{experimental_package_version}-1.el#{distro_release}.#{arch}.#{file_suffix}"
+        "flapjack-#{experimental_package_version}.el#{distro_release}-1.#{arch}.#{file_suffix}"
       end
     end
 
@@ -116,7 +116,7 @@ module OmnibusFlapjack
       when 'ubuntu', 'debian'
         "flapjack_#{version}-#{distro_release}_#{arch}.#{file_suffix}"
       when 'centos'
-        "flapjack-#{version}_1.el#{distro_release}.#{arch}.#{file_suffix}"
+        "flapjack-#{version}_0.el#{distro_release}.#{arch}.#{file_suffix}"
       end
     end
 
