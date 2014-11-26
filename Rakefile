@@ -468,5 +468,5 @@ end
 desc "Build and test Flapjack packages"
 task :build_and_test => [ :build, :test ]
 
-desc "Build, and publish Flapjack packages"
-task :build_and_publish => [ :build, :publish ]
+desc "Build, test and publish Flapjack packages"
+task :build_and_publish => [ :build, :test, :publish ]
