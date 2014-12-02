@@ -156,13 +156,14 @@ module OmnibusFlapjack
         first, second = version.match(/^([0-9.]*)([a-z0-9.]*)$/).captures
         case @distro
         when 'ubuntu', 'debian'
+          build_ref_clean = build_ref.sub(/\//, '.')
           if second.empty?
             # If we get a version that isn't an RC (contains an alpha), make
             # the package version~+date-ref-release-1 so that it sorts above RCs
             # ie, insert a + before the timestamp
-            "#{first}~+#{timestamp}#{minor_delim}#{build_ref}#{minor_delim}#{distro_release}"
+            "#{first}~+#{timestamp}#{minor_delim}#{build_ref_clean}#{minor_delim}#{distro_release}"
           else
-            "#{first}~#{second}~#{timestamp}#{minor_delim}#{build_ref}#{minor_delim}#{distro_release}"
+            "#{first}~#{second}~#{timestamp}#{minor_delim}#{build_ref_clean}#{minor_delim}#{distro_release}"
           end
         when 'centos'
           "#{first}#{minor_delim}0.#{timestamp}#{second}.el#{distro_release}"
