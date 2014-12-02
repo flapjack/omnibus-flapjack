@@ -5,6 +5,7 @@ require 'cinch'
 require 'open-uri'
 require 'chronic_duration'
 require 'benchmark'
+require 'logger'
 
 # Wrapper for the build_and_publish rake task
 # Assumes you have permission to packages.flapjack.io S3 bucket for writing
@@ -24,31 +25,40 @@ unless distro && distro_release && build_ref
   exit 1
 end
 
-log = "flapjack_#{build_ref_clean}-#{tstamp}-#{distro}-#{distro_release}.log"
+log_file = "flapjack_#{build_ref_clean}-#{tstamp}-#{distro}-#{distro_release}.log"
+log = Logger.new(log_file)
 
-Mixlib::ShellOut.new("echo 'Running build of #{build_ref} on #{distro} " +
-  "#{distro_release} at #{tstamp}' | tee -a #{log}").run_command.error!
+log.info "Running build of #{build_ref} on #{distro} #{distro_release} at #{tstamp}"
 
-build_success = nil
 rake = nil
 
 build_duration = Benchmark.realtime do
   rake = Mixlib::ShellOut.new("BUILD_REF=#{build_ref} DISTRO=#{distro} " +
-    "DISTRO_RELEASE=#{distro_release} bundle exec rake build_and_publish 2>&1 | " +
-    "tee -a #{log}", :timeout => 60 * 60 * 3)
+    "DISTRO_RELEASE=#{distro_release} bundle exec rake build_and_publish 2>&1", :timeout => 60 * 60 * 3)
+    #"DISTRO_RELEASE=#{distro_release} bundle exec rake build_and_publish 2>&1 | " +
+    #"tee -a #{log}", :timeout => 60 * 60 * 3)
   rake.run_command
-  build_success = !rake.error?
 end
 
+if rake.error?
+  log.info "Failure running `bundle exec rake build_and_publish`"
+  log.info "Command: #{rake.inspect}"
+else
+  log.info "Success running `bundle exec rake build_and_publish`"
+end
+log.info "Output: "
+log.info rake.stdout
+
 duration_string = ChronicDuration.output(build_duration.round(0), :format => :short)
-success_string = build_success ? 'Successful' : 'Failed'
+success_string = !rake.error? ? 'Successful' : 'Failed'
 
-Mixlib::ShellOut.new("echo '#{success_string} build of #{build_ref} on #{distro} " +
-  "#{distro_release} at #{Time.now.utc.iso8601}, duration: #{duration_string}' | tee -a #{log}").run_command
+log.info "#{success_string} build of #{build_ref} on #{distro} " +
+  "#{distro_release} at #{Time.now.utc.iso8601}, duration: #{duration_string}"
 
-log_dst = "packages.flapjack.io/build_logs/#{log}"
-puts "Done. Uploading log to #{log_dst}"
-log_upload = Mixlib::ShellOut.new("aws s3 cp #{log} s3://#{log_dst}")
+
+log_dst = "packages.flapjack.io/build_logs/#{log_file}"
+puts "#{success_string}. Uploading log to #{log_dst}"
+log_upload = Mixlib::ShellOut.new("aws s3 cp #{log_file} s3://#{log_dst}")
 log_upload.run_command
 
 begin
