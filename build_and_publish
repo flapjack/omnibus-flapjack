@@ -11,6 +11,8 @@ require 'benchmark'
 
 distro, distro_release, build_ref = ARGV
 
+build_ref_clean = build_ref.sub(/\//, '.')
+
 start_time = Time.now.utc
 tstamp = start_time.strftime('%Y%m%dT%H%M%S')
 
@@ -22,7 +24,7 @@ unless distro && distro_release && build_ref
   exit 1
 end
 
-log = "flapjack_#{build_ref}-#{tstamp}-#{distro}-#{distro_release}.log"
+log = "flapjack_#{build_ref_clean}-#{tstamp}-#{distro}-#{distro_release}.log"
 
 Mixlib::ShellOut.new("echo 'Running build of #{build_ref} on #{distro} " +
   "#{distro_release} at #{tstamp}' | tee -a #{log}").run_command.error!
