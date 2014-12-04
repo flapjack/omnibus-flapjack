@@ -10,12 +10,11 @@ CONFIG_DIR=/etc/flapjack
 FLAPJACK_GEM_DIR=`ls -dr ${DEST_DIR}/embedded/lib/ruby/gems/*/gems/flapjack-* | head -1`
 PROGNAME=$(basename $0)
 
+groupadd flapjack
+useradd --system --gid flapjack --no-create-home flapjack
 if [ -f /etc/redhat-release ]; then
-  groupadd flapjack
-  adduser --system --gid flapjack --no-create-home flapjack
   INITDDIR="/etc/rc.d/init.d"
 else
-  adduser --system --group --no-create-home flapjack
   INITDDIR="/etc/init.d"
 fi
 
