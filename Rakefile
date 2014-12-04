@@ -110,7 +110,7 @@ def build_omnibus_cmd(pkg)
     "bundle update omnibus",
     "bundle update omnibus-software",
     "bundle install --binstubs",
-    "bin/omnibus build --log-level=debug " +
+    "bin/omnibus build --log-level=info " +
       "--override use_s3_caching:false " +
       "--override use_git_caching:true " +
       "flapjack",
