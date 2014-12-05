@@ -75,7 +75,7 @@ task :build do
     "-v", "#{Dir.home}/.gnupg:/root/.gnupg",
     "flapjack/omnibus-#{pkg.distro}:#{pkg.distro_release}", 'bash', '-l', '-c',
     "\'#{omnibus_cmd}\'"
-  ].join(" "), :timeout => 60 * 60)
+  ].join(" "), :timeout => 60 * 60, :live_stream => $stdout)
   puts "Executing: " + docker_cmd.inspect
   unless dry_run
     docker_cmd.run_command
@@ -449,7 +449,7 @@ task :test do
     "-v #{Dir.pwd}:/mnt/omnibus-flapjack",
     "#{image}", 'bash', '-l', '-c',
     "\'#{test_cmd}\'"
-  ].join(" "), :timeout => 60 * 60)
+  ].join(" "), :timeout => 60 * 60, :live_stream => $stdout)
   puts "Executing: " + docker_cmd.inspect
   unless dry_run
     docker_cmd.run_command
