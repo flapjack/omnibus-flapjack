@@ -397,13 +397,31 @@ task :test do
   raise "package_version cannot be determined" unless pkg.experimental_package_version
 
   case pkg.distro
-  when 'ubuntu', 'debian'
+  when 'ubuntu'
     test_cmd = [
       "dpkg -i /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
       # Install a second time to check that the uninstall procedure works
       "dpkg -i /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
       "apt-get update || true",
       "DEBIAN_FRONTEND=noninteractive apt-get install -y ruby1.9.1-full git nagios3 phantomjs net-tools",
+      # Install libraries for nokogiri compilation required during bundle
+      "DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential curl libssl-dev libreadline-dev libxslt1-dev libxml2-dev libcurl4-openssl-dev zlib1g-dev libexpat1-dev libicu-dev",
+      "echo broker_module=/usr/local/lib/flapjackfeeder.o redis_host=localhost,redis_port=6380 >> /etc/nagios3/nagios.cfg",
+      "sed -i -r s/enable_notifications=1/enable_notifications=0/ /etc/nagios3/nagios.cfg",
+      "service nagios3 restart"
+    ]
+    image = "#{pkg.distro}:#{pkg.distro_release}"
+  when 'debian'
+    test_cmd = [
+      "dpkg -i /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
+      # Install a second time to check that the uninstall procedure works
+      "dpkg -i /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
+      "apt-get update || true",
+      "DEBIAN_FRONTEND=noninteractive apt-get install -y ruby1.9.1-full git nagios3 net-tools ca-certificates",
+      # No phantomjs package in wheezy yet, only in sid
+      "DEBIAN_FRONTEND=noninteractive apt-get install -y libfontconfig1 libexpat1 libfreetype6 libfreetype6 fontconfig-config ucf ttf-dejavu-core ttf-bitstream-vera ttf-freefont fonts-freefont-ttf",
+      "wget https://raw.githubusercontent.com/suan/phantomjs-debian/master/phantomjs_1.9.6-0wheezy_amd64.deb",
+      "dpkg -i phantomjs_1.9.6-0wheezy_amd64.deb",
       # Install libraries for nokogiri compilation required during bundle
       "DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential curl libssl-dev libreadline-dev libxslt1-dev libxml2-dev libcurl4-openssl-dev zlib1g-dev libexpat1-dev libicu-dev",
       "echo broker_module=/usr/local/lib/flapjackfeeder.o redis_host=localhost,redis_port=6380 >> /etc/nagios3/nagios.cfg",
