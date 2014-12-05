@@ -10,8 +10,6 @@ else
   INITDDIR="/etc/init.d"
 fi
 
-rm ${INITDDIR}/flapjack ${INITDDIR}/flapjack-nagios-receiver ${INITDDIR}/flapper ${INITDDIR}/redis-flapjack
-
 if [ -f /etc/redhat-release ]; then
   chkconfig --del redis-flapjack
   chkconfig --del flapjack
@@ -23,6 +21,8 @@ else
   update-rc.d flapper remove
   update-rc.d redis-flapjack remove
 fi
+
+rm ${INITDDIR}/flapjack ${INITDDIR}/flapjack-nagios-receiver ${INITDDIR}/flapper ${INITDDIR}/redis-flapjack
 
 echo "flapjack has been uninstalled!"
 
