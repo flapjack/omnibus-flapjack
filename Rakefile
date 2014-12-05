@@ -21,6 +21,8 @@ require 'mixlib/shellout'
 require 'omnibus-flapjack/package'
 require 'omnibus-flapjack/publish'
 require 'fileutils'
+require 'benchmark'
+require 'chronic_duration'
 
 dry_run = (ENV["DRY_RUN"].nil? || ENV["DRY_RUN"].empty?) ? false : true
 pkg = nil
@@ -78,16 +80,19 @@ task :build do
   ].join(" "), :timeout => 60 * 60, :live_stream => $stdout)
   puts "Executing: " + docker_cmd.inspect
   unless dry_run
-    docker_cmd.run_command
+    build_duration = Benchmark.realtime do
+      docker_cmd.run_command
+    end
+    duration_string = ChronicDuration.output(build_duration.round(0), :format => :short)
     puts "STDOUT: "
     puts "#{docker_cmd.stdout}"
     puts "STDERR: "
     puts "#{docker_cmd.stderr}"
     if docker_cmd.error?
-      puts "ERROR running docker command, exit status is #{docker_cmd.exitstatus}"
+      puts "ERROR running docker command, exit status is #{docker_cmd.exitstatus}, duration was #{duration_string}."
       exit 1
     end
-    puts "Docker run completed."
+    puts "Docker run completed, duration was #{duration_string}."
 
     sleep 10 # one time I got "Could not find the file /omnibus-flapjack/pkg in container" and a while later it worked fine
 
@@ -235,35 +240,39 @@ task :publish do
 
   OmnibusFlapjack::Publish.get_lock(lockfile)
 
-  OmnibusFlapjack::Publish.sync_packages_to_local(local_dir, remote_dir)
+  publish_duration = Benchmark.realtime do
+    OmnibusFlapjack::Publish.sync_packages_to_local(local_dir, remote_dir)
 
-  case pkg.distro
-  when 'ubuntu', 'debian'
-    OmnibusFlapjack::Publish.add_to_deb_repo(pkg)
+    case pkg.distro
+    when 'ubuntu', 'debian'
+      OmnibusFlapjack::Publish.add_to_deb_repo(pkg)
 
-    OmnibusFlapjack::Publish.create_indexes('aptly/public', '../../create_directory_listings')
+      OmnibusFlapjack::Publish.create_indexes('aptly/public', '../../create_directory_listings')
 
-    OmnibusFlapjack::Publish.sync_packages_to_remote('aptly/public', 's3://packages.flapjack.io/deb')
+      OmnibusFlapjack::Publish.sync_packages_to_remote('aptly/public', 's3://packages.flapjack.io/deb')
 
-  when 'centos'
-    OmnibusFlapjack::Publish.add_to_rpm_repo(pkg)
+    when 'centos'
+      OmnibusFlapjack::Publish.add_to_rpm_repo(pkg)
 
-    OmnibusFlapjack::Publish.create_indexes(local_dir, '../create_directory_listings')
-  else
-    puts "Error: I don't know how to publish for distro #{pkg.distro}"
-    exit 1
+      OmnibusFlapjack::Publish.create_indexes(local_dir, '../create_directory_listings')
+    else
+      puts "Error: I don't know how to publish for distro #{pkg.distro}"
+      exit 1
+    end
+
+    OmnibusFlapjack::Publish.sync_packages_to_remote(local_dir, remote_dir)
+
+    unless Dir.glob("pkg/candidate_flapjack_#{pkg.experimental_package_version}*").empty?
+      puts "Copying candidate package for main to s3"
+      Mixlib::ShellOut.new("aws s3 cp pkg/candidate_flapjack#{pkg.major_delim}#{pkg.experimental_package_version}*.deb " +
+                           's3://packages.flapjack.io/candidates/ --acl public-read ' +
+                           '--region us-east-1').run_command.error!
+    end
+
+    OmnibusFlapjack::Publish.release_lock(lockfile)
   end
-
-  OmnibusFlapjack::Publish.sync_packages_to_remote(local_dir, remote_dir)
-
-  unless Dir.glob("pkg/candidate_flapjack_#{pkg.experimental_package_version}*").empty?
-    puts "Copying candidate package for main to s3"
-    Mixlib::ShellOut.new("aws s3 cp pkg/candidate_flapjack#{pkg.major_delim}#{pkg.experimental_package_version}*.deb " +
-                         's3://packages.flapjack.io/candidates/ --acl public-read ' +
-                         '--region us-east-1').run_command.error!
-  end
-
-  OmnibusFlapjack::Publish.release_lock(lockfile)
+  duration_string = ChronicDuration.output(publish_duration.round(0), :format => :short)
+  puts "Publishing completed, duration was #{duration_string}"
 end
 
 desc "Promote a published Flapjack package (from experimental to main)"
@@ -452,16 +461,19 @@ task :test do
   ].join(" "), :timeout => 60 * 60, :live_stream => $stdout)
   puts "Executing: " + docker_cmd.inspect
   unless dry_run
-    docker_cmd.run_command
+    test_duration = Benchmark.realtime do
+      docker_cmd.run_command
+    end
+    duration_string = ChronicDuration.output(test_duration.round(0), :format => :short)
     puts "STDOUT: "
     puts "#{docker_cmd.stdout}"
     puts "STDERR: "
     puts "#{docker_cmd.stderr}"
     if docker_cmd.error?
-      puts "ERROR running docker command, exit status is #{docker_cmd.exitstatus}"
+      puts "ERROR running docker command, exit status is #{docker_cmd.exitstatus}, duration was #{duration_string}."
       exit 1
     end
-    puts "Test with docker completed."
+    puts "Test with docker completed, duration was #{duration_string}."
   end
 end
 

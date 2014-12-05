@@ -25,23 +25,26 @@ module OmnibusFlapjack
 
       def get_lock(lockfile)
         # Attempt to get lock file from S3
-        obtained_lock = false
-        (1..360).each do |i|
-          if Mixlib::ShellOut.new("aws s3 cp s3://packages.flapjack.io/#{lockfile} #{lockfile}" +
-            "--acl public-read --region us-east-1").run_command.error?
-            obtained_lock = true
-            break
+        get_lock_duration = Benchmark.realtime do
+          obtained_lock = false
+          (1..360).each do |i|
+            if Mixlib::ShellOut.new("aws s3 cp s3://packages.flapjack.io/#{lockfile} #{lockfile}" +
+              "--acl public-read --region us-east-1").run_command.error?
+              obtained_lock = true
+              break
+            end
+            puts "Could not get flapjack upload lock, someone else is updating the repository: #{i}"
+            sleep 10
           end
-          puts "Could not get flapjack upload lock, someone else is updating the repository: #{i}"
-          sleep 10
-        end
 
-        unless obtained_lock
-          puts "Error: timed out trying to get #{lockfile}"
-          exit 4
+          unless obtained_lock
+            puts "Error: timed out trying to get #{lockfile}"
+            exit 4
+          end
         end
+        duration_string = ChronicDuration.output(get_lock_duration.round(0), :format => :short)
 
-        puts "Starting package upload"
+        puts "Took #{duration_string} to get lockfile.  Starting package upload"
         Mixlib::ShellOut.new("touch #{lockfile}").run_command.error!
         Mixlib::ShellOut.new("aws s3 cp #{lockfile} s3://packages.flapjack.io/#{lockfile} --acl public-read " +
                              "--region us-east-1").run_command.error!
