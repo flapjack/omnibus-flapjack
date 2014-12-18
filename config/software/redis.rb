@@ -69,7 +69,7 @@ case "$1" in
   touch $PIDFILE
   chown flapjack:flapjack $RUNDIR $PIDFILE
   chmod 755 $RUNDIR
-  if start-stop-daemon --start --quiet --umask 007 --pidfile $PIDFILE --chuid flapjack:flapjack --exec $DAEMON -- $DAEMON_ARGS
+  if start-stop-daemon --start --quiet --umask 022 --pidfile $PIDFILE --chuid flapjack:flapjack --exec $DAEMON -- $DAEMON_ARGS
   then
     echo "$NAME."
   else
