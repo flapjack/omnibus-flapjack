@@ -351,6 +351,8 @@ task :promote do
   FileUtils.copy("pkg/candidate_#{filename}", "pkg/#{pkg.main_filename}")
   puts "Main package file is at pkg/#{pkg.main_filename}"
 
+  Mixlib::ShellOut.new("md5sum pkg/*").run_command.error!
+
   OmnibusFlapjack::Publish.sync_packages_to_local(local_dir, remote_dir)
 
   case pkg.distro
