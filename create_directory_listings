@@ -71,36 +71,43 @@ def write_index_file(path, directories, files, sizes)
 
   </head>
   <body>
-    <h2><a href="http://packages.flapjack.io">packages.flapjack.io</a></h2>
-    <% parts = @dirname.split('/') %>
-    <h3>
-      <% parts.each_with_index do |part, i| %>
-        <% uri_up = nil %>
-        <% j = i %>
-        <% while @levels_deep > j %>
-          <% uri_up = uri_up ? (uri_up + '../') : '../' %>
-          <% j += 1 %>
-        <% end %>
-        <% if uri_up %>
-          <a href="<%= uri_up %>"><%= part %></a> /
-        <% else %>
-          <%= part %> /
-        <% end %>
-      <% end %>
-    </h3>
-    <ul>
-      <li><a href="../">..</a></li>
-      <% @directories.each do |d| %>
-        <li><a href="<%= d %>"><%= d %>/</a></li>
-      <% end %>
-      <% @files.each do |thefile| %>
-        <li>
-          <% full_path = [@dirname, thefile].join('/') %>
-          <a href="<%= thefile %>"><%= thefile %></a>
-            - <%= @sizes[full_path] %> bytes
-        </li>
-      <% end %>
-    </ul>
+    <div class="container content">
+      <div class="row">
+        <div class="col-md-offset-1 col-md-10">
+
+          <h1><a href="http://packages.flapjack.io">packages.flapjack.io</a></h1>
+          <% parts = @dirname.split('/') %>
+          <h2>
+            <% parts.each_with_index do |part, i| %>
+              <% uri_up = nil %>
+              <% j = i %>
+              <% while @levels_deep > j %>
+                <% uri_up = uri_up ? (uri_up + '../') : '../' %>
+                <% j += 1 %>
+              <% end %>
+              <% if uri_up %>
+                <a href="<%= uri_up %>"><%= part %></a> /
+              <% else %>
+                <%= part %> /
+              <% end %>
+            <% end %>
+          </h2>
+          <ul>
+            <li><a href="../">..</a></li>
+            <% @directories.each do |d| %>
+              <li><a href="<%= d %>"><%= d %>/</a></li>
+            <% end %>
+            <% @files.each do |thefile| %>
+              <li>
+                <% full_path = [@dirname, thefile].join('/') %>
+                <a href="<%= thefile %>"><%= thefile %></a>
+                  - <%= @sizes[full_path] %> bytes
+              </li>
+            <% end %>
+          </ul>
+        </div>
+      </div>
+    </div>
   </body>
 </html>
 EOS
