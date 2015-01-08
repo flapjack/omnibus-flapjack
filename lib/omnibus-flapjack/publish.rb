@@ -41,13 +41,13 @@ module OmnibusFlapjack
             puts "Error: timed out trying to get #{lockfile}"
             exit 4
           end
+
+          Mixlib::ShellOut.new("touch #{lockfile}", :live_stream => $stdout).run_command.error!
+          Mixlib::ShellOut.new("aws s3 cp #{lockfile} s3://packages.flapjack.io/#{lockfile} --acl public-read " +
+                               "--region us-east-1 2>&1", :live_stream => $stdout).run_command.error!
         end
         duration_string = ChronicDuration.output(get_lock_duration.round(0), :format => :short)
-
-        puts "Took #{duration_string} to get lockfile.  Starting package upload"
-        Mixlib::ShellOut.new("touch #{lockfile}", :live_stream => $stdout).run_command.error!
-        Mixlib::ShellOut.new("aws s3 cp #{lockfile} s3://packages.flapjack.io/#{lockfile} --acl public-read " +
-                             "--region us-east-1 2>&1", :live_stream => $stdout).run_command.error!
+        puts "Took #{duration_string} to get lockfile."
       end
 
       def release_lock(lockfile)
@@ -67,14 +67,15 @@ module OmnibusFlapjack
                              "--acl public-read --region us-east-1 2>&1", :live_stream => $stdout).run_command.error!
       end
 
-      def sync_packages_to_remote(local_dir, remote_dir)
+      def sync_packages_to_remote(local_dir, remote_dir, options = {})
         unless File.directory?(local_dir)
           puts "Error, local_dir does not exist (#{local_dir}) pwd: #{FileUtils.pwd}"
           return false
         end
-        puts "Syncing #{local_dir} up to #{remote_dir}"
+        dry_run = options[:dry_run] ? '--dryrun' : ''
+        puts "Syncing #{local_dir} up to #{remote_dir} #{dryrun}"
         Mixlib::ShellOut.new("aws s3 sync #{local_dir} #{remote_dir} " +
-                             "--delete --acl public-read --region us-east-1 2>&1", :live_stream => $stdout).run_command.error!
+                             "--delete --acl public-read --region us-east-1 #{dry_run}2>&1", :live_stream => $stdout).run_command.error!
       end
 
       def add_to_deb_repo(pkg, component = 'experimental')

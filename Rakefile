@@ -277,6 +277,40 @@ task :publish do
   puts "Publishing completed, duration was #{duration_string}"
 end
 
+
+
+  #   local_dir   = 'createrepo'
+  #   remote_dir  = 's3://packages.flapjack.io/rpm'
+  #   lockfile    = 'flapjack_upload_rpm.lock'
+
+
+  # #when 'centos'
+  # OmnibusFlapjack::Publish.add_to_rpm_repo(pkg)
+  
+  # OmnibusFlapjack::Publish.create_indexes(local_dir, '../create_directory_listings')
+
+
+
+desc "Update directory indexes for the deb repo"
+task :update_indexes_deb do
+
+  start_dir = FileUtils.pwd
+
+  local_dir   = 'deb'
+  remote_dir  = 's3://packages.flapjack.io/deb'
+  lockfile    = 'flapjack_upload_deb.lock'
+
+  update_indexes_duration = Benchmark.realtime do
+    OmnibusFlapjack::Publish.get_lock(lockfile)
+    OmnibusFlapjack::Publish.sync_packages_to_local(local_dir, remote_dir)
+    OmnibusFlapjack::Publish.create_indexes(local_dir, '../../create_directory_listings')
+    OmnibusFlapjack::Publish.sync_packages_to_remote(local_dir, remote_dir, :dry_run => dry_run)
+    OmnibusFlapjack::Publish.release_lock(lockfile)
+  end
+  duration_string = ChronicDuration.output(update_indexes_duration.round(0), :format => :short)
+  puts "Indexes updating completed, duration was #{duration_string}"
+end
+
 desc "Promote a published Flapjack package (from experimental to main)"
 task :promote do
   pkg ||= OmnibusFlapjack::Package.new(
