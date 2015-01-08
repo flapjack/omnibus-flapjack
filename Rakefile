@@ -266,7 +266,7 @@ task :publish do
 
     unless Dir.glob("pkg/candidate_flapjack#{pkg.major_delim}#{pkg.experimental_package_version}*").empty?
       puts "Copying candidate package for main to s3"
-      Mixlib::ShellOut.new("aws s3 cp pkg/candidate_flapjack#{pkg.major_delim}#{pkg.experimental_package_version}*.deb " +
+      Mixlib::ShellOut.new("aws s3 cp pkg/candidate_flapjack#{pkg.major_delim}#{pkg.experimental_package_version}*.#{pkg.file_suffix} " +
                            's3://packages.flapjack.io/candidates/ --acl public-read ' +
                            '--region us-east-1').run_command.error!
     end
