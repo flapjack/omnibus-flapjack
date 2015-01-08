@@ -53,7 +53,22 @@ def write_index_file(path, directories, files, sizes)
 <html>
   <head>
     <title><%= @dirname %></title>
-    <meta name="generator" content="flapjack.io flapjack-omnibus bin/create_directory_listings">
+    <meta name="generator" content="flapjack.io flapjack-omnibus create_directory_listings">
+    <link rel="stylesheet" href="http://flapjack.io/stylesheets/bootstrap.min.css"/>
+    <link rel="stylesheet" href="http://flapjack.io/stylesheets/api-screen.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="http://flapjack.io/stylesheets/api-syntax.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="http://flapjack.io/stylesheets/github-markdown.css" type="text/css">
+    <link rel="shortcut icon" href="http://flapjack.io/images/flapjack-2013-favicon-64-32-24-16.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+      .markdown-body {
+          min-width: 200px;
+          max-width: 790px;
+          margin: 0 auto;
+          padding: 30px;
+      }
+    </style>
+
   </head>
   <body>
     <h2><a href="http://packages.flapjack.io">packages.flapjack.io</a></h2>
