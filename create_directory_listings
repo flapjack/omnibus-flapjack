@@ -9,6 +9,7 @@ def process_directory(path)
   directories = []
   files       = []
   sizes       = {}
+  mtimes      = {}
   Dir.entries(path).sort.each do |filename|
     full_path = "#{path}/#{filename}"
     case filename
