@@ -29,7 +29,7 @@ module OmnibusFlapjack
       @distro_release ||= if truth_from_filename
         case distro
         when 'ubuntu', 'debian'
-          experimental_package_version.split(minor_delim).last
+          experimental_package_version.split(minor_delim).last.split('-').first
         when 'centos'
           @package_file.split('.')[-3].match(/el(.+)-1/)[1]
         end
@@ -51,11 +51,11 @@ module OmnibusFlapjack
     end
 
     def major_delim
-      return @major_delim ||= ['ubuntu', 'debian'].include?(distro) ? '_' : '-'
+      @major_delim ||= ['ubuntu', 'debian'].include?(distro) ? '_' : '-'
     end
 
     def minor_delim
-      return @minor_delim ||= ['ubuntu', 'debian'].include?(distro) ? '-' : '_'
+      @minor_delim ||= ['ubuntu', 'debian'].include?(distro) ? '~' : '_'
     end
 
     def version
@@ -63,11 +63,10 @@ module OmnibusFlapjack
       @version = if truth_from_filename
         case distro
         when 'ubuntu', 'debian'
-          # flapjack_1.2.0~rc2~20141104062643-v1.2.0rc2-wheezy-1_amd64.deb
-          # flapjack_1.2.0~+20141107130330-v1.2.0-wheezy-1_amd64.deb
-          simple_version, b, c = @package_file.split(major_delim)[1].split('~')
-          addendum = c ? b : nil
-          "#{simple_version}#{addendum}"
+          # flapjack_1.2.0~rc2~20141104062643~v1.2.0rc2~wheezy-1_amd64.deb
+          # flapjack_1.2.0~+20141107130330~v1.2.0~wheezy-1_amd64.deb
+          a = @package_file.split(major_delim)[1].split('~')
+          a.length > 4 ? "#{a[0]}#{a[1]}" : a[0]
         when 'centos'
           simple_version, date_and_crap = @package_file.split(major_delim)[1].split(minor_delim)
           _, addendum = date_and_crap.split('.')[1].split(/\d{14}/)
@@ -114,7 +113,7 @@ module OmnibusFlapjack
       return nil unless version.match(/^[\d\.]+$/)
       @main_filename = case distro
       when 'ubuntu', 'debian'
-        "flapjack_#{version}-#{distro_release}_#{arch}.#{file_suffix}"
+        "flapjack_#{version}~#{distro_release}_#{arch}.#{file_suffix}"
       when 'centos'
         "flapjack-#{version}_0.el#{distro_release}.#{arch}.#{file_suffix}"
       end
