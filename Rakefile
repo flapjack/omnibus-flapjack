@@ -303,7 +303,7 @@ task :update_indexes_deb do
   update_indexes_duration = Benchmark.realtime do
     OmnibusFlapjack::Publish.get_lock(lockfile)
     OmnibusFlapjack::Publish.sync_packages_to_local(local_dir, remote_dir)
-    OmnibusFlapjack::Publish.create_indexes(local_dir, '../../create_directory_listings')
+    OmnibusFlapjack::Publish.create_indexes(local_dir, '../create_directory_listings')
     OmnibusFlapjack::Publish.sync_packages_to_remote(local_dir, remote_dir, :dry_run => dry_run)
     OmnibusFlapjack::Publish.release_lock(lockfile)
   end
