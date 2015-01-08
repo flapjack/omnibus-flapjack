@@ -25,7 +25,8 @@ def process_directory(path)
         directories << filename
       when File.file?(full_path)
         files << filename
-        sizes[full_path] = File.size(full_path)
+        sizes[full_path]  = File.size(full_path)
+        mtimes[full_path] = File.mtime(full_path)
       end
 
     end # case filename
@@ -36,16 +37,17 @@ def process_directory(path)
   end
 
   # output this directory's info:
-  write_index_file("#{path}/index.html", directories, files, sizes)
+  write_index_file("#{path}/index.html", directories, files, sizes, mtimes)
   puts "#{path}/index.html"
 end
 
-def write_index_file(path, directories, files, sizes)
+def write_index_file(path, directories, files, sizes, mtimes)
   @basename    = File.basename(path)
   @dirname     = File.dirname(path)
   @directories = directories
   @files       = files
   @sizes       = sizes
+  @mtimes      = mtimes
   @levels_deep = @dirname.split('/').length - 1
 
   # FIXME: make me look pretty
@@ -101,7 +103,7 @@ def write_index_file(path, directories, files, sizes)
               <li>
                 <% full_path = [@dirname, thefile].join('/') %>
                 <a href="<%= thefile %>"><%= thefile %></a>
-                  - <%= @sizes[full_path] %> bytes
+                  - <%= @sizes[full_path] %> bytes - <%= @mtimes[full_path] %>
               </li>
             <% end %>
           </ul>
