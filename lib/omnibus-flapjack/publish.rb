@@ -75,7 +75,7 @@ module OmnibusFlapjack
         dry_run = options[:dry_run] ? '--dryrun' : ''
         puts "Syncing #{local_dir} up to #{remote_dir} #{dry_run}"
         Mixlib::ShellOut.new("aws s3 sync #{local_dir} #{remote_dir} " +
-                             "--delete --acl public-read --region us-east-1 #{dry_run}2>&1", :live_stream => $stdout).run_command.error!
+                             "--delete --acl public-read --region us-east-1 #{dry_run} 2>&1", :live_stream => $stdout).run_command.error!
       end
 
       def add_to_deb_repo(pkg, component = 'experimental')
