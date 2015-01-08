@@ -150,3 +150,7 @@ Tests are fairly minimal right now, would you like to expand them? Check out the
 bundle install
 bundle exec rspec
 ```
+
+To test a specific package file, set `PACKAGE_FILE` the same as in the Publish section, above:
+
+
