@@ -142,6 +142,13 @@ You'll need the name of the candidate package, which will be in the output of `b
 $ ./promote candidate_flapjack_1.0.0~rc6~20140820210002-master-precise-1_amd64.deb
 ```
 
+### Testing Packages
+
+To test a specific package file, set `PACKAGE_FILE` the same as in the Publish section, above:
+```bash
+PACKAGE_FILE=flapjack_1.2.1-precise_amd64.deb bundle exec rake test
+```
+
 ### Tests
 
 Tests are fairly minimal right now, would you like to expand them? Check out the spec directory! Run with:
@@ -150,7 +157,5 @@ Tests are fairly minimal right now, would you like to expand them? Check out the
 bundle install
 bundle exec rspec
 ```
-
-To test a specific package file, set `PACKAGE_FILE` the same as in the Publish section, above:
 
 

@@ -277,20 +277,6 @@ task :publish do
   puts "Publishing completed, duration was #{duration_string}"
 end
 
-
-
-  #   local_dir   = 'createrepo'
-  #   remote_dir  = 's3://packages.flapjack.io/rpm'
-  #   lockfile    = 'flapjack_upload_rpm.lock'
-
-
-  # #when 'centos'
-  # OmnibusFlapjack::Publish.add_to_rpm_repo(pkg)
-  
-  # OmnibusFlapjack::Publish.create_indexes(local_dir, '../create_directory_listings')
-
-
-
 desc "Update directory indexes for the deb repo"
 task :update_indexes_deb do
 
