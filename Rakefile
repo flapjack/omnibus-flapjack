@@ -100,7 +100,7 @@ task :build do
     container_id = `docker ps -l -q`.strip
     Mixlib::ShellOut.new("docker cp #{container_id}:/omnibus-flapjack/pkg .").run_command.error!
 
-    Mixlib::ShellOut.new("md5sum pkg/*").run_command.error!
+    Mixlib::ShellOut.new("find pkg -maxdepth 1 -type f -exec md5sum {} \;").run_command.error!
 
     puts "Purging the container"
     Mixlib::ShellOut.new("docker rm #{container_id}").run_command.error!
@@ -401,7 +401,7 @@ task :promote do
   FileUtils.copy("pkg/candidate_#{filename}", "pkg/#{pkg.main_filename}")
   puts "Main package file is at pkg/#{pkg.main_filename}"
 
-  Mixlib::ShellOut.new("md5sum pkg/*").run_command.error!
+  Mixlib::ShellOut.new("find pkg -maxdepth 1 -type f -exec md5sum {} \;").run_command.error!
 
   OmnibusFlapjack::Publish.sync_packages_to_local(local_dir, remote_dir)
 
