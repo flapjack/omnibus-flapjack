@@ -139,12 +139,19 @@ bundle exec rake build_and_publish
 
 ### Promote from Experimental to Main
 
-When testing of the package candidiate is completed, use the `promote` script to repackage the deb for the **main** component in the case of debs, or copy the package to `flapjack` from `flapjack-experimental` in the case of rpms. 
+When testing of the package candidiate is completed, use the `promote` script to repackage the deb for the **main** component in the case of debs, or copy the package to `flapjack` from `flapjack-experimental` in the case of rpms.
 
 You'll need the name of the candidate package, which will be in the output of `build`, or look in S3 to find it. Eg:
 
 ```shell
 $ ./promote candidate_flapjack_1.0.0~rc6~20140820210002-master-precise-1_amd64.deb
+```
+
+### Testing Packages
+
+To test a specific package file, set `PACKAGE_FILE` the same as in the Publish section, above:
+```bash
+PACKAGE_FILE=flapjack_1.2.1-precise_amd64.deb bundle exec rake test
 ```
 
 ### Tests
@@ -156,4 +163,3 @@ bundle install
 bundle exec rspec
 ```
 
-To test a specific package file, set `PACKAGE_FILE` the same as in the Publish section, above:

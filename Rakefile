@@ -103,7 +103,7 @@ task :build do
     container_id = `docker ps -l -q`.strip
     Mixlib::ShellOut.new("docker cp #{container_id}:/omnibus-flapjack/pkg .").run_command.error!
 
-    Mixlib::ShellOut.new("md5sum pkg/*").run_command.error!
+    Mixlib::ShellOut.new('find pkg -maxdepth 1 -type f -exec md5sum {} \;').run_command.error!
 
     puts "Purging the container"
     Mixlib::ShellOut.new("docker rm #{container_id}").run_command.error!
@@ -285,6 +285,42 @@ task :publish do
   puts "Publishing completed, duration was #{duration_string}"
 end
 
+desc "Update directory indexes for the deb repo"
+task :update_indexes_deb do
+
+  local_dir   = 'deb'
+  remote_dir  = 's3://packages.flapjack.io/deb'
+  lockfile    = 'flapjack_upload_deb.lock'
+
+  update_indexes_duration = Benchmark.realtime do
+    OmnibusFlapjack::Publish.get_lock(lockfile)
+    OmnibusFlapjack::Publish.sync_packages_to_local(local_dir, remote_dir)
+    OmnibusFlapjack::Publish.create_indexes(local_dir, '../create_directory_listings')
+    OmnibusFlapjack::Publish.sync_packages_to_remote(local_dir, remote_dir, :dry_run => dry_run)
+    OmnibusFlapjack::Publish.release_lock(lockfile)
+  end
+  duration_string = ChronicDuration.output(update_indexes_duration.round(0), :format => :short)
+  puts "deb repo indexes updating completed, duration was #{duration_string}"
+end
+
+desc "Update directory indexes for the rpm repo"
+task :update_indexes_rpm do
+
+  local_dir   = 'createrepo'
+  remote_dir  = 's3://packages.flapjack.io/rpm'
+  lockfile    = 'flapjack_upload_rpm.lock'
+
+  update_indexes_duration = Benchmark.realtime do
+    OmnibusFlapjack::Publish.get_lock(lockfile)
+    OmnibusFlapjack::Publish.sync_packages_to_local(local_dir, remote_dir)
+    OmnibusFlapjack::Publish.create_indexes(local_dir, '../create_directory_listings')
+    OmnibusFlapjack::Publish.sync_packages_to_remote(local_dir, remote_dir, :dry_run => dry_run)
+    OmnibusFlapjack::Publish.release_lock(lockfile)
+  end
+  duration_string = ChronicDuration.output(update_indexes_duration.round(0), :format => :short)
+  puts "rpm repo indexes updating completed, duration was #{duration_string}"
+end
+
 desc "Promote a published Flapjack package (from experimental to main)"
 task :promote do
   pkg ||= OmnibusFlapjack::Package.new(
@@ -364,7 +400,7 @@ task :promote do
   FileUtils.copy("pkg/candidate_#{filename}", "pkg/#{pkg.main_filename}")
   puts "Main package file is at pkg/#{pkg.main_filename}"
 
-  Mixlib::ShellOut.new("md5sum pkg/*").run_command.error!
+  Mixlib::ShellOut.new('find pkg -maxdepth 1 -type f -exec md5sum {} \;').run_command.error!
 
   OmnibusFlapjack::Publish.sync_packages_to_local(local_dir, remote_dir)
 

@@ -9,6 +9,7 @@ def process_directory(path)
   directories = []
   files       = []
   sizes       = {}
+  mtimes      = {}
   Dir.entries(path).sort.each do |filename|
     full_path = "#{path}/#{filename}"
     case filename
@@ -25,7 +26,8 @@ def process_directory(path)
         directories << filename
       when File.file?(full_path)
         files << filename
-        sizes[full_path] = File.size(full_path)
+        sizes[full_path]  = File.size(full_path)
+        mtimes[full_path] = File.mtime(full_path)
       end
 
     end # case filename
@@ -36,16 +38,17 @@ def process_directory(path)
   end
 
   # output this directory's info:
-  write_index_file("#{path}/index.html", directories, files, sizes)
+  write_index_file("#{path}/index.html", directories, files, sizes, mtimes)
   puts "#{path}/index.html"
 end
 
-def write_index_file(path, directories, files, sizes)
+def write_index_file(path, directories, files, sizes, mtimes)
   @basename    = File.basename(path)
   @dirname     = File.dirname(path)
   @directories = directories
   @files       = files
   @sizes       = sizes
+  @mtimes      = mtimes
   @levels_deep = @dirname.split('/').length - 1
 
   # FIXME: make me look pretty
@@ -53,39 +56,61 @@ def write_index_file(path, directories, files, sizes)
 <html>
   <head>
     <title><%= @dirname %></title>
-    <meta name="generator" content="flapjack.io flapjack-omnibus bin/create_directory_listings">
+    <meta name="generator" content="flapjack.io flapjack-omnibus create_directory_listings">
+    <link rel="stylesheet" href="http://flapjack.io/stylesheets/bootstrap.min.css"/>
+    <link rel="stylesheet" href="http://flapjack.io/stylesheets/api-screen.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="http://flapjack.io/stylesheets/api-syntax.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="http://flapjack.io/stylesheets/github-markdown.css" type="text/css">
+    <link rel="shortcut icon" href="http://flapjack.io/images/flapjack-2013-favicon-64-32-24-16.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+      .markdown-body {
+          min-width: 200px;
+          max-width: 790px;
+          margin: 0 auto;
+          padding: 30px;
+      }
+    </style>
+
   </head>
   <body>
-    <h2><a href="http://packages.flapjack.io">packages.flapjack.io</a></h2>
-    <% parts = @dirname.split('/') %>
-    <h3>
-      <% parts.each_with_index do |part, i| %>
-        <% uri_up = nil %>
-        <% j = i %>
-        <% while @levels_deep > j %>
-          <% uri_up = uri_up ? (uri_up + '../') : '../' %>
-          <% j += 1 %>
-        <% end %>
-        <% if uri_up %>
-          <a href="<%= uri_up %>"><%= part %></a> /
-        <% else %>
-          <%= part %> /
-        <% end %>
-      <% end %>
-    </h3>
-    <ul>
-      <li><a href="../">..</a></li>
-      <% @directories.each do |d| %>
-        <li><a href="<%= d %>"><%= d %>/</a></li>
-      <% end %>
-      <% @files.each do |thefile| %>
-        <li>
-          <% full_path = [@dirname, thefile].join('/') %>
-          <a href="<%= thefile %>"><%= thefile %></a>
-            - <%= @sizes[full_path] %> bytes
-        </li>
-      <% end %>
-    </ul>
+    <div class="container content">
+      <div class="row">
+        <div class="col-md-offset-1 col-md-10">
+
+          <h1><a href="http://packages.flapjack.io">packages.flapjack.io</a></h1>
+          <% parts = @dirname.split('/') %>
+          <h2>
+            <% parts.each_with_index do |part, i| %>
+              <% uri_up = nil %>
+              <% j = i %>
+              <% while @levels_deep > j %>
+                <% uri_up = uri_up ? (uri_up + '../') : '../' %>
+                <% j += 1 %>
+              <% end %>
+              <% if uri_up %>
+                <a href="<%= uri_up %>"><%= part %></a> /
+              <% else %>
+                <%= part %> /
+              <% end %>
+            <% end %>
+          </h2>
+          <ul>
+            <li><a href="../">..</a></li>
+            <% @directories.each do |d| %>
+              <li><a href="<%= d %>"><%= d %>/</a></li>
+            <% end %>
+            <% @files.each do |thefile| %>
+              <li>
+                <% full_path = [@dirname, thefile].join('/') %>
+                <a href="<%= thefile %>"><%= thefile %></a>
+                  - <%= @sizes[full_path] %> bytes - <%= @mtimes[full_path] %>
+              </li>
+            <% end %>
+          </ul>
+        </div>
+      </div>
+    </div>
   </body>
 </html>
 EOS
