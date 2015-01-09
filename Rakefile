@@ -2,10 +2,10 @@
 
 # Environment Variables:
 
-# BUILD_REF      - the branch, tag, or commit (on master) to build (Required)
-# DISTRO         - only "ubuntu" is currently supported (Optional, Default: "ubuntu")
-# DISTRO_RELEASE - the release name, eg "precise" (Optional, Default: "trusy")
-# DRY_RUN        - if set, just shows what would be gone (Optiona, Default: nil)
+# BUILD_REF                 - the branch, tag, or commit (on master) to build (Required)
+# DISTRO                    - only "ubuntu" is currently supported (Optional, Default: "ubuntu")
+# DISTRO_RELEASE            - the release name, eg "precise" (Optional, Default: "trusy")
+# DRY_RUN                   - if set, just shows what would be gone (Optiona, Default: nil)
 # OFFICIAL_FLAPJACK_PACKAGE - if true, assuming that the Flapjack Signing Key is on the system, and sign the rpm package
 
 # eg:
