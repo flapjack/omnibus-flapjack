@@ -210,6 +210,11 @@ task :publish do
     exit 1
   end
 
+  unless official_pkg
+    puts "This is not an official Flapjack build, therefore a publish can't be done.  If this is incorrect, export OFFICIAL_FLAPJACK_PACKAGE=true"
+    exit 2
+  end
+
   start_dir = FileUtils.pwd
 
   case pkg.distro
@@ -304,6 +309,11 @@ task :promote do
   if dry_run
     puts "Ending early due to DRY_RUN being set"
     exit 1
+  end
+
+  unless official_pkg
+    puts "This is not an official Flapjack build, therefore a publish can't be done.  If this is incorrect, export OFFICIAL_FLAPJACK_PACKAGE=true"
+    exit 2
   end
 
   start_dir = FileUtils.pwd
