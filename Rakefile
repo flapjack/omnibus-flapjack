@@ -6,6 +6,7 @@
 # DISTRO         - only "ubuntu" is currently supported (Optional, Default: "ubuntu")
 # DISTRO_RELEASE - the release name, eg "precise" (Optional, Default: "trusy")
 # DRY_RUN        - if set, just shows what would be gone (Optiona, Default: nil)
+# OFFICIAL_FLAPJACK_PACKAGE - if true, assuming that the Flapjack Signing Key is on the system, and sign the rpm package
 
 # eg:
 #   bundle
@@ -25,6 +26,7 @@ require 'benchmark'
 require 'chronic_duration'
 
 dry_run = (ENV["DRY_RUN"].nil? || ENV["DRY_RUN"].empty?) ? false : true
+official_pkg = ENV["OFFICIAL_FLAPJACK_PACKAGE"] == 'true'
 pkg = nil
 
 task :default do
@@ -74,6 +76,7 @@ task :build do
     '-e', "FLAPJACK_EXPERIMENTAL_PACKAGE_VERSION=#{pkg.experimental_package_version}",
     '-e', "FLAPJACK_MAIN_PACKAGE_VERSION=#{pkg.main_package_version}",
     '-e', "DISTRO_RELEASE=#{pkg.distro_release}",
+    '-e', "OFFICIAL_FLAPJACK_PACKAGE=#{official_pkg}",
     "-v", "#{Dir.home}/.gnupg:/root/.gnupg",
     "flapjack/omnibus-#{pkg.distro}:#{pkg.distro_release}", 'bash', '-l', '-c',
     "\'#{omnibus_cmd}\'"

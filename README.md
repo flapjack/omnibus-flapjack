@@ -92,6 +92,8 @@ The following environment variables affect what `build` does:
 - `DISTRO`         - only "ubuntu" is currently supported (Optional, Default: "ubuntu")
 - `DISTRO_RELEASE` - the release name, eg "precise" (Optional, Default: "trusy")
 - `DRY_RUN`        - if set, just shows what would be gone (Optional, Default: nil)
+- `OFFICIAL_FLAPJACK_PACKAGE` - if true, assuming that the Flapjack Signing Key is on the system, and sign the rpm package
+
 
 Eg:
 
@@ -99,6 +101,8 @@ Eg:
 export BUILD_REF="1.1.0"
 export DISTRO="ubuntu"
 export DISTRO_RELEASE="precise"
+export OFFICIAL_FLAPJACK_PACKAGE=true
+
 bundle exec rake build
 ```
 
@@ -152,5 +156,3 @@ bundle exec rspec
 ```
 
 To test a specific package file, set `PACKAGE_FILE` the same as in the Publish section, above:
-
-
