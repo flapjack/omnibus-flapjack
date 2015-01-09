@@ -26,7 +26,7 @@ require 'benchmark'
 require 'chronic_duration'
 
 dry_run = (ENV["DRY_RUN"].nil? || ENV["DRY_RUN"].empty?) ? false : true
-official_pkg = ENV["OFFICIAL_FLAPJACK_PACKAGE"] == 'true'
+official_pkg = (ENV["OFFICIAL_FLAPJACK_PACKAGE"].nil? || ENV["OFFICIAL_FLAPJACK_PACKAGE"].empty?) ? false : true
 pkg = nil
 
 task :default do
