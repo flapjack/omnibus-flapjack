@@ -2,10 +2,11 @@
 
 # Environment Variables:
 
-# BUILD_REF      - the branch, tag, or commit (on master) to build (Required)
-# DISTRO         - only "ubuntu" is currently supported (Optional, Default: "ubuntu")
-# DISTRO_RELEASE - the release name, eg "precise" (Optional, Default: "trusy")
-# DRY_RUN        - if set, just shows what would be gone (Optiona, Default: nil)
+# BUILD_REF                 - the branch, tag, or commit (on master) to build (Required)
+# DISTRO                    - only "ubuntu" is currently supported (Optional, Default: "ubuntu")
+# DISTRO_RELEASE            - the release name, eg "precise" (Optional, Default: "trusy")
+# DRY_RUN                   - if set, just shows what would be gone (Optiona, Default: nil)
+# OFFICIAL_FLAPJACK_PACKAGE - if true, assuming that the Flapjack Signing Key is on the system, and sign the rpm package
 
 # eg:
 #   bundle
@@ -25,6 +26,7 @@ require 'benchmark'
 require 'chronic_duration'
 
 dry_run = (ENV["DRY_RUN"].nil? || ENV["DRY_RUN"].empty?) ? false : true
+official_pkg = (ENV["OFFICIAL_FLAPJACK_PACKAGE"].nil? || ENV["OFFICIAL_FLAPJACK_PACKAGE"].empty?) ? false : true
 pkg = nil
 
 task :default do
@@ -74,6 +76,7 @@ task :build do
     '-e', "FLAPJACK_EXPERIMENTAL_PACKAGE_VERSION=#{pkg.experimental_package_version}",
     '-e', "FLAPJACK_MAIN_PACKAGE_VERSION=#{pkg.main_package_version}",
     '-e', "DISTRO_RELEASE=#{pkg.distro_release}",
+    '-e', "OFFICIAL_FLAPJACK_PACKAGE=#{official_pkg}",
     "-v", "#{Dir.home}/.gnupg:/root/.gnupg",
     "flapjack/omnibus-#{pkg.distro}:#{pkg.distro_release}", 'bash', '-l', '-c',
     "\'#{omnibus_cmd}\'"
@@ -207,6 +210,11 @@ task :publish do
     exit 1
   end
 
+  unless official_pkg
+    puts "This is not an official Flapjack build, therefore a publish can't be done.  If this is incorrect, export OFFICIAL_FLAPJACK_PACKAGE=true"
+    exit 2
+  end
+
   start_dir = FileUtils.pwd
 
   case pkg.distro
@@ -277,20 +285,6 @@ task :publish do
   puts "Publishing completed, duration was #{duration_string}"
 end
 
-
-
-  #   local_dir   = 'createrepo'
-  #   remote_dir  = 's3://packages.flapjack.io/rpm'
-  #   lockfile    = 'flapjack_upload_rpm.lock'
-
-
-  # #when 'centos'
-  # OmnibusFlapjack::Publish.add_to_rpm_repo(pkg)
-  
-  # OmnibusFlapjack::Publish.create_indexes(local_dir, '../create_directory_listings')
-
-
-
 desc "Update directory indexes for the deb repo"
 task :update_indexes_deb do
 
@@ -351,6 +345,11 @@ task :promote do
   if dry_run
     puts "Ending early due to DRY_RUN being set"
     exit 1
+  end
+
+  unless official_pkg
+    puts "This is not an official Flapjack build, therefore a promote can't be done.  If this is incorrect, export OFFICIAL_FLAPJACK_PACKAGE=true"
+    exit 2
   end
 
   start_dir = FileUtils.pwd

@@ -6,12 +6,12 @@ This project creates full-stack platform-specific packages for
 
 You have some choice over how you run this:
 
-- locally
-- within a docker container
+- building locally
+- building within a docker container
 
 If you run locally, you'll be calling `omnibus build` directly rather than using the `build` script, which means you'll miss out on the ability to update packages.flapjack.io with the resulting package.
 
-## Running omnibus locally
+## Building locally
 
 You need to have this project checked out on the target platform as cross compilation is not supported.
 
@@ -63,11 +63,11 @@ Full help for the Omnibus command line interface can be accessed with the
 $ bin/omnibus help
 ```
 
-## Running within a Docker container
+## Building within a Docker container
 
-You'll need a docker server to talk to.
+You'll need a docker server and a local docker command that can talk to it.
 An easy way to get a docker server going is using [boot2docker](http://boot2docker.io/).
-A more complicated way is to use an EC2 instance, and that's what we use for the official packages.
+A more complicated way is to use an EC2 instance, which is what we use for the official packages.
 There's a [packer config](packer-ebs.json) for building the AMIs we use.
 See the Flapjack docs on [package building](http://flapjack.io/docs/1.0/development/Package-Building/) and [getting going with boot2docker](http://flapjack.io/docs/1.0/development/Omnibus-In-Your-Docker/).
 
@@ -88,10 +88,12 @@ Run the `build` rake task. It drives `docker` and `omnibus` to build packages. Y
 
 The following environment variables affect what `build` does:
 
-- `BUILD_REF`      - the branch, tag, or commit (on master) to build (Required). If a tag, it'll start with a v if it's a release tag, eg `v1.0.0rc5`
-- `DISTRO`         - only "ubuntu" is currently supported (Optional, Default: "ubuntu")
-- `DISTRO_RELEASE` - the release name, eg "precise" (Optional, Default: "trusy")
-- `DRY_RUN`        - if set, just shows what would be gone (Optional, Default: nil)
+- `BUILD_REF`                 - the branch, tag, or commit (on master) to build (Required). If a tag, it'll start with a v if it's a release tag, eg `v1.0.0rc5`
+- `DISTRO`                    - only "ubuntu" is currently supported (Optional, Default: "ubuntu")
+- `DISTRO_RELEASE`            - the release name, eg "precise" (Optional, Default: "trusy")
+- `DRY_RUN`                   - if set, just shows what would be gone (Optional, Default: nil)
+- `OFFICIAL_FLAPJACK_PACKAGE` - if true, signs built packages, assuming that the Flapjack Signing Key is on the system
+
 
 Eg:
 
@@ -99,6 +101,8 @@ Eg:
 export BUILD_REF="1.1.0"
 export DISTRO="ubuntu"
 export DISTRO_RELEASE="precise"
+export OFFICIAL_FLAPJACK_PACKAGE="true"
+
 bundle exec rake build
 ```
 
@@ -135,11 +139,19 @@ bundle exec rake build_and_publish
 
 ### Promote from Experimental to Main
 
-When testing of the package candidiate is completed, use the `promote` script to repackage the deb for the **main** component.
+When testing of the package candidiate is completed, use the `promote` script to repackage the deb for the **main** component in the case of debs, or copy the package to `flapjack` from `flapjack-experimental` in the case of rpms.
+
 You'll need the name of the candidate package, which will be in the output of `build`, or look in S3 to find it. Eg:
 
 ```shell
 $ ./promote candidate_flapjack_1.0.0~rc6~20140820210002-master-precise-1_amd64.deb
+```
+
+### Testing Packages
+
+To test a specific package file, set `PACKAGE_FILE` the same as in the Publish section, above:
+```bash
+PACKAGE_FILE=flapjack_1.2.1-precise_amd64.deb bundle exec rake test
 ```
 
 ### Tests
@@ -150,7 +162,4 @@ Tests are fairly minimal right now, would you like to expand them? Check out the
 bundle install
 bundle exec rspec
 ```
-
-To test a specific package file, set `PACKAGE_FILE` the same as in the Publish section, above:
-
 

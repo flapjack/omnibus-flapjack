@@ -33,7 +33,7 @@ log.info "Running build of #{build_ref} on #{distro} #{distro_release} at #{tsta
 rake = nil
 
 build_duration = Benchmark.realtime do
-  rake = Mixlib::ShellOut.new("BUILD_REF=#{build_ref} DISTRO=#{distro} " +
+  rake = Mixlib::ShellOut.new("OFFICIAL_FLAPJACK_PACKAGE=true BUILD_REF=#{build_ref} DISTRO=#{distro} " +
     "DISTRO_RELEASE=#{distro_release} bundle exec rake build_and_publish 2>&1", :timeout => 60 * 60 * 3)
     #"DISTRO_RELEASE=#{distro_release} bundle exec rake build_and_publish 2>&1 | " +
     #"tee -a #{log}", :timeout => 60 * 60 * 3)

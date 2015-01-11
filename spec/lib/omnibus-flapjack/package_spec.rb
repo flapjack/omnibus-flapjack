@@ -50,6 +50,17 @@ describe 'Package' do
   describe 'Truth from filename' do
     describe 'Ubuntu' do
 
+      it 'extracts data from the filename of a final and promoted ubuntu package filename' do
+        filename = 'flapjack_1.2.0~precise_amd64.deb'
+        pkg = OmnibusFlapjack::Package.new(:package_file => filename)
+        expect(pkg.package_file).to eq(filename)
+        expect(pkg.version).to eq('1.2.0')
+        expect(pkg.distro).to eq('ubuntu')
+        expect(pkg.distro_release).to eq('precise')
+        expect(pkg.file_suffix).to eq('deb')
+        expect(pkg.main_filename).to eq('flapjack_1.2.0~precise_amd64.deb')
+      end
+
       it 'extracts data from the filename of a final ubuntu package filename' do
         filename = 'flapjack_1.2.0~+20141107124706~v1.2.0~trusty-1_amd64.deb'
         pkg = OmnibusFlapjack::Package.new(:package_file => filename)
