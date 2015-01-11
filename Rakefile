@@ -516,7 +516,7 @@ task :test do
     "cd /mnt/omnibus-flapjack",
     "gem install bundler --no-ri --no-rdoc",
     "bundle",
-    "(bundle exec rspec spec/serverspec || true)"
+    "bundle exec rspec spec/serverspec"
     # "(bundle exec rspec spec/capybara || true)"
   ]
 
