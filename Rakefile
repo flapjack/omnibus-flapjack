@@ -154,7 +154,8 @@ def build_omnibus_cmd(pkg)
         "dpkg-deb -R ${EXPERIMENTAL_FILENAME} repackage",
         "sed -i s@#{pkg.experimental_package_version}-1@#{pkg.main_package_version}@g repackage/DEBIAN/control",
         "sed -i s@#{pkg.experimental_package_version}@#{pkg.main_package_version}@g repackage/opt/flapjack/version-manifest.txt",
-        "dpkg-deb -b repackage candidate_${EXPERIMENTAL_FILENAME}"
+        "dpkg-deb -b repackage candidate_${EXPERIMENTAL_FILENAME}",
+        "rm -r repackage"
       ]
       # Validate the newly created main candidate
       omnibus_cmd << [
