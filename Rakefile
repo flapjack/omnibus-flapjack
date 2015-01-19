@@ -433,119 +433,132 @@ end
 
 desc "Test a flapjack package, using vagrant-flapjack"
 task :test do
+  packages = []
   pkg ||= OmnibusFlapjack::Package.new(
     :package_file => ENV['PACKAGE_FILE']
   )
+  packages << pkg
 
-  puts "distro:          #{pkg.distro}"
-  puts "distro_release:  #{pkg.distro_release}"
-  puts "major_version:   #{pkg.major_version}"
-  puts "package_version: #{pkg.experimental_package_version}"
-  puts "file_suffix:     #{pkg.file_suffix}"
-  puts "major_delim:     #{pkg.major_delim}"
-  puts "minor_delim:     #{pkg.minor_delim}"
-
-  raise "distro cannot be determined" unless pkg.distro
-  raise "distro_release cannot be determined" unless pkg.distro_release
-  raise "major_version cannot be determined" unless pkg.major_version
-  raise "package_version cannot be determined" unless pkg.experimental_package_version
-
-  case pkg.distro
-  when 'ubuntu'
-    test_cmd = [
-      "dpkg -i /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
-      # Install a second time to check that the uninstall procedure works
-      "dpkg -i /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
-      "apt-get update || true",
-      "DEBIAN_FRONTEND=noninteractive apt-get install -y ruby1.9.1-full git nagios3 phantomjs net-tools",
-      # Install libraries for nokogiri compilation required during bundle
-      "DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential curl libssl-dev libreadline-dev libxslt1-dev libxml2-dev libcurl4-openssl-dev zlib1g-dev libexpat1-dev libicu-dev",
-      "echo broker_module=/usr/local/lib/flapjackfeeder.o redis_host=localhost,redis_port=6380 >> /etc/nagios3/nagios.cfg",
-      "sed -i -r s/enable_notifications=1/enable_notifications=0/ /etc/nagios3/nagios.cfg",
-      "service nagios3 restart"
-    ]
-    image = "#{pkg.distro}:#{pkg.distro_release}"
-  when 'debian'
-    test_cmd = [
-      "dpkg -i /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
-      # Install a second time to check that the uninstall procedure works
-      "dpkg -i /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
-      "apt-get update || true",
-      "DEBIAN_FRONTEND=noninteractive apt-get install -y ruby1.9.1-full git nagios3 net-tools ca-certificates wget",
-      # No phantomjs package in wheezy yet, only in sid
-      "DEBIAN_FRONTEND=noninteractive apt-get install -y libfontconfig1 libexpat1 libfreetype6 libfreetype6 fontconfig-config ucf ttf-dejavu-core ttf-bitstream-vera ttf-freefont fonts-freefont-ttf",
-      "wget https://raw.githubusercontent.com/suan/phantomjs-debian/master/phantomjs_1.9.6-0wheezy_amd64.deb",
-      "dpkg -i phantomjs_1.9.6-0wheezy_amd64.deb",
-      # Install libraries for nokogiri compilation required during bundle
-      "DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential curl libssl-dev libreadline-dev libxslt1-dev libxml2-dev libcurl4-openssl-dev zlib1g-dev libexpat1-dev libicu-dev",
-      "echo broker_module=/usr/local/lib/flapjackfeeder.o redis_host=localhost,redis_port=6380 >> /etc/nagios3/nagios.cfg",
-      "sed -i -r s/enable_notifications=1/enable_notifications=0/ /etc/nagios3/nagios.cfg",
-      "service nagios3 restart"
-    ]
-    image = "#{pkg.distro}:#{pkg.distro_release}"
-  when 'centos'
-    epel_url = case pkg.distro_release
-    when '6'
-      "http://download.fedoraproject.org/pub/epel/6/#{pkg.arch}/epel-release-6-8.noarch.rpm"
-    when '7'
-      "rpm -ivh http://download.fedoraproject.org/pub/epel/7/#{pkg.arch}/e/epel-release-7-2.noarch.rpm"
-    end
-
-    test_cmd = [
-      "rpm -ivh #{epel_url}",
-      "yum install -y centos-release-SCL",
-      "yum groupinstall -y \"Development Tools\"",
-      "yum install -y ruby193 ruby193-ruby-devel openssl-devel expat-devel perl-ExtUtils-MakeMaker curl-devel tar nagios which",
-      "echo \"export PATH=\\${PATH}:/opt/rh/ruby193/root/usr/local/bin\" | tee -a /opt/rh/ruby193/enable",
-      "cat /opt/rh/ruby193/enable",
-      "source /opt/rh/ruby193/enable",
-      "rpm -ivh /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
-      "rpm -ev flapjack",
-      "rpm -ivh /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
-      "service redis-flapjack start",
-      "service flapjack start",
-      "export PATH=\${PATH}:/opt/flapjack/bin",
-      "echo broker_module=/usr/local/lib/flapjackfeeder.o redis_host=localhost,redis_port=6380 >> /etc/nagios/nagios.cfg",
-      "sed -i -r s/enable_notifications=1/enable_notifications=0/ /etc/nagios/nagios.cfg",
-      "service nagios start"
-    ]
-    image = "#{pkg.distro}:#{pkg.distro}#{pkg.distro_release}"
+  main_pkg_filename = pkg.package_file.gsub('flapjack', 'candidate_flapjack')
+  if File.file?(File.join('pkg', main_pkg_filename))
+    packages << OmnibusFlapjack::Package.new(
+      :package_file => main_pkg_filename
+    )
   end
 
-  test_cmd << [
-    "cd /mnt/omnibus-flapjack",
-    "gem install bundler --no-ri --no-rdoc",
-    "bundle",
-    "bundle exec rspec spec/serverspec"
-    # "(bundle exec rspec spec/capybara || true)"
-  ]
+  packages.each do |pkg|
+    puts "distro:          #{pkg.distro}"
+    puts "distro_release:  #{pkg.distro_release}"
+    puts "major_version:   #{pkg.major_version}"
+    puts "package_version: #{pkg.experimental_package_version}"
+    puts "file_suffix:     #{pkg.file_suffix}"
+    puts "major_delim:     #{pkg.major_delim}"
+    puts "minor_delim:     #{pkg.minor_delim}"
+    puts "package_file:    #{pkg.package_file}"
+    puts
 
-  test_cmd = test_cmd.flatten.join(" && ")
+    raise "distro cannot be determined" unless pkg.distro
+    raise "distro_release cannot be determined" unless pkg.distro_release
+    raise "major_version cannot be determined" unless pkg.major_version
+    raise "package_version cannot be determined" unless pkg.experimental_package_version
 
-  docker_cmd = Mixlib::ShellOut.new([
-    'docker', 'run', '-t',
-    '--attach', 'stdout',
-    '--attach', 'stderr',
-    '--rm',
-    "-v #{Dir.pwd}:/mnt/omnibus-flapjack",
-    "#{image}", 'bash', '-l', '-c',
-    "\'#{test_cmd}\'"
-  ].join(" "), :timeout => 60 * 60, :live_stream => $stdout)
-  puts "Executing: " + docker_cmd.inspect
-  unless dry_run
-    test_duration = Benchmark.realtime do
-      docker_cmd.run_command
+    case pkg.distro
+    when 'ubuntu'
+      test_cmd = [
+        "dpkg -i /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
+        # Install a second time to check that the uninstall procedure works
+        "dpkg -i /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
+        "apt-get update || true",
+        "DEBIAN_FRONTEND=noninteractive apt-get install -y ruby1.9.1-full git nagios3 phantomjs net-tools",
+        # Install libraries for nokogiri compilation required during bundle
+        "DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential curl libssl-dev libreadline-dev libxslt1-dev libxml2-dev libcurl4-openssl-dev zlib1g-dev libexpat1-dev libicu-dev",
+        "echo broker_module=/usr/local/lib/flapjackfeeder.o redis_host=localhost,redis_port=6380 >> /etc/nagios3/nagios.cfg",
+        "sed -i -r s/enable_notifications=1/enable_notifications=0/ /etc/nagios3/nagios.cfg",
+        "service nagios3 restart"
+      ]
+      image = "#{pkg.distro}:#{pkg.distro_release}"
+    when 'debian'
+      test_cmd = [
+        "dpkg -i /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
+        # Install a second time to check that the uninstall procedure works
+        "dpkg -i /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
+        "apt-get update || true",
+        "DEBIAN_FRONTEND=noninteractive apt-get install -y ruby1.9.1-full git nagios3 net-tools ca-certificates wget",
+        # No phantomjs package in wheezy yet, only in sid
+        "DEBIAN_FRONTEND=noninteractive apt-get install -y libfontconfig1 libexpat1 libfreetype6 libfreetype6 fontconfig-config ucf ttf-dejavu-core ttf-bitstream-vera ttf-freefont fonts-freefont-ttf",
+        "wget https://raw.githubusercontent.com/suan/phantomjs-debian/master/phantomjs_1.9.6-0wheezy_amd64.deb",
+        "dpkg -i phantomjs_1.9.6-0wheezy_amd64.deb",
+        # Install libraries for nokogiri compilation required during bundle
+        "DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential curl libssl-dev libreadline-dev libxslt1-dev libxml2-dev libcurl4-openssl-dev zlib1g-dev libexpat1-dev libicu-dev",
+        "echo broker_module=/usr/local/lib/flapjackfeeder.o redis_host=localhost,redis_port=6380 >> /etc/nagios3/nagios.cfg",
+        "sed -i -r s/enable_notifications=1/enable_notifications=0/ /etc/nagios3/nagios.cfg",
+        "service nagios3 restart"
+      ]
+      image = "#{pkg.distro}:#{pkg.distro_release}"
+    when 'centos'
+      epel_url = case pkg.distro_release
+      when '6'
+        "http://download.fedoraproject.org/pub/epel/6/#{pkg.arch}/epel-release-6-8.noarch.rpm"
+      when '7'
+        "rpm -ivh http://download.fedoraproject.org/pub/epel/7/#{pkg.arch}/e/epel-release-7-2.noarch.rpm"
+      end
+
+      test_cmd = [
+        "rpm -ivh #{epel_url}",
+        "yum install -y centos-release-SCL",
+        "yum groupinstall -y \"Development Tools\"",
+        "yum install -y ruby193 ruby193-ruby-devel openssl-devel expat-devel perl-ExtUtils-MakeMaker curl-devel tar nagios which",
+        "echo \"export PATH=\\${PATH}:/opt/rh/ruby193/root/usr/local/bin\" | tee -a /opt/rh/ruby193/enable",
+        "cat /opt/rh/ruby193/enable",
+        "source /opt/rh/ruby193/enable",
+        "rpm -ivh /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
+        "rpm -ev flapjack",
+        "rpm -ivh /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
+        "service redis-flapjack start",
+        "service flapjack start",
+        "export PATH=\${PATH}:/opt/flapjack/bin",
+        "echo broker_module=/usr/local/lib/flapjackfeeder.o redis_host=localhost,redis_port=6380 >> /etc/nagios/nagios.cfg",
+        "sed -i -r s/enable_notifications=1/enable_notifications=0/ /etc/nagios/nagios.cfg",
+        "service nagios start"
+      ]
+      image = "#{pkg.distro}:#{pkg.distro}#{pkg.distro_release}"
     end
-    duration_string = ChronicDuration.output(test_duration.round(0), :format => :short)
-    puts "STDOUT: "
-    puts "#{docker_cmd.stdout}"
-    puts "STDERR: "
-    puts "#{docker_cmd.stderr}"
-    if docker_cmd.error?
-      puts "ERROR running docker command, exit status is #{docker_cmd.exitstatus}, duration was #{duration_string}."
-      exit 1
+
+    test_cmd << [
+      "cd /mnt/omnibus-flapjack",
+      "gem install bundler --no-ri --no-rdoc",
+      "bundle",
+      "bundle exec rspec spec/serverspec"
+      # "(bundle exec rspec spec/capybara || true)"
+    ]
+
+    test_cmd = test_cmd.flatten.join(" && ")
+
+    docker_cmd = Mixlib::ShellOut.new([
+      'docker', 'run', '-t',
+      '--attach', 'stdout',
+      '--attach', 'stderr',
+      '--rm',
+      "-v #{Dir.pwd}:/mnt/omnibus-flapjack",
+      "#{image}", 'bash', '-l', '-c',
+      "\'#{test_cmd}\'"
+    ].join(" "), :timeout => 60 * 60, :live_stream => $stdout)
+    puts "Executing: " + docker_cmd.inspect
+    unless dry_run
+      test_duration = Benchmark.realtime do
+        docker_cmd.run_command
+      end
+      duration_string = ChronicDuration.output(test_duration.round(0), :format => :short)
+      puts "STDOUT: "
+      puts "#{docker_cmd.stdout}"
+      puts "STDERR: "
+      puts "#{docker_cmd.stderr}"
+      if docker_cmd.error?
+        puts "ERROR running docker command, exit status is #{docker_cmd.exitstatus}, duration was #{duration_string}."
+        exit 1
+      end
+      puts "Test with docker completed, duration was #{duration_string}."
     end
-    puts "Test with docker completed, duration was #{duration_string}."
   end
 end
 

@@ -141,7 +141,7 @@ module OmnibusFlapjack
 
     def package_version
       @package_version ||= if truth_from_filename
-        package_name, package_version = package_file.split(major_delim)
+        package_name, package_version = package_file.gsub(/candidate_/, '').split(major_delim)
         package_version.gsub(/#{minor_delim}1$/, '')
       else
         nil
