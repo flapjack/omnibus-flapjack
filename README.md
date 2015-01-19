@@ -3,67 +3,7 @@
 This project creates full-stack platform-specific packages for
 [Flapjack](http://flapjack.io) using [omnibus](https://github.com/opscode/omnibus) and maintains appropriate package repositories at [packages.flapjack.io](http://packages.flapjack.io/)
 
-
-You have some choice over how you run this:
-
-- building locally
-- building within a docker container
-
-If you run locally, you'll be calling `omnibus build` directly rather than using the `build` script, which means you'll miss out on the ability to update packages.flapjack.io with the resulting package.
-
-## Building locally
-
-You need to have this project checked out on the target platform as cross compilation is not supported.
-
-We'll assume you have Ruby 1.9+ and Bundler installed. First ensure all
-required gems are installed and ready to use:
-
-```shell
-$ bundle install --binstubs
-```
-
-Also make sure you have fpm and the required tools to build packages (such as rpm-build on rpm based platforms) installed.
-
-The platform/architecture type of the package created will match the platform
-where the `build` command is invoked. So running this command on say a
-MacBook Pro will generate a Mac OS X specific package. After the build
-completes packages will be available in `pkg/`, and with a bit of luck on your package repo as well.
-
-### Build
-
-```shell
-FLAPJACK_BUILD_REF="v1.0.0rc3" \
-FLAPJACK_EXPERIMENTAL_PACKAGE_VERSION="1.0.0~rc3~20140727T125000-9b1e831-1" \
-bundle exec bin/omnibus build project flapjack
-```
-
-### Clean
-
-You can clean up all temporary files generated during the build process with
-the `clean` command:
-
-```shell
-$ bin/omnibus clean flapjack
-```
-
-Adding the `--purge` purge option removes __ALL__ files generated during the
-build including the project install directory (`/opt/flapjack`) and
-the package cache directory (`/var/cache/omnibus/pkg`):
-
-```shell
-$ bin/omnibus clean flapjack --purge
-```
-
-### Help
-
-Full help for the Omnibus command line interface can be accessed with the
-`help` command:
-
-```shell
-$ bin/omnibus help
-```
-
-## Building within a Docker container
+We highly recommend you build this with the included Rakefile, which uses Docker.
 
 You'll need a docker server and a local docker command that can talk to it.
 An easy way to get a docker server going is using [boot2docker](http://boot2docker.io/).
@@ -84,7 +24,7 @@ If you want the build rake task to publish to packages.flapjack.io then you'll n
 
 ### Build
 
-Run the `build` rake task. It drives `docker` and `omnibus` to build packages. You can also call the `build_and_publish` rake task (see below) if you want to also publish the package directly.
+Run the `build` rake task. It drives `docker` and `omnibus` to build packages.
 
 The following environment variables affect what `build` does:
 
@@ -112,7 +52,7 @@ Run the `publish` rake task to publish a previously built package. The package i
 
 The following environment variable is required:
 
-- `PACKAGE_FILE` - the filename of the package file you've just built and want to publish
+- `PACKAGE_FILE` - the filename of the package file you've just built and want to publish.  This is assumed to be in omnibus-flapjack/pkg (which is where the Rakefile build puts it)
 
 Eg:
 
@@ -121,9 +61,23 @@ export PACKAGE_FILE=flapjack_1.1.0~+20141003112645-master-trusty-1_amd64.deb
 bundle exec rake build
 ```
 
+### Testing Packages
+
+The test task starts up a docker instance with a pristine copy of the distribution, installs the package given, and runs Serverspec against it.
+
+The following environment variable is required:
+
+- `PACKAGE_FILE` - the filename of the package file you've just built and want to publish.  This is assumed to be in omnibus-flapjack/pkg (which is where the Rakefile build puts it)
+
+
+### Build and Test
+
+The rake task `build_and_test` just calls the `build` and `test` rake tasks sequentially. You don't need to set the `PACKAGE_FILE` environment variable however, as the package meta data is already determined.
+
+
 ### Build and Publish
 
-The rake task `build_and_publish` just calls the `build` and `publish` rake tasks sequentially. You don't need to set the `PACKAGE_FILE` environment variable however, as the package meta data is already determined.
+The rake task `build_and_publish` just calls the `build`, `test` and `publish` rake tasks sequentially. You don't need to set the `PACKAGE_FILE` environment variable however, as the package meta data is already determined.
 
 The environment variables are as per the `build` rake task.
 
@@ -139,19 +93,13 @@ bundle exec rake build_and_publish
 
 ### Promote from Experimental to Main
 
-When testing of the package candidiate is completed, use the `promote` script to repackage the deb for the **main** component in the case of debs, or copy the package to `flapjack` from `flapjack-experimental` in the case of rpms.
+When testing of the package candidiate is completed, use the `promote` task to repackage the deb for the **main** component in the case of debs, or copy the package to `flapjack` from `flapjack-experimental` in the case of rpms.
 
 You'll need the name of the candidate package, which will be in the output of `build`, or look in S3 to find it. Eg:
 
-```shell
-$ ./promote candidate_flapjack_1.0.0~rc6~20140820210002-master-precise-1_amd64.deb
-```
-
-### Testing Packages
-
-To test a specific package file, set `PACKAGE_FILE` the same as in the Publish section, above:
 ```bash
-PACKAGE_FILE=flapjack_1.2.1-precise_amd64.deb bundle exec rake test
+export PACKAGE_FILE=flapjack_1.1.0~+20141003112645-master-trusty-1_amd64.deb
+bundle exec rake promote
 ```
 
 ### Tests
@@ -162,4 +110,3 @@ Tests are fairly minimal right now, would you like to expand them? Check out the
 bundle install
 bundle exec rspec
 ```
-
