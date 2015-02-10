@@ -31,7 +31,6 @@
       "sleep 30",
       "sudo apt-get update",
       "sudo apt-get install -y gnupg awscli git build-essential ruby1.9.1-full createrepo zlib1g-dev",
-      "git clone https://github.com/flapjack/omnibus-flapjack.git && cd omnibus-flapjack",
       "gpg --batch --yes --import /tmp/pkg_signing_key",
       "gpg --batch --yes --keyserver keys.gnupg.net --recv-keys 2A194991",
       "gpg --batch --yes -a --export 2A194991 | sudo apt-key add -",
@@ -49,7 +48,7 @@
       "sudo docker pull flapjack/omnibus-centos",
       "sudo docker images",
       "sudo service docker stop",
-      "sleep 5"
+      "git clone https://github.com/flapjack/omnibus-flapjack.git && cd omnibus-flapjack && bundle install"
     ]
   }]
 }
