@@ -43,6 +43,11 @@ env.merge!(
 
 build do
 
+  command ["which cmake"], :env => env
+  command ["file #{install_dir}/embedded/lib/libssl.so"], :env => env
+  command ["file #{install_dir}/embedded/lib/libz.so"], :env => env
+  command ["file #{install_dir}/embedded/lib/libcrypto.so"], :env => env
+
   command [
             "cmake",
             "-DCMAKE_SKIP_RPATH=YES",
