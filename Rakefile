@@ -36,11 +36,19 @@ end
 desc "Build Flapjack packages"
 task :build do
 
-  pkg ||= OmnibusFlapjack::Package.new(
-    :build_ref      => ENV['BUILD_REF'],
-    :distro         => ENV['DISTRO'],
-    :distro_release => ENV['DISTRO_RELEASE'],
-  )
+  begin
+    pkg ||= OmnibusFlapjack::Package.new(
+      :build_ref      => ENV['BUILD_REF'],
+      :distro         => ENV['DISTRO'],
+      :distro_release => ENV['DISTRO_RELEASE'],
+    )
+  rescue ArgumentError
+    puts "To build, please set the following environment variables as appropriate:"
+    puts "  BUILD_REF"
+    puts "  DISTRO"
+    puts "  DISTRO_RELEASE"
+    exit 1
+  end
 
   puts "distro:               #{pkg.distro}"
   puts "distro_release:       #{pkg.distro_release}"
@@ -52,6 +60,7 @@ task :build do
   puts "package_version:      #{pkg.experimental_package_version}"
   puts pkg.main_package_version.nil? ? "Not building candidate for main - version contains an alpha" : "main_package_version: #{pkg.main_package_version}"
   puts
+
   puts "Starting Docker container..."
 
   # ensure the 'ubuntu' user is in the docker group
