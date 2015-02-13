@@ -65,22 +65,16 @@ end
 describe file('/var/log/flapjack/flapjack.log') do
   it { should be_file }
   it { should be_mode 644 }
-  it { should be_owned_by 'flapjack' }
-  it { should be_grouped_into 'flapjack' }
 end
 
 describe file('/var/log/flapjack/notification.log') do
   it { should be_file }
   it { should be_mode 644 }
-  it { should be_owned_by 'flapjack' }
-  it { should be_grouped_into 'flapjack' }
 end
 
 describe file('/var/log/flapjack/jsonapi_access.log') do
   it { should be_file }
   it { should be_mode 644 }
-  it { should be_owned_by 'flapjack' }
-  it { should be_grouped_into 'flapjack' }
 end
 
 describe file('/var/log/flapjack/redis-flapjack.log') do
@@ -93,6 +87,4 @@ end
 describe file('/var/log/flapjack/web_access.log') do
   it { should be_file }
   it { should be_mode 644 }
-  it { should be_owned_by 'flapjack' }
-  it { should be_grouped_into 'flapjack' }
 end
