@@ -14,7 +14,6 @@ dependency "ruby"
 dependency "rubygems"
 dependency "bundler"
 dependency "nokogiri"
-dependency "mysql-client"
 
 relative_path "flapjack"
 
