@@ -490,7 +490,6 @@ task :test do
       test_cmd = [
         "dpkg -i /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
         # Install a second time to check that the uninstall procedure works
-        "dpkg -i /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
         "apt-get update || true",
         "DEBIAN_FRONTEND=noninteractive apt-get install -y ruby1.9.1-full git nagios3 net-tools ca-certificates wget",
         # No phantomjs package in wheezy yet, only in sid
@@ -501,7 +500,8 @@ task :test do
         "DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential curl libssl-dev libreadline-dev libxslt1-dev libxml2-dev libcurl4-openssl-dev zlib1g-dev libexpat1-dev libicu-dev",
         "echo broker_module=/usr/local/lib/flapjackfeeder.o redis_host=localhost,redis_port=6380 >> /etc/nagios3/nagios.cfg",
         "sed -i -r s/enable_notifications=1/enable_notifications=0/ /etc/nagios3/nagios.cfg",
-        "service nagios3 restart"
+        "service nagios3 restart",
+        "dpkg -i /mnt/omnibus-flapjack/pkg/#{pkg.package_file}"
       ]
       image = "#{pkg.distro}:#{pkg.distro_release}"
     when 'centos'
@@ -521,14 +521,16 @@ task :test do
         "cat /opt/rh/ruby193/enable",
         "source /opt/rh/ruby193/enable",
         "rpm -ivh /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
-        "rpm -ev flapjack",
-        "rpm -ivh /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
         "service redis-flapjack start",
         "service flapjack start",
         "export PATH=\${PATH}:/opt/flapjack/bin",
         "echo broker_module=/usr/local/lib/flapjackfeeder.o redis_host=localhost,redis_port=6380 >> /etc/nagios/nagios.cfg",
         "sed -i -r s/enable_notifications=1/enable_notifications=0/ /etc/nagios/nagios.cfg",
-        "service nagios start"
+        "service nagios start",
+        "rpm -ev flapjack",
+        "rpm -ivh /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
+        "service redis-flapjack start",
+        "service flapjack start"
       ]
       image = "#{pkg.distro}:#{pkg.distro}#{pkg.distro_release}"
     end
