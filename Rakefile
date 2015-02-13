@@ -92,12 +92,12 @@ task :build do
   ].join(" ")
   puts "Executing: " + docker_cmd_string
   unless dry_run
-    docker_cmd = Mixlib::ShellOut.new(docker_cmd_string,
-                                      :timeout     => 60 * 60,
-                                      :live_stream => $stdout)
     docker_success = false
     (1..10).each {|docker_attempt|
       puts "Docker attempt: #{docker_attempt}"
+      docker_cmd = Mixlib::ShellOut.new(docker_cmd_string,
+                                        :timeout     => 60 * 60,
+                                        :live_stream => $stdout)
       test_duration = Benchmark.realtime do
         docker_cmd.run_command
       end
