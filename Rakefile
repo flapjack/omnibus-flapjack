@@ -76,7 +76,7 @@ task :build do
 
   omnibus_cmd = build_omnibus_cmd(pkg)
 
-  docker_cmd = Mixlib::ShellOut.new([
+  docker_cmd_string = [
     'docker', 'run', '-t',
     '--attach', 'stdout',
     '--attach', 'stderr',
@@ -89,9 +89,12 @@ task :build do
     "-v", "#{Dir.home}/.gnupg:/root/.gnupg",
     "flapjack/omnibus-#{pkg.distro}:#{pkg.distro_release}", 'bash', '-l', '-c',
     "\'#{omnibus_cmd}\'"
-  ].join(" "), :timeout => 60 * 60, :live_stream => $stdout)
-  puts "Executing: " + docker_cmd.inspect
+  ].join(" ")
+  puts "Executing: " + docker_cmd_string
   unless dry_run
+    docker_cmd = Mixlib::ShellOut.new(docker_cmd_string,
+                                      :timeout     => 60 * 60,
+                                      :live_stream => $stdout)
     docker_success = false
     (1..10).each {|docker_attempt|
       puts "Docker attempt: #{docker_attempt}"
@@ -554,19 +557,22 @@ task :test do
 
     test_cmd = test_cmd.flatten.join(" && ")
 
-    docker_cmd = Mixlib::ShellOut.new([
+    docker_cmd_string = [
       'docker', 'run', '-t',
       '--attach', 'stdout',
       '--attach', 'stderr',
       "-v #{Dir.pwd}:/mnt/omnibus-flapjack",
       "#{image}", 'bash', '-l', '-c',
       "\'#{test_cmd}\'"
-    ].join(" "), :timeout => 60 * 60, :live_stream => $stdout)
-    puts "Executing: " + docker_cmd.inspect
+    ].join(" ")
+    puts "Executing: " + docker_cmd_string
     unless dry_run
       docker_success = false
       (1..10).each {|docker_attemp|
         puts "Docker attempt: #{docker_attempt}"
+        docker_cmd = Mixlib::ShellOut.new(docker_cmd_string,
+                                          :timeout     => 60 * 60,
+                                          :live_stream => $stdout)
         test_duration = Benchmark.realtime do
           docker_cmd.run_command
         end
