@@ -92,10 +92,9 @@ task :build do
   ].join(" "), :timeout => 60 * 60, :live_stream => $stdout)
   puts "Executing: " + docker_cmd.inspect
   unless dry_run
-    docker_attempts = 5
-    success = false
-    while docker_attempts > 0 || success
-      puts "Docker attempt: #{docker_attempts}"
+    docker_success = false
+    (1..10).each {|docker_attempt|
+      puts "Docker attempt: #{docker_attempt}"
       test_duration = Benchmark.realtime do
         docker_cmd.run_command
       end
@@ -107,15 +106,20 @@ task :build do
 
       if docker_cmd.error?
         if docker_cmd.stderr.match(/Cannot start container/)
-          docker_attempts =- 1
+          next
         else
           puts "ERROR running docker command, exit status is #{docker_cmd.exitstatus}, duration was #{duration_string}."
           exit 1
         end
-      else
-        success = true
       end
+      docker_success = true
+    }
+
+    unless docker_success
+      puts "Unable to successfully run the docker build command after multiple attempts. Exiting!"
+      exit 1
     end
+
     puts "Docker run completed, duration was #{duration_string}."
 
     sleep 10 # one time I got "Could not find the file /omnibus-flapjack/pkg in container" and a while later it worked fine
@@ -560,10 +564,9 @@ task :test do
     ].join(" "), :timeout => 60 * 60, :live_stream => $stdout)
     puts "Executing: " + docker_cmd.inspect
     unless dry_run
-      docker_attempts = 5
-      success = false
-      while docker_attempts > 0 || success
-        puts "Docker attempt: #{docker_attempts}"
+      docker_success = false
+      (1..10).each {|docker_attemp|
+        puts "Docker attempt: #{docker_attempt}"
         test_duration = Benchmark.realtime do
           docker_cmd.run_command
         end
@@ -575,14 +578,17 @@ task :test do
 
         if docker_cmd.error?
           if docker_cmd.stderr.match(/Cannot start container/)
-            docker_attempts =- 1
+            next
           else
             puts "ERROR running docker command, exit status is #{docker_cmd.exitstatus}, duration was #{duration_string}."
             exit 1
           end
-        else
-          success = true
         end
+        docker_success = true
+      }
+      unless docker_success
+        puts "Unable to run the docker test command after multiple attempts. Exiting!"
+        exit 1
       end
       puts "Test with docker completed, duration was #{duration_string}."
     end
