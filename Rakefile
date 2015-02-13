@@ -93,6 +93,7 @@ task :build do
   puts "Executing: " + docker_cmd_string
   unless dry_run
     docker_success = false
+    duration_string = nil
     (1..10).each {|docker_attempt|
       puts "Docker attempt: #{docker_attempt}"
       docker_cmd = Mixlib::ShellOut.new(docker_cmd_string,
@@ -568,6 +569,7 @@ task :test do
     puts "Executing: " + docker_cmd_string
     unless dry_run
       docker_success = false
+      duration_string = nil
       (1..10).each {|docker_attemp|
         puts "Docker attempt: #{docker_attempt}"
         docker_cmd = Mixlib::ShellOut.new(docker_cmd_string,
