@@ -34,7 +34,7 @@ completes packages will be available in `pkg/`, and with a bit of luck on your p
 ```shell
 FLAPJACK_BUILD_REF="v1.0.0rc3" \
 FLAPJACK_EXPERIMENTAL_PACKAGE_VERSION="1.0.0~rc3~20140727T125000-9b1e831-1" \
-bundle exec bin/omnibus build project flapjack
+bundle exec bin/omnibus build flapjack
 ```
 
 ### Clean
