@@ -547,7 +547,6 @@ task :test do
       'docker', 'run', '-t',
       '--attach', 'stdout',
       '--attach', 'stderr',
-      '--rm',
       "-v #{Dir.pwd}:/mnt/omnibus-flapjack",
       "#{image}", 'bash', '-l', '-c',
       "\'#{test_cmd}\'"
