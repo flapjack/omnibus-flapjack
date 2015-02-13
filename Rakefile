@@ -92,17 +92,29 @@ task :build do
   ].join(" "), :timeout => 60 * 60, :live_stream => $stdout)
   puts "Executing: " + docker_cmd.inspect
   unless dry_run
-    build_duration = Benchmark.realtime do
-      docker_cmd.run_command
-    end
-    duration_string = ChronicDuration.output(build_duration.round(0), :format => :short)
-    puts "STDOUT: "
-    puts "#{docker_cmd.stdout}"
-    puts "STDERR: "
-    puts "#{docker_cmd.stderr}"
-    if docker_cmd.error?
-      puts "ERROR running docker command, exit status is #{docker_cmd.exitstatus}, duration was #{duration_string}."
-      exit 1
+    docker_attempts = 5
+    success = false
+    while docker_attempts > 0 || success
+      puts "Docker attempt: #{docker_attempts}"
+      test_duration = Benchmark.realtime do
+        docker_cmd.run_command
+      end
+      duration_string = ChronicDuration.output(test_duration.round(0), :format => :short)
+      puts "STDOUT: "
+      puts "#{docker_cmd.stdout}"
+      puts "STDERR: "
+      puts "#{docker_cmd.stderr}"
+
+      if docker_cmd.error?
+        if docker_cmd.stderr.match(/Cannot start container/)
+          docker_attempts =- 1
+        else
+          puts "ERROR running docker command, exit status is #{docker_cmd.exitstatus}, duration was #{duration_string}."
+          exit 1
+        end
+      else
+        success = true
+      end
     end
     puts "Docker run completed, duration was #{duration_string}."
 
@@ -548,17 +560,29 @@ task :test do
     ].join(" "), :timeout => 60 * 60, :live_stream => $stdout)
     puts "Executing: " + docker_cmd.inspect
     unless dry_run
-      test_duration = Benchmark.realtime do
-        docker_cmd.run_command
-      end
-      duration_string = ChronicDuration.output(test_duration.round(0), :format => :short)
-      puts "STDOUT: "
-      puts "#{docker_cmd.stdout}"
-      puts "STDERR: "
-      puts "#{docker_cmd.stderr}"
-      if docker_cmd.error?
-        puts "ERROR running docker command, exit status is #{docker_cmd.exitstatus}, duration was #{duration_string}."
-        exit 1
+      docker_attempts = 5
+      success = false
+      while docker_attempts > 0 || success
+        puts "Docker attempt: #{docker_attempts}"
+        test_duration = Benchmark.realtime do
+          docker_cmd.run_command
+        end
+        duration_string = ChronicDuration.output(test_duration.round(0), :format => :short)
+        puts "STDOUT: "
+        puts "#{docker_cmd.stdout}"
+        puts "STDERR: "
+        puts "#{docker_cmd.stderr}"
+
+        if docker_cmd.error?
+          if docker_cmd.stderr.match(/Cannot start container/)
+            docker_attempts =- 1
+          else
+            puts "ERROR running docker command, exit status is #{docker_cmd.exitstatus}, duration was #{duration_string}."
+            exit 1
+          end
+        else
+          success = true
+        end
       end
       puts "Test with docker completed, duration was #{duration_string}."
     end
