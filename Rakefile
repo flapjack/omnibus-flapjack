@@ -491,16 +491,13 @@ task :test do
         "dpkg -i /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
         # Install a second time to check that the uninstall procedure works
         "apt-get update || true",
-        "DEBIAN_FRONTEND=noninteractive apt-get install -y ruby1.9.1-full git nagios3 net-tools ca-certificates wget",
+        "DEBIAN_FRONTEND=noninteractive apt-get install -y ruby1.9.1-full git net-tools ca-certificates wget",
         # No phantomjs package in wheezy yet, only in sid
         "DEBIAN_FRONTEND=noninteractive apt-get install -y libfontconfig1 libexpat1 libfreetype6 libfreetype6 fontconfig-config ucf ttf-dejavu-core ttf-bitstream-vera ttf-freefont fonts-freefont-ttf",
         "wget https://raw.githubusercontent.com/suan/phantomjs-debian/master/phantomjs_1.9.6-0wheezy_amd64.deb",
         "dpkg -i phantomjs_1.9.6-0wheezy_amd64.deb",
         # Install libraries for nokogiri compilation required during bundle
         "DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential curl libssl-dev libreadline-dev libxslt1-dev libxml2-dev libcurl4-openssl-dev zlib1g-dev libexpat1-dev libicu-dev",
-        "echo broker_module=/usr/local/lib/flapjackfeeder.o redis_host=localhost,redis_port=6380 >> /etc/nagios3/nagios.cfg",
-        "sed -i -r s/enable_notifications=1/enable_notifications=0/ /etc/nagios3/nagios.cfg",
-        "service nagios3 restart",
         "dpkg -i /mnt/omnibus-flapjack/pkg/#{pkg.package_file}"
       ]
       image = "#{pkg.distro}:#{pkg.distro_release}"
@@ -516,7 +513,7 @@ task :test do
         "rpm -ivh #{epel_url}",
         "yum install -y centos-release-SCL",
         "yum groupinstall -y \"Development Tools\"",
-        "yum install -y ruby193 ruby193-ruby-devel openssl-devel expat-devel perl-ExtUtils-MakeMaker curl-devel tar nagios which",
+        "yum install -y ruby193 ruby193-ruby-devel openssl-devel expat-devel perl-ExtUtils-MakeMaker curl-devel tar which",
         "echo \"export PATH=\\${PATH}:/opt/rh/ruby193/root/usr/local/bin\" | tee -a /opt/rh/ruby193/enable",
         "cat /opt/rh/ruby193/enable",
         "source /opt/rh/ruby193/enable",
@@ -524,9 +521,6 @@ task :test do
         "service redis-flapjack start",
         "service flapjack start",
         "export PATH=\${PATH}:/opt/flapjack/bin",
-        "echo broker_module=/usr/local/lib/flapjackfeeder.o redis_host=localhost,redis_port=6380 >> /etc/nagios/nagios.cfg",
-        "sed -i -r s/enable_notifications=1/enable_notifications=0/ /etc/nagios/nagios.cfg",
-        "service nagios start",
         "rpm -ev flapjack",
         "rpm -ivh /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
         "service redis-flapjack start",
@@ -540,7 +534,6 @@ task :test do
       "gem install bundler --no-ri --no-rdoc",
       "bundle",
       "bundle exec rspec spec/serverspec"
-      # "(bundle exec rspec spec/capybara || true)"
     ]
 
     test_cmd = test_cmd.flatten.join(" && ")
