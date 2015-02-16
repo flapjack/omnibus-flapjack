@@ -30,14 +30,13 @@
     "inline": [
       "sleep 30",
       "sudo apt-get update",
-      "sudo apt-get install -y gnupg awscli git build-essential ruby1.9.1-full createrepo",
-      "git clone https://github.com/flapjack/omnibus-flapjack.git && cd omnibus-flapjack",
+      "sudo apt-get install -y gnupg awscli git build-essential ruby1.9.1-full createrepo zlib1g-dev",
       "gpg --batch --yes --import /tmp/pkg_signing_key",
       "gpg --batch --yes --keyserver keys.gnupg.net --recv-keys 2A194991",
       "gpg --batch --yes -a --export 2A194991 | sudo apt-key add -",
       "if [ ! -e /usr/lib/apt/methods/https ]; then sudo apt-get install -y apt-transport-https ; fi",
       "sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 36A1D7869245C8950F966E92D8576A8BA88D21E9",
-      "sudo sh -c \"echo deb https://get.docker.io/ubuntu docker main > /etc/apt/sources.list.d/docker.list\"",
+      "sudo sh -c \"echo deb https://get.docker.com/ubuntu docker main > /etc/apt/sources.list.d/docker.list\"",
       "echo 'deb http://repo.aptly.info/ squeeze main' | sudo tee /etc/apt/sources.list.d/aptly.list",
       "sudo apt-get update",
       "sudo apt-get install -y lxc-docker aptly vagrant",
@@ -47,9 +46,14 @@
       "sudo docker pull flapjack/omnibus-ubuntu",
       "sudo docker pull flapjack/omnibus-debian",
       "sudo docker pull flapjack/omnibus-centos",
+      "sudo docker pull ubuntu:trusty",
+      "sudo docker pull ubuntu:precise",
+      "sudo docker pull debian:wheezy",
+      "sudo docker pull centos:6",
+      "sudo docker pull centos:7",
       "sudo docker images",
       "sudo service docker stop",
-      "sleep 5"
+      "git clone https://github.com/flapjack/omnibus-flapjack.git && cd omnibus-flapjack && bundle install"
     ]
   }]
 }

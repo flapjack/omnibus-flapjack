@@ -186,6 +186,9 @@ module OmnibusFlapjack
       @distro         = options[:distro]
       @distro_release = options[:distro_release]
       @package_file   = options[:package_file]
+      unless (@build_ref && @distro && @distro_release) || @package_file
+        raise ArgumentError, "cannot initialize package"
+      end
       @truth_from_filename = @package_file && !@package_file.nil?
     end
   end

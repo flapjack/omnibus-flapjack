@@ -36,11 +36,19 @@ end
 desc "Build Flapjack packages"
 task :build do
 
-  pkg ||= OmnibusFlapjack::Package.new(
-    :build_ref      => ENV['BUILD_REF'],
-    :distro         => ENV['DISTRO'],
-    :distro_release => ENV['DISTRO_RELEASE'],
-  )
+  begin
+    pkg ||= OmnibusFlapjack::Package.new(
+      :build_ref      => ENV['BUILD_REF'],
+      :distro         => ENV['DISTRO'],
+      :distro_release => ENV['DISTRO_RELEASE'],
+    )
+  rescue ArgumentError
+    puts "To build, please set the following environment variables as appropriate:"
+    puts "  BUILD_REF"
+    puts "  DISTRO"
+    puts "  DISTRO_RELEASE"
+    exit 1
+  end
 
   puts "distro:               #{pkg.distro}"
   puts "distro_release:       #{pkg.distro_release}"
@@ -52,10 +60,11 @@ task :build do
   puts "package_version:      #{pkg.experimental_package_version}"
   puts pkg.main_package_version.nil? ? "Not building candidate for main - version contains an alpha" : "main_package_version: #{pkg.main_package_version}"
   puts
+
   puts "Starting Docker container..."
 
   # ensure the 'ubuntu' user is in the docker group
-  if system('which usermod')
+  if system('type usermod')
     puts "Adding user ubuntu to the docker group"
     unless dry_run
       useradd = Mixlib::ShellOut.new("sudo usermod -a -G docker ubuntu")
@@ -67,7 +76,7 @@ task :build do
 
   omnibus_cmd = build_omnibus_cmd(pkg)
 
-  docker_cmd = Mixlib::ShellOut.new([
+  docker_cmd_string = [
     'docker', 'run', '-t',
     '--attach', 'stdout',
     '--attach', 'stderr',
@@ -80,21 +89,42 @@ task :build do
     "-v", "#{Dir.home}/.gnupg:/root/.gnupg",
     "flapjack/omnibus-#{pkg.distro}:#{pkg.distro_release}", 'bash', '-l', '-c',
     "\'#{omnibus_cmd}\'"
-  ].join(" "), :timeout => 60 * 60, :live_stream => $stdout)
-  puts "Executing: " + docker_cmd.inspect
+  ].join(" ")
+  puts "Executing: " + docker_cmd_string
   unless dry_run
-    build_duration = Benchmark.realtime do
-      docker_cmd.run_command
+    docker_success = false
+    duration_string = nil
+    (1..10).each do |docker_attempt|
+      puts "Docker attempt: #{docker_attempt}"
+      docker_cmd = Mixlib::ShellOut.new(docker_cmd_string,
+                                        :timeout     => 60 * 60,
+                                        :live_stream => $stdout)
+      test_duration = Benchmark.realtime do
+        docker_cmd.run_command
+      end
+      duration_string = ChronicDuration.output(test_duration.round(0), :format => :short)
+      puts "STDOUT: "
+      puts "#{docker_cmd.stdout}"
+      puts "STDERR: "
+      puts "#{docker_cmd.stderr}"
+
+      if docker_cmd.error?
+        if docker_cmd.stderr.match(/Cannot start container.+Error mounting '\/dev\/mapper\/docker/)
+          next
+        else
+          puts "ERROR running docker command, exit status is #{docker_cmd.exitstatus}, duration was #{duration_string}."
+          exit 1
+        end
+      end
+      # If we got to here, the build was successful
+      break
     end
-    duration_string = ChronicDuration.output(build_duration.round(0), :format => :short)
-    puts "STDOUT: "
-    puts "#{docker_cmd.stdout}"
-    puts "STDERR: "
-    puts "#{docker_cmd.stderr}"
-    if docker_cmd.error?
-      puts "ERROR running docker command, exit status is #{docker_cmd.exitstatus}, duration was #{duration_string}."
+
+    unless docker_success
+      puts "Unable to successfully run the docker build command after multiple attempts. Exiting!"
       exit 1
     end
+
     puts "Docker run completed, duration was #{duration_string}."
 
     sleep 10 # one time I got "Could not find the file /omnibus-flapjack/pkg in container" and a while later it worked fine
@@ -481,18 +511,15 @@ task :test do
       test_cmd = [
         "dpkg -i /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
         # Install a second time to check that the uninstall procedure works
-        "dpkg -i /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
         "apt-get update || true",
-        "DEBIAN_FRONTEND=noninteractive apt-get install -y ruby1.9.1-full git nagios3 net-tools ca-certificates wget",
+        "DEBIAN_FRONTEND=noninteractive apt-get install -y ruby1.9.1-full git net-tools ca-certificates wget procps",
         # No phantomjs package in wheezy yet, only in sid
         "DEBIAN_FRONTEND=noninteractive apt-get install -y libfontconfig1 libexpat1 libfreetype6 libfreetype6 fontconfig-config ucf ttf-dejavu-core ttf-bitstream-vera ttf-freefont fonts-freefont-ttf",
         "wget https://raw.githubusercontent.com/suan/phantomjs-debian/master/phantomjs_1.9.6-0wheezy_amd64.deb",
         "dpkg -i phantomjs_1.9.6-0wheezy_amd64.deb",
         # Install libraries for nokogiri compilation required during bundle
         "DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential curl libssl-dev libreadline-dev libxslt1-dev libxml2-dev libcurl4-openssl-dev zlib1g-dev libexpat1-dev libicu-dev",
-        "echo broker_module=/usr/local/lib/flapjackfeeder.o redis_host=localhost,redis_port=6380 >> /etc/nagios3/nagios.cfg",
-        "sed -i -r s/enable_notifications=1/enable_notifications=0/ /etc/nagios3/nagios.cfg",
-        "service nagios3 restart"
+        "dpkg -i /mnt/omnibus-flapjack/pkg/#{pkg.package_file}"
       ]
       image = "#{pkg.distro}:#{pkg.distro_release}"
     when 'centos'
@@ -507,19 +534,18 @@ task :test do
         "rpm -ivh #{epel_url}",
         "yum install -y centos-release-SCL",
         "yum groupinstall -y \"Development Tools\"",
-        "yum install -y ruby193 ruby193-ruby-devel openssl-devel expat-devel perl-ExtUtils-MakeMaker curl-devel tar nagios which",
+        "yum install -y ruby193 ruby193-ruby-devel openssl-devel expat-devel perl-ExtUtils-MakeMaker curl-devel tar",
         "echo \"export PATH=\\${PATH}:/opt/rh/ruby193/root/usr/local/bin\" | tee -a /opt/rh/ruby193/enable",
         "cat /opt/rh/ruby193/enable",
         "source /opt/rh/ruby193/enable",
         "rpm -ivh /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
-        "rpm -ev flapjack",
-        "rpm -ivh /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
         "service redis-flapjack start",
         "service flapjack start",
         "export PATH=\${PATH}:/opt/flapjack/bin",
-        "echo broker_module=/usr/local/lib/flapjackfeeder.o redis_host=localhost,redis_port=6380 >> /etc/nagios/nagios.cfg",
-        "sed -i -r s/enable_notifications=1/enable_notifications=0/ /etc/nagios/nagios.cfg",
-        "service nagios start"
+        "rpm -ev flapjack",
+        "rpm -ivh /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
+        "service redis-flapjack start",
+        "service flapjack start"
       ]
       image = "#{pkg.distro}:#{pkg.distro}#{pkg.distro_release}"
     end
@@ -529,32 +555,50 @@ task :test do
       "gem install bundler --no-ri --no-rdoc",
       "bundle",
       "bundle exec rspec spec/serverspec"
-      # "(bundle exec rspec spec/capybara || true)"
     ]
 
     test_cmd = test_cmd.flatten.join(" && ")
 
-    docker_cmd = Mixlib::ShellOut.new([
+    docker_cmd_string = [
       'docker', 'run', '-t',
       '--attach', 'stdout',
       '--attach', 'stderr',
-      '--rm',
       "-v #{Dir.pwd}:/mnt/omnibus-flapjack",
       "#{image}", 'bash', '-l', '-c',
       "\'#{test_cmd}\'"
-    ].join(" "), :timeout => 60 * 60, :live_stream => $stdout)
-    puts "Executing: " + docker_cmd.inspect
+    ].join(" ")
+    puts "Executing: " + docker_cmd_string
     unless dry_run
-      test_duration = Benchmark.realtime do
-        docker_cmd.run_command
+      docker_success = false
+      duration_string = nil
+      (1..10).each do |docker_attempt|
+        puts "Docker attempt: #{docker_attempt}"
+        docker_cmd = Mixlib::ShellOut.new(docker_cmd_string,
+                                          :timeout     => 60 * 60,
+                                          :live_stream => $stdout)
+        test_duration = Benchmark.realtime do
+          docker_cmd.run_command
+        end
+        duration_string = ChronicDuration.output(test_duration.round(0), :format => :short)
+        puts "STDOUT: "
+        puts "#{docker_cmd.stdout}"
+        puts "STDERR: "
+        puts "#{docker_cmd.stderr}"
+
+        if docker_cmd.error?
+          if docker_cmd.stderr.match(/Cannot start container.+Error mounting '\/dev\/mapper\/docker/)
+            next
+          else
+            puts "ERROR running docker command, exit status is #{docker_cmd.exitstatus}, duration was #{duration_string}."
+            exit 1
+          end
+        end
+        # If we got to here, the build was successful
+        break
       end
-      duration_string = ChronicDuration.output(test_duration.round(0), :format => :short)
-      puts "STDOUT: "
-      puts "#{docker_cmd.stdout}"
-      puts "STDERR: "
-      puts "#{docker_cmd.stderr}"
-      if docker_cmd.error?
-        puts "ERROR running docker command, exit status is #{docker_cmd.exitstatus}, duration was #{duration_string}."
+
+      unless docker_success
+        puts "Unable to run the docker test command after multiple attempts. Exiting!"
         exit 1
       end
       puts "Test with docker completed, duration was #{duration_string}."
