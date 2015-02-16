@@ -94,8 +94,7 @@ task :build do
   unless dry_run
     docker_success = false
     duration_string = nil
-    10.times do |docker_attempt|
-      break if docker_success
+    (1..10).each do |docker_attempt|
       puts "Docker attempt: #{docker_attempt}"
       docker_cmd = Mixlib::ShellOut.new(docker_cmd_string,
                                         :timeout     => 60 * 60,
@@ -117,7 +116,8 @@ task :build do
           exit 1
         end
       end
-      docker_success = true
+      # If we got to here, the build was successful
+      break
     end
 
     unless docker_success
@@ -571,8 +571,7 @@ task :test do
     unless dry_run
       docker_success = false
       duration_string = nil
-      10.times do |docker_attempt|
-        break if docker_success
+      (1..10).each do |docker_attempt|
         puts "Docker attempt: #{docker_attempt}"
         docker_cmd = Mixlib::ShellOut.new(docker_cmd_string,
                                           :timeout     => 60 * 60,
@@ -594,7 +593,8 @@ task :test do
             exit 1
           end
         end
-        docker_success = true
+        # If we got to here, the build was successful
+        break
       end
 
       unless docker_success
