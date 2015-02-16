@@ -512,7 +512,7 @@ task :test do
         "dpkg -i /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
         # Install a second time to check that the uninstall procedure works
         "apt-get update || true",
-        "DEBIAN_FRONTEND=noninteractive apt-get install -y ruby1.9.1-full git net-tools ca-certificates wget",
+        "DEBIAN_FRONTEND=noninteractive apt-get install -y ruby1.9.1-full git net-tools ca-certificates wget procps",
         # No phantomjs package in wheezy yet, only in sid
         "DEBIAN_FRONTEND=noninteractive apt-get install -y libfontconfig1 libexpat1 libfreetype6 libfreetype6 fontconfig-config ucf ttf-dejavu-core ttf-bitstream-vera ttf-freefont fonts-freefont-ttf",
         "wget https://raw.githubusercontent.com/suan/phantomjs-debian/master/phantomjs_1.9.6-0wheezy_amd64.deb",
