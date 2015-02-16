@@ -590,7 +590,6 @@ task :test do
             exit 1
           end
         end
-        break if docker_success
         docker_success = true
         break
       end
