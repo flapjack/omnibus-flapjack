@@ -461,7 +461,7 @@ task :promote do
   OmnibusFlapjack::Publish.release_lock(lockfile)
 end
 
-desc "Test a flapjack package, using vagrant-flapjack"
+desc "Test a flapjack package, using docker"
 task :test do
   packages = []
   pkg ||= OmnibusFlapjack::Package.new(
