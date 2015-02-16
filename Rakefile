@@ -64,7 +64,7 @@ task :build do
   puts "Starting Docker container..."
 
   # ensure the 'ubuntu' user is in the docker group
-  if system('which usermod')
+  if system('type usermod')
     puts "Adding user ubuntu to the docker group"
     unless dry_run
       useradd = Mixlib::ShellOut.new("sudo usermod -a -G docker ubuntu")
@@ -534,7 +534,7 @@ task :test do
         "rpm -ivh #{epel_url}",
         "yum install -y centos-release-SCL",
         "yum groupinstall -y \"Development Tools\"",
-        "yum install -y ruby193 ruby193-ruby-devel openssl-devel expat-devel perl-ExtUtils-MakeMaker curl-devel tar which",
+        "yum install -y ruby193 ruby193-ruby-devel openssl-devel expat-devel perl-ExtUtils-MakeMaker curl-devel tar",
         "echo \"export PATH=\\${PATH}:/opt/rh/ruby193/root/usr/local/bin\" | tee -a /opt/rh/ruby193/enable",
         "cat /opt/rh/ruby193/enable",
         "source /opt/rh/ruby193/enable",
