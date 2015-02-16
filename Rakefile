@@ -94,7 +94,8 @@ task :build do
   unless dry_run
     docker_success = false
     duration_string = nil
-    (1..10).each {|docker_attempt|
+    10.times do |docker_attempt|
+      break if docker_success
       puts "Docker attempt: #{docker_attempt}"
       docker_cmd = Mixlib::ShellOut.new(docker_cmd_string,
                                         :timeout     => 60 * 60,
@@ -109,7 +110,7 @@ task :build do
       puts "#{docker_cmd.stderr}"
 
       if docker_cmd.error?
-        if docker_cmd.stderr.match(/Cannot start container/)
+        if docker_cmd.stderr.match(/Cannot start container.+Error mounting '\/dev\/mapper\/docker/)
           next
         else
           puts "ERROR running docker command, exit status is #{docker_cmd.exitstatus}, duration was #{duration_string}."
@@ -117,7 +118,7 @@ task :build do
         end
       end
       docker_success = true
-    }
+    end
 
     unless docker_success
       puts "Unable to successfully run the docker build command after multiple attempts. Exiting!"
@@ -570,7 +571,8 @@ task :test do
     unless dry_run
       docker_success = false
       duration_string = nil
-      (1..10).each {|docker_attemp|
+      10.times do |docker_attempt|
+        break if docker_success
         puts "Docker attempt: #{docker_attempt}"
         docker_cmd = Mixlib::ShellOut.new(docker_cmd_string,
                                           :timeout     => 60 * 60,
@@ -585,7 +587,7 @@ task :test do
         puts "#{docker_cmd.stderr}"
 
         if docker_cmd.error?
-          if docker_cmd.stderr.match(/Cannot start container/)
+          if docker_cmd.stderr.match(/Cannot start container.+Error mounting '\/dev\/mapper\/docker/)
             next
           else
             puts "ERROR running docker command, exit status is #{docker_cmd.exitstatus}, duration was #{duration_string}."
@@ -593,7 +595,8 @@ task :test do
           end
         end
         docker_success = true
-      }
+      end
+
       unless docker_success
         puts "Unable to run the docker test command after multiple attempts. Exiting!"
         exit 1
