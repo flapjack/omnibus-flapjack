@@ -496,21 +496,17 @@ task :test do
     when 'ubuntu'
       test_cmd = [
         "dpkg -i /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
-        # Install a second time to check that the uninstall procedure works
-        "dpkg -i /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
         "apt-get update || true",
-        "DEBIAN_FRONTEND=noninteractive apt-get install -y ruby1.9.1-full git nagios3 phantomjs net-tools",
+        "DEBIAN_FRONTEND=noninteractive apt-get install -y ruby1.9.1-full git phantomjs net-tools",
         # Install libraries for nokogiri compilation required during bundle
         "DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential curl libssl-dev libreadline-dev libxslt1-dev libxml2-dev libcurl4-openssl-dev zlib1g-dev libexpat1-dev libicu-dev",
-        "echo broker_module=/usr/local/lib/flapjackfeeder.o redis_host=localhost,redis_port=6380 >> /etc/nagios3/nagios.cfg",
-        "sed -i -r s/enable_notifications=1/enable_notifications=0/ /etc/nagios3/nagios.cfg",
-        "service nagios3 restart"
+        # Install a second time to check that the uninstall procedure works
+        "dpkg -i /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
       ]
       image = "#{pkg.distro}:#{pkg.distro_release}"
     when 'debian'
       test_cmd = [
         "dpkg -i /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
-        # Install a second time to check that the uninstall procedure works
         "apt-get update || true",
         "DEBIAN_FRONTEND=noninteractive apt-get install -y ruby1.9.1-full git net-tools ca-certificates wget procps",
         # No phantomjs package in wheezy yet, only in sid
@@ -519,6 +515,7 @@ task :test do
         "dpkg -i phantomjs_1.9.6-0wheezy_amd64.deb",
         # Install libraries for nokogiri compilation required during bundle
         "DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential curl libssl-dev libreadline-dev libxslt1-dev libxml2-dev libcurl4-openssl-dev zlib1g-dev libexpat1-dev libicu-dev",
+        # Install a second time to check that the uninstall procedure works
         "dpkg -i /mnt/omnibus-flapjack/pkg/#{pkg.package_file}"
       ]
       image = "#{pkg.distro}:#{pkg.distro_release}"
