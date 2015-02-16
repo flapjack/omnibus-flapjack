@@ -64,7 +64,7 @@ task :build do
   puts "Starting Docker container..."
 
   # ensure the 'ubuntu' user is in the docker group
-  if system('which usermod')
+  if system('type usermod')
     puts "Adding user ubuntu to the docker group"
     unless dry_run
       useradd = Mixlib::ShellOut.new("sudo usermod -a -G docker ubuntu")
@@ -94,8 +94,7 @@ task :build do
   unless dry_run
     docker_success = false
     duration_string = nil
-    10.times do |docker_attempt|
-      break if docker_success
+    (1..10).each do |docker_attempt|
       puts "Docker attempt: #{docker_attempt}"
       docker_cmd = Mixlib::ShellOut.new(docker_cmd_string,
                                         :timeout     => 60 * 60,
@@ -118,6 +117,7 @@ task :build do
         end
       end
       docker_success = true
+      break
     end
 
     unless docker_success
@@ -461,7 +461,7 @@ task :promote do
   OmnibusFlapjack::Publish.release_lock(lockfile)
 end
 
-desc "Test a flapjack package, using vagrant-flapjack"
+desc "Test a flapjack package, using docker"
 task :test do
   packages = []
   pkg ||= OmnibusFlapjack::Package.new(
@@ -496,29 +496,26 @@ task :test do
     when 'ubuntu'
       test_cmd = [
         "dpkg -i /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
-        # Install a second time to check that the uninstall procedure works
-        "dpkg -i /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
         "apt-get update || true",
-        "DEBIAN_FRONTEND=noninteractive apt-get install -y ruby1.9.1-full git nagios3 phantomjs net-tools",
+        "DEBIAN_FRONTEND=noninteractive apt-get install -y ruby1.9.1-full git phantomjs net-tools",
         # Install libraries for nokogiri compilation required during bundle
         "DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential curl libssl-dev libreadline-dev libxslt1-dev libxml2-dev libcurl4-openssl-dev zlib1g-dev libexpat1-dev libicu-dev",
-        "echo broker_module=/usr/local/lib/flapjackfeeder.o redis_host=localhost,redis_port=6380 >> /etc/nagios3/nagios.cfg",
-        "sed -i -r s/enable_notifications=1/enable_notifications=0/ /etc/nagios3/nagios.cfg",
-        "service nagios3 restart"
+        # Install a second time to check that the uninstall procedure works
+        "dpkg -i /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
       ]
       image = "#{pkg.distro}:#{pkg.distro_release}"
     when 'debian'
       test_cmd = [
         "dpkg -i /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
-        # Install a second time to check that the uninstall procedure works
         "apt-get update || true",
-        "DEBIAN_FRONTEND=noninteractive apt-get install -y ruby1.9.1-full git net-tools ca-certificates wget",
+        "DEBIAN_FRONTEND=noninteractive apt-get install -y ruby1.9.1-full git net-tools ca-certificates wget procps",
         # No phantomjs package in wheezy yet, only in sid
         "DEBIAN_FRONTEND=noninteractive apt-get install -y libfontconfig1 libexpat1 libfreetype6 libfreetype6 fontconfig-config ucf ttf-dejavu-core ttf-bitstream-vera ttf-freefont fonts-freefont-ttf",
         "wget https://raw.githubusercontent.com/suan/phantomjs-debian/master/phantomjs_1.9.6-0wheezy_amd64.deb",
         "dpkg -i phantomjs_1.9.6-0wheezy_amd64.deb",
         # Install libraries for nokogiri compilation required during bundle
         "DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential curl libssl-dev libreadline-dev libxslt1-dev libxml2-dev libcurl4-openssl-dev zlib1g-dev libexpat1-dev libicu-dev",
+        # Install a second time to check that the uninstall procedure works
         "dpkg -i /mnt/omnibus-flapjack/pkg/#{pkg.package_file}"
       ]
       image = "#{pkg.distro}:#{pkg.distro_release}"
@@ -534,7 +531,7 @@ task :test do
         "rpm -ivh #{epel_url}",
         "yum install -y centos-release-SCL",
         "yum groupinstall -y \"Development Tools\"",
-        "yum install -y ruby193 ruby193-ruby-devel openssl-devel expat-devel perl-ExtUtils-MakeMaker curl-devel tar which",
+        "yum install -y ruby193 ruby193-ruby-devel openssl-devel expat-devel perl-ExtUtils-MakeMaker curl-devel tar",
         "echo \"export PATH=\\${PATH}:/opt/rh/ruby193/root/usr/local/bin\" | tee -a /opt/rh/ruby193/enable",
         "cat /opt/rh/ruby193/enable",
         "source /opt/rh/ruby193/enable",
@@ -595,6 +592,7 @@ task :test do
         end
         break if docker_success
         docker_success = true
+        break
       end
 
       unless docker_success
