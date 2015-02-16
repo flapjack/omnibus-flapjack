@@ -116,7 +116,7 @@ task :build do
           exit 1
         end
       end
-      # If we got to here, the build was successful
+      docker_success = true
       break
     end
 
@@ -590,7 +590,7 @@ task :test do
             exit 1
           end
         end
-        # If we got to here, the build was successful
+        docker_success = true
         break
       end
 
