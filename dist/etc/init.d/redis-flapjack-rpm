@@ -1,4 +1,13 @@
-#! /bin/sh
+#!/bin/bash
+#
+# redis-flapjack	Persistent key-value db for Flapjack
+#
+# chkconfig: 2345 80 30
+# description: Persistent key-value db for Flapjack
+# processname: redis-flapjack
+# pidfile: /var/run/flapjack/redis-flapjack.pid
+# config: /opt/flapjack/embedded/etc/redis/redis-flapjack.conf
+
 ### BEGIN INIT INFO
 # Provides:   redis-flapjack
 # Required-Start: $syslog $remote_fs
@@ -11,65 +20,93 @@
 # Description:    redis-flapjack - Persistent key-value db for Flapjack
 ### END INIT INFO
 
+# Source function library.
+. /etc/rc.d/init.d/functions
 
-PATH=#{install_dir}/embedded/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-DAEMON=#{install_dir}/embedded/bin/redis-server
-DAEMON_ARGS=#{install_dir}/embedded/etc/redis/redis-flapjack.conf
+RETVAL=0
+PATH=/opt/flapjack/embedded/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+DAEMON=/opt/flapjack/embedded/bin/redis-server
+DAEMON_ARGS=/opt/flapjack/embedded/etc/redis/redis-flapjack.conf
 NAME=redis-server
 DESC=redis-server
 
 RUNDIR=/var/run/flapjack
 PIDFILE=$RUNDIR/redis-flapjack.pid
 
-test -x $DAEMON || exit 0
+start() {
+    [ -x $DAEMON ] || exit 5
+    [ -f $DAEMON_ARGS ] || exit 6
+    echo -n "Starting $NAME: "
+    daemon --user flapjack --pidfile $PIDFILE $DAEMON $DAEMON_ARGS &
+    retval=$?
+    echo
+    [ $retval -eq 0 ] && touch $PIDFILE
+}
 
-set -e
+stop() {
+    echo -n $"Stopping $NAME: "
+    if [ -n "`pgrep $NAME`" ] ; then
+        killproc $NAME
+    RETVAL=3
+    else
+        failure $"Stopping $DAEMON"
+    fi
+    retval=$?
+    echo
+    [ $retval -eq 0 ] && rm -f $PIDFILE
+}
+
+restart() {
+    stop
+    start
+}
+
+reload() {
+    restart
+}
+
+force_reload() {
+    restart
+}
+
+rh_status() {
+    # run checks to determine if the service is running or use generic status
+    status $DAEMON
+}
+
+rh_status_q() {
+    rh_status >/dev/null 2>&1
+}
+
 
 case "$1" in
-  start)
-  echo -n "Starting $DESC: "
-  mkdir -p $RUNDIR
-  touch $PIDFILE
-  chown flapjack:flapjack $RUNDIR $PIDFILE
-  chmod 755 $RUNDIR
-  if start-stop-daemon --start --quiet --umask 022 --pidfile $PIDFILE --chuid flapjack:flapjack --exec $DAEMON -- $DAEMON_ARGS
-  then
-    echo "$NAME."
-  else
-    echo "failed"
-  fi
-  ;;
-  stop)
-  echo -n "Stopping $DESC: "
-  if start-stop-daemon --stop --retry forever/QUIT/1 --quiet --oknodo --pidfile $PIDFILE --exec $DAEMON
-  then
-    echo "$NAME."
-  else
-    echo "failed"
-  fi
-  rm -f $PIDFILE
-  ;;
-
-  restart|force-reload)
-  ${0} stop
-  ${0} start
-  ;;
-
-  status)
-  echo -n "$DESC is "
-  if start-stop-daemon --status --quiet --signal 0 --name ${NAME} --pidfile ${PIDFILE}
-  then
-    echo "running"
-  else
-    echo "not running"
-    exit 1
-  fi
-  ;;
-
-  *)
-  echo "Usage: /etc/init.d/$NAME {start|stop|restart|force-reload}" >&2
-  exit 1
-  ;;
+    start)
+        rh_status_q && exit 0
+        $1
+        ;;
+    stop)
+        rh_status_q || exit 0
+        $1
+        ;;
+    restart)
+        $1
+        ;;
+    reload)
+        rh_status_q || exit 7
+        $1
+        ;;
+    force-reload)
+        force_reload
+        ;;
+    status)
+        rh_status
+        ;;
+    condrestart|try-restart)
+        rh_status_q || exit 0
+        restart
+        ;;
+    *)
+        echo $"Usage: $0 {start|stop|status|restart|condrestart|try-restart|reload|force-reload}"
+        exit 2
 esac
-
-exit 0
+exit $?
