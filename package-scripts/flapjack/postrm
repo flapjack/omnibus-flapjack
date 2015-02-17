@@ -22,8 +22,6 @@ else
   update-rc.d redis-flapjack remove
 fi
 
-rm ${INITDDIR}/flapjack ${INITDDIR}/flapjack-nagios-receiver ${INITDDIR}/flapper ${INITDDIR}/redis-flapjack
-
 echo "flapjack has been uninstalled!"
 
 exit 0
