@@ -17,6 +17,9 @@ dependency "nokogiri"
 
 relative_path "flapjack"
 
+etc_path = "#{install_dir}/embedded/etc"
+omnibus_flapjack_path = Dir.pwd
+
 build do
   command "if [ ! -d flapjack_source ] ; then git clone https://github.com/flapjack/flapjack.git flapjack_source ; fi"
   command "cd flapjack_source && " +
@@ -61,4 +64,7 @@ build do
     "cd .. && " +
     "cp flapjackfeeder/src/flapjackfeeder.o . && " +
     "rm -r flapjackfeeder hiredis"
+
+    command "cp #{omnibus_flapjack_path}/dist/etc/init.d/flapjack* #{etc_path}/init.d/"
+    command "cp #{omnibus_flapjack_path}/dist/etc/init.d/flapper* #{etc_path}/init.d/"
 end
