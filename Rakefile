@@ -108,8 +108,18 @@ task :build do
       puts "STDERR: "
       puts "#{docker_cmd.stderr}"
 
+      # time="2015-02-17T20:38:19Z" level="fatal" msg="Error response from daemon: Cannot start
+      # container 1661905ff7e94437ebf3a81de59a0a2f716dc32af2fcb14ccace8ff941c4751d: Error getting
+      # container 1661905ff7e94437ebf3a81de59a0a2f716dc32af2fcb14ccace8ff941c4751d from driver
+      # devicemapper: open
+      # /dev/mapper/docker-202:1-31547-1661905ff7e94437ebf3a81de59a0a2f716dc32af2fcb14ccace8ff941c4751d:
+      # no such file or directory"
+      #
       if docker_cmd.error?
-        if docker_cmd.stderr.match(/Cannot start container.+Error mounting '\/dev\/mapper\/docker/)
+        case
+        when docker_cmd.stderr.match(/Cannot start container.+Error mounting '\/dev\/mapper\/docker/)
+          next
+        when docker_cmd.stderr.match(/Cannot start container.+Error getting container .+ from driver.*devicemapper/)
           next
         else
           puts "ERROR running docker command, exit status is #{docker_cmd.exitstatus}, duration was #{duration_string}."
@@ -583,7 +593,10 @@ task :test do
         puts "#{docker_cmd.stderr}"
 
         if docker_cmd.error?
-          if docker_cmd.stderr.match(/Cannot start container.+Error mounting '\/dev\/mapper\/docker/)
+          case
+          when docker_cmd.stderr.match(/Cannot start container.+Error mounting '\/dev\/mapper\/docker/)
+            next
+          when docker_cmd.stderr.match(/Cannot start container.+Error getting container .+ from driver.*devicemapper/)
             next
           else
             puts "ERROR running docker command, exit status is #{docker_cmd.exitstatus}, duration was #{duration_string}."
