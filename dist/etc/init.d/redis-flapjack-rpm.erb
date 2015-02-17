@@ -6,7 +6,7 @@
 # description: Persistent key-value db for Flapjack
 # processname: redis-flapjack
 # pidfile: /var/run/flapjack/redis-flapjack.pid
-# config: /opt/flapjack/embedded/etc/redis/redis-flapjack.conf
+# config: <%= @install_dir %>/embedded/etc/redis/redis-flapjack.conf
 
 ### BEGIN INIT INFO
 # Provides:   redis-flapjack
@@ -24,9 +24,9 @@
 . /etc/rc.d/init.d/functions
 
 RETVAL=0
-PATH=/opt/flapjack/embedded/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-DAEMON=/opt/flapjack/embedded/bin/redis-server
-DAEMON_ARGS=/opt/flapjack/embedded/etc/redis/redis-flapjack.conf
+PATH=<%= @install_dir %>/embedded/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+DAEMON=<%= @install_dir %>/embedded/bin/redis-server
+DAEMON_ARGS=<%= @install_dir %>/embedded/etc/redis/redis-flapjack.conf
 NAME=redis-server
 DESC=redis-server
 
