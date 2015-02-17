@@ -1,3 +1,4 @@
+require 'erb'
 
 name "redis"
 default_version "2.8.17"
