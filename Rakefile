@@ -92,50 +92,7 @@ task :build do
   ].join(" ")
   puts "Executing: " + docker_cmd_string
   unless dry_run
-    docker_success = false
-    duration_string = nil
-    (1..10).each do |docker_attempt|
-      puts "Docker attempt: #{docker_attempt}"
-      docker_cmd = Mixlib::ShellOut.new(docker_cmd_string,
-                                        :timeout     => 60 * 60,
-                                        :live_stream => $stdout)
-      test_duration = Benchmark.realtime do
-        docker_cmd.run_command
-      end
-      duration_string = ChronicDuration.output(test_duration.round(0), :format => :short)
-      puts "STDOUT: "
-      puts "#{docker_cmd.stdout}"
-      puts "STDERR: "
-      puts "#{docker_cmd.stderr}"
-
-      # time="2015-02-17T20:38:19Z" level="fatal" msg="Error response from daemon: Cannot start
-      # container 1661905ff7e94437ebf3a81de59a0a2f716dc32af2fcb14ccace8ff941c4751d: Error getting
-      # container 1661905ff7e94437ebf3a81de59a0a2f716dc32af2fcb14ccace8ff941c4751d from driver
-      # devicemapper: open
-      # /dev/mapper/docker-202:1-31547-1661905ff7e94437ebf3a81de59a0a2f716dc32af2fcb14ccace8ff941c4751d:
-      # no such file or directory"
-      #
-      if docker_cmd.error?
-        case
-        when docker_cmd.stderr.match(/Cannot start container.+Error mounting '\/dev\/mapper\/docker/)
-          next
-        when docker_cmd.stderr.match(/Cannot start container.+Error getting container .+ from driver.*devicemapper/)
-          next
-        else
-          puts "ERROR running docker command, exit status is #{docker_cmd.exitstatus}, duration was #{duration_string}."
-          exit 1
-        end
-      end
-      docker_success = true
-      break
-    end
-
-    unless docker_success
-      puts "Unable to successfully run the docker build command after multiple attempts. Exiting!"
-      exit 1
-    end
-
-    puts "Docker run completed, duration was #{duration_string}."
+    run_docker(docker_cmd_string)
 
     sleep 10 # one time I got "Could not find the file /omnibus-flapjack/pkg in container" and a while later it worked fine
 
@@ -152,6 +109,53 @@ task :build do
     Mixlib::ShellOut.new("aws s3 cp pkg/#{pkg.package_file} s3://packages.flapjack.io/tmp/ --acl public-read " +
                          "--region us-east-1 2>&1", :live_stream => $stdout).run_command.error!
   end
+end
+
+def run_docker(docker_cmd_string)
+  docker_success = false
+  duration_string = nil
+  (1..10).each do |docker_attempt|
+    puts "Docker attempt: #{docker_attempt}"
+    docker_cmd = Mixlib::ShellOut.new(docker_cmd_string,
+                                      :timeout     => 60 * 60,
+                                      :live_stream => $stdout)
+    test_duration = Benchmark.realtime do
+      docker_cmd.run_command
+    end
+    duration_string = ChronicDuration.output(test_duration.round(0), :format => :short)
+    puts "STDOUT: "
+    puts "#{docker_cmd.stdout}"
+    puts "STDERR: "
+    puts "#{docker_cmd.stderr}"
+
+    # time="2015-02-17T20:38:19Z" level="fatal" msg="Error response from daemon: Cannot start
+    # container 1661905ff7e94437ebf3a81de59a0a2f716dc32af2fcb14ccace8ff941c4751d: Error getting
+    # container 1661905ff7e94437ebf3a81de59a0a2f716dc32af2fcb14ccace8ff941c4751d from driver
+    # devicemapper: open
+    # /dev/mapper/docker-202:1-31547-1661905ff7e94437ebf3a81de59a0a2f716dc32af2fcb14ccace8ff941c4751d:
+    # no such file or directory"
+    #
+    if docker_cmd.error?
+      case
+      when docker_cmd.stderr.match(/Cannot start container.+Error mounting '\/dev\/mapper\/docker/)
+        next
+      when docker_cmd.stderr.match(/Cannot start container.+Error getting container .+ from driver.*devicemapper/)
+        next
+      else
+        puts "ERROR running docker command, exit status is #{docker_cmd.exitstatus}, duration was #{duration_string}."
+        exit 1
+      end
+    end
+    docker_success = true
+    break
+  end
+
+  unless docker_success
+    puts "Unable to successfully run the docker build command after multiple attempts. Exiting!"
+    exit 1
+  end
+
+  puts "Docker run completed, duration was #{duration_string}."
 end
 
 def build_omnibus_cmd(pkg)
@@ -580,42 +584,7 @@ task :test do
     ].join(" ")
     puts "Executing: " + docker_cmd_string
     unless dry_run
-      docker_success = false
-      duration_string = nil
-      (1..10).each do |docker_attempt|
-        puts "Docker attempt: #{docker_attempt}"
-        docker_cmd = Mixlib::ShellOut.new(docker_cmd_string,
-                                          :timeout     => 60 * 60,
-                                          :live_stream => $stdout)
-        test_duration = Benchmark.realtime do
-          docker_cmd.run_command
-        end
-        duration_string = ChronicDuration.output(test_duration.round(0), :format => :short)
-        puts "STDOUT: "
-        puts "#{docker_cmd.stdout}"
-        puts "STDERR: "
-        puts "#{docker_cmd.stderr}"
-
-        if docker_cmd.error?
-          case
-          when docker_cmd.stderr.match(/Cannot start container.+Error mounting '\/dev\/mapper\/docker/)
-            next
-          when docker_cmd.stderr.match(/Cannot start container.+Error getting container .+ from driver.*devicemapper/)
-            next
-          else
-            puts "ERROR running docker command, exit status is #{docker_cmd.exitstatus}, duration was #{duration_string}."
-            exit 1
-          end
-        end
-        docker_success = true
-        break
-      end
-
-      unless docker_success
-        puts "Unable to run the docker test command after multiple attempts. Exiting!"
-        exit 1
-      end
-      puts "Test with docker completed, duration was #{duration_string}."
+      run_docker(docker_cmd_string)
       puts "Removing #{pkg.package_file} from packages.flapjack.io/tmp"
       Mixlib::ShellOut.new("aws s3 rm s3://packages.flapjack.io/tmp/#{pkg.package_file}" +
                            "--region us-east-1 2>&1", :live_stream => $stdout).run_command.error!
