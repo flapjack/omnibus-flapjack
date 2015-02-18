@@ -147,6 +147,10 @@ task :build do
 
     puts "Purging the container"
     Mixlib::ShellOut.new("docker rm #{container_id}").run_command.error!
+
+    puts "Uploading #{pkg.package_file} packages to packages.flapjack.io/tmp"
+    Mixlib::ShellOut.new("aws s3 cp pkg/#{pkg.package_file} s3://packages.flapjack.io/tmp/ --acl public-read " +
+                         "--region us-east-1 2>&1", :live_stream => $stdout).run_command.error!
   end
 end
 
@@ -612,6 +616,9 @@ task :test do
         exit 1
       end
       puts "Test with docker completed, duration was #{duration_string}."
+      puts "Removing #{pkg.package_file} from packages.flapjack.io/tmp"
+      Mixlib::ShellOut.new("aws s3 rm s3://packages.flapjack.io/tmp/#{pkg.package_file}" +
+                           "--region us-east-1 2>&1", :live_stream => $stdout).run_command.error!
     end
   end
 end
