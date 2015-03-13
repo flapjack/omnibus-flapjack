@@ -8,6 +8,8 @@ export BUILD_REF="v1.4.0"
 
 export BUILD_REF_CLEAN=`echo ${BUILD_REF} | sed s,/,.,`
 
+packagecloud_creds="packagecloud_user=ada@example.com packagecloud_token=xxx"
+
 echo "USER DATA SCRIPT STARTING AT `date`"
 echo "UPDATING omnibus-flapjack"
 
@@ -17,10 +19,10 @@ echo "CONFIGURING AWSCLI"
 
 su - ubuntu -c 'omnibus-flapjack/configure_awscli --aws-access-key-id xxxx --aws-secret-access-key xxxx --default-region us-east-1'
 
-su - ubuntu -c "cd omnibus-flapjack && bundle exec ./build_and_publish centos 6 ${BUILD_REF}"
-su - ubuntu -c "cd omnibus-flapjack && bundle exec ./build_and_publish debian wheezy ${BUILD_REF}"
-su - ubuntu -c "cd omnibus-flapjack && bundle exec ./build_and_publish ubuntu trusty ${BUILD_REF}"
-su - ubuntu -c "cd omnibus-flapjack && bundle exec ./build_and_publish ubuntu precise ${BUILD_REF}"
+su - ubuntu -c "cd omnibus-flapjack && bundle exec ./build_and_publish centos 6 ${BUILD_REF} ${packagecloud_creds}"
+su - ubuntu -c "cd omnibus-flapjack && bundle exec ./build_and_publish debian wheezy ${BUILD_REF} ${packagecloud_creds}"
+su - ubuntu -c "cd omnibus-flapjack && bundle exec ./build_and_publish ubuntu trusty ${BUILD_REF} ${packagecloud_creds}"
+su - ubuntu -c "cd omnibus-flapjack && bundle exec ./build_and_publish ubuntu precise ${BUILD_REF} ${packagecloud_creds}"
 
 export BUILD_TSTAMP=`date +%Y%m%dT%H%M%S`
 

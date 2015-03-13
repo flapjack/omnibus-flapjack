@@ -124,7 +124,7 @@ def run_docker(docker_cmd_string)
   (1..10).each do |docker_attempt|
     puts "Docker attempt: #{docker_attempt}"
     docker_cmd = Mixlib::ShellOut.new(docker_cmd_string,
-                                      :timeout     => 60 * 60,
+                                      :timeout     => 60 * 60 * 3,
                                       :live_stream => $stdout)
     test_duration = Benchmark.realtime do
       docker_cmd.run_command
