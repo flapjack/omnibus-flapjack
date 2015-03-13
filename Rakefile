@@ -81,6 +81,7 @@ task :build do
     '--attach', 'stdout',
     '--attach', 'stderr',
     '--detach=false',
+    '--name', "flapjack-build-#{pkg.distro_release}",
     '-e', "FLAPJACK_BUILD_REF=#{pkg.build_ref}",
     '-e', "FLAPJACK_EXPERIMENTAL_PACKAGE_VERSION=#{pkg.experimental_package_version}",
     '-e', "FLAPJACK_MAIN_PACKAGE_VERSION=#{pkg.main_package_version}",
@@ -97,13 +98,12 @@ task :build do
     sleep 10 # one time I got "Could not find the file /omnibus-flapjack/pkg in container" and a while later it worked fine
 
     puts "Retrieving package from the container"
-    container_id = `docker ps -l -q`.strip
-    Mixlib::ShellOut.new("docker cp #{container_id}:/omnibus-flapjack/pkg .").run_command.error!
+    Mixlib::ShellOut.new("docker cp flapjack-build-#{pkg.distro_release}:/omnibus-flapjack/pkg .").run_command.error!
 
     Mixlib::ShellOut.new('find pkg -maxdepth 1 -type f -exec md5sum {} \;').run_command.error!
 
     puts "Purging the container"
-    Mixlib::ShellOut.new("docker rm #{container_id}").run_command.error!
+    Mixlib::ShellOut.new("docker rm flapjack-build-#{pkg.distro_release}").run_command.error!
 
     puts "Uploading #{pkg.package_file} packages to http://packages.flapjack.io/tmp/#{pkg.package_file}"
     Mixlib::ShellOut.new("aws s3 cp pkg/#{pkg.package_file} s3://packages.flapjack.io/tmp/ --acl public-read " +
@@ -332,6 +332,10 @@ task :publish do
   end
   duration_string = ChronicDuration.output(publish_duration.round(0), :format => :short)
   puts "Publishing completed, duration was #{duration_string}"
+
+  puts "Removing #{pkg.package_file} from packages.flapjack.io/tmp"
+  Mixlib::ShellOut.new("aws s3 rm s3://packages.flapjack.io/tmp/#{pkg.package_file} " +
+                       "--region us-east-1 2>&1", :live_stream => $stdout).run_command.error!
 end
 
 desc "Update directory indexes for the deb repo"
@@ -578,17 +582,13 @@ task :test do
       'docker', 'run', '-t',
       '--attach', 'stdout',
       '--attach', 'stderr',
+      '--name', "flapjack-test-#{pkg.distro_release}",
       "-v #{Dir.pwd}:/mnt/omnibus-flapjack",
       "#{image}", 'bash', '-l', '-c',
       "\'#{test_cmd}\'"
     ].join(" ")
     puts "Executing: " + docker_cmd_string
-    unless dry_run
-      run_docker(docker_cmd_string)
-      puts "Removing #{pkg.package_file} from packages.flapjack.io/tmp"
-      Mixlib::ShellOut.new("aws s3 rm s3://packages.flapjack.io/tmp/#{pkg.package_file}" +
-                           "--region us-east-1 2>&1", :live_stream => $stdout).run_command.error!
-    end
+    run_docker(docker_cmd_string) unless dry_run
   end
 end
 
