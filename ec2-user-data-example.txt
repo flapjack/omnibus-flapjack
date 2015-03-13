@@ -4,20 +4,36 @@
 
 # Output will be found at /var/log/cloud-init-output.log
 
-echo "USER DATA SCRIPT STARTING AT `date`"
+export BUILD_REF="v1.4.0"
 
+export BUILD_REF_CLEAN=`echo ${BUILD_REF} | sed s,/,.,`
+
+echo "USER DATA SCRIPT STARTING AT `date`"
 echo "UPDATING omnibus-flapjack"
 
-su - ubuntu -c 'cd omnibus-flapjack && git pull'
+su - ubuntu -c 'cd omnibus-flapjack && git pull && bundle install'
 
 echo "CONFIGURING AWSCLI"
 
-su - ubuntu -c 'omnibus-flapjack/configure_awscli --aws-access-key-id xxxxx --aws-secret-access-key xxxxx --default-region us-east-1'
+su - ubuntu -c 'omnibus-flapjack/configure_awscli --aws-access-key-id xxxx --aws-secret-access-key xxxx --default-region us-east-1'
 
-echo "RUNNING build"
+su - ubuntu -c "cd omnibus-flapjack && bundle exec ./build_and_publish centos 6 ${BUILD_REF}"
+su - ubuntu -c "cd omnibus-flapjack && bundle exec ./build_and_publish debian wheezy ${BUILD_REF}"
+su - ubuntu -c "cd omnibus-flapjack && bundle exec ./build_and_publish ubuntu trusty ${BUILD_REF}"
+su - ubuntu -c "cd omnibus-flapjack && bundle exec ./build_and_publish ubuntu precise ${BUILD_REF}"
 
-# FIXME: how to parameterise these arguments in the user data?
-su - ubuntu -c 'cd omnibus-flapjack && ./build v1.0.0 precise'
+export BUILD_TSTAMP=`date +%Y%m%dT%H%M%S`
 
-echo "FINISHED  AT `date`"
+log="packages.flapjack.io/build_logs/flapjack_${BUILD_REF_CLEAN}-${BUILD_TSTAMP}-cloud-init-output.log"
+su - ubuntu -c "aws s3 cp /var/log/cloud-init-output.log s3://${log}"
+
+echo "uploaded user data log to s3://${log}"
+
+echo "terminating instances in 5 minutes"
+
+sleep 300
+
+echo "terminating instances NOW"
+
+su - ubuntu -c 'aws autoscaling set-desired-capacity --auto-scaling-group-name flapjack-all-distros --desired-capacity 0'
 
