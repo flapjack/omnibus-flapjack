@@ -108,6 +108,13 @@ task :build do
     puts "Uploading #{pkg.package_file} packages to http://packages.flapjack.io/tmp/#{pkg.package_file}"
     Mixlib::ShellOut.new("aws s3 cp pkg/#{pkg.package_file} s3://packages.flapjack.io/tmp/ --acl public-read " +
                          "--region us-east-1 2>&1", :live_stream => $stdout).run_command.error!
+
+    unless Dir.glob("pkg/candidate_flapjack#{pkg.major_delim}#{pkg.experimental_package_version}*").empty?
+      puts "Copying candidate package for main to s3"
+      Mixlib::ShellOut.new("aws s3 cp pkg/candidate_flapjack#{pkg.major_delim}#{pkg.experimental_package_version}*.#{pkg.file_suffix} " +
+                           's3://packages.flapjack.io/candidates/ --acl public-read ' +
+                           '--region us-east-1').run_command.error!
+    end
   end
 end
 
@@ -322,13 +329,6 @@ task :publish do
 
     OmnibusFlapjack::Publish.sync_packages_to_remote(local_dir, remote_dir)
 
-    unless Dir.glob("pkg/candidate_flapjack#{pkg.major_delim}#{pkg.experimental_package_version}*").empty?
-      puts "Copying candidate package for main to s3"
-      Mixlib::ShellOut.new("aws s3 cp pkg/candidate_flapjack#{pkg.major_delim}#{pkg.experimental_package_version}*.#{pkg.file_suffix} " +
-                           's3://packages.flapjack.io/candidates/ --acl public-read ' +
-                           '--region us-east-1').run_command.error!
-    end
-
     OmnibusFlapjack::Publish.release_lock(lockfile)
   end
   duration_string = ChronicDuration.output(publish_duration.round(0), :format => :short)
@@ -341,7 +341,6 @@ end
 
 desc "Update directory indexes for the deb repo"
 task :update_indexes_deb do
-
   local_dir   = 'deb'
   remote_dir  = 's3://packages.flapjack.io/deb'
   lockfile    = 'flapjack_upload_deb.lock'
@@ -359,7 +358,6 @@ end
 
 desc "Update directory indexes for the rpm repo"
 task :update_indexes_rpm do
-
   local_dir   = 'createrepo'
   remote_dir  = 's3://packages.flapjack.io/rpm'
   lockfile    = 'flapjack_upload_rpm.lock'
