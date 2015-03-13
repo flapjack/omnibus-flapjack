@@ -36,7 +36,7 @@ module OmnibusFlapjack
 
           if docker_cmd.stderr.match(/Cannot start container.+Error mounting '\/dev\/mapper\/docker/) ||
              docker_cmd.stderr.match(/Cannot start container.+Error getting container .+ from driver.*devicemapper/)
-            docker_name = docker_cmd_string.match(/--name (\S+)/)[1]
+            docker_name = command.match(/--name (\S+)/)[1]
             puts "Deleting container and retrying the docker command"
             Mixlib::ShellOut.new("docker rm #{docker_name}").run_command
             next
