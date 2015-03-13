@@ -7,7 +7,7 @@ require 'chronic_duration'
 module OmnibusFlapjack
   module Helpers
 
-    def run_docker (command, opts = {})
+    def self.run_docker (command, opts = {})
       timeout      = opts[:timeout]      || 60 * 60 * 3
       live_stream  = opts[:live_stream]  || $stdout
       max_attempts = opts[:max_attempts] || 10
@@ -57,7 +57,7 @@ module OmnibusFlapjack
       puts "Docker run completed, duration was #{duration_string}."
     end
 
-    def build_omnibus_cmd(pkg)
+    def self.build_omnibus_cmd(pkg)
       omnibus_cmd = [
         "if [[ -f /opt/rh/ruby193/enable ]]; then source /opt/rh/ruby193/enable; fi",
         "export PATH=$PATH:/usr/local/go/bin",
