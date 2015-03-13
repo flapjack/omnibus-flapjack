@@ -10,7 +10,7 @@ require 'logger'
 # Wrapper for the build_and_publish rake task
 # Assumes you have permission to packages.flapjack.io S3 bucket for writing
 
-distro, distro_release, build_ref, packagecloud_user, packagecloud_token = ARGV
+distro, distro_release, build_ref = ARGV
 
 build_ref_clean = build_ref.sub(/\//, '.')
 
@@ -31,12 +31,10 @@ log = Logger.new(log_file)
 log.info "Running build of #{build_ref} on #{distro} #{distro_release} at #{tstamp}"
 
 rake = nil
-packagecloud_creds = packagecloud_user ?
-  "packagecloud_user=#{packagecloud_user} packagecloud_token=#{packagecloud_token}" : ""
 
 build_duration = Benchmark.realtime do
   rake = Mixlib::ShellOut.new("OFFICIAL_FLAPJACK_PACKAGE=true BUILD_REF=#{build_ref} DISTRO=#{distro} " +
-    "DISTRO_RELEASE=#{distro_release} " + packagecloud_creds + " " +
+    "DISTRO_RELEASE=#{distro_release} " +
     "bundle exec rake build_and_publish 2>&1", :timeout => 60 * 60 * 3)
     #"DISTRO_RELEASE=#{distro_release} bundle exec rake build_and_publish 2>&1 | " +
     #"tee -a #{log}", :timeout => 60 * 60 * 3)
