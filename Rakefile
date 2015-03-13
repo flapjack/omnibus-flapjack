@@ -145,6 +145,8 @@ def run_docker(docker_cmd_string)
         puts "ERROR running docker command, exit status is #{docker_cmd.exitstatus}, duration was #{duration_string}."
         exit 1
       end
+      docker_name = docker_cmd_string.match(/--name (\S+)/)[1]
+      Mixlib::ShellOut.new("docker rm #{docker_name}")
     end
     docker_success = true
     break
