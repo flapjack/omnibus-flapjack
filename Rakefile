@@ -459,7 +459,7 @@ task :test do
 
     test_cmd = test_cmd.flatten.join(" && ")
 
-    container_name = "flapjack-test-#{pkg.package_file}"
+    container_name = "flapjack-test-#{pkg.distro_release}"
 
     docker_cmd_string = [
       'docker', 'run', '-t',
