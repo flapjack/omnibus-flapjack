@@ -310,6 +310,8 @@ task :publish do
   publish_duration = Benchmark.realtime do
     OmnibusFlapjack::Publish.sync_packages_to_local(local_dir, remote_dir)
 
+    OmnibusFlapjack::Publish.add_to_packagecloud(pkg)
+
     case pkg.distro
     when 'ubuntu', 'debian'
       OmnibusFlapjack::Publish.add_to_deb_repo(pkg)
@@ -455,6 +457,8 @@ task :promote do
   Mixlib::ShellOut.new('find pkg -maxdepth 1 -type f -exec md5sum {} \;').run_command.error!
 
   OmnibusFlapjack::Publish.sync_packages_to_local(local_dir, remote_dir)
+
+  OmnibusFlapjack::Publish.add_to_packagecloud(pkg, 'main')
 
   case pkg.distro
   when 'ubuntu', 'debian'

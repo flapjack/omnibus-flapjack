@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+require 'packagecloud'
 
 module OmnibusFlapjack
   class Publish
@@ -198,6 +199,28 @@ module OmnibusFlapjack
           Mixlib::ShellOut.new('createrepo . 2>&1', :live_stream => $stdout).run_command.error!
         end
       end
+
+      def add_to_packagecloud(pkg, component='experimental')
+        begin
+          credentials = Packagecloud::Credentials.new(ENV['packagecloud_user'], ENV['packagecloud_token'])
+          packagecloud = Packagecloud::Client.new(credentials)
+
+          repo_name = case component
+          when 'experimental'
+            "flapjack/testing"
+          when 'main'
+            "flapjack/releases"
+          end
+          pc_distro_id = packagecloud.find_distribution_id("#{pkg.distro}/#{pkg.distro_release}")
+          filename = "pkg/#{pkg.package_file}"
+          package = Packagecloud::Package.new(open(filename), pc_distro_id)
+          packagecloud.put_package(repo_name, package)
+        rescue => e
+          puts e.message
+          puts e.backtrace
+        end
+      end
+
     end # class << self
   end
 end
