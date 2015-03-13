@@ -21,6 +21,7 @@ $:.push(File.expand_path(File.join(__FILE__, '..', 'lib')))
 require 'mixlib/shellout'
 require 'omnibus-flapjack/package'
 require 'omnibus-flapjack/publish'
+require 'omnibus-flapjack/helpers'
 require 'fileutils'
 require 'benchmark'
 require 'chronic_duration'
@@ -74,7 +75,7 @@ task :build do
     end
   end
 
-  omnibus_cmd = build_omnibus_cmd(pkg)
+  omnibus_cmd = OmnibusFlapjack::Helpers.build_omnibus_cmd(pkg)
 
   container_name = "flapjack-build-#{pkg.distro_release}"
 
@@ -95,7 +96,7 @@ task :build do
   ].join(" ")
   puts "Executing: " + docker_cmd_string
   unless dry_run
-    run_docker(docker_cmd_string)
+    OmnibusFlapjack::Helpers.run_docker(docker_cmd_string)
 
     sleep 10 # one time I got "Could not find the file /omnibus-flapjack/pkg in container" and a while later it worked fine
 
@@ -118,124 +119,6 @@ task :build do
                            '--region us-east-1').run_command.error!
     end
   end
-end
-
-def run_docker(docker_cmd_string)
-  docker_success = false
-  duration_string = nil
-  (1..10).each do |docker_attempt|
-    puts "Docker attempt: #{docker_attempt} at #{Time.new}"
-    docker_cmd = Mixlib::ShellOut.new(docker_cmd_string,
-                                      :timeout     => 60 * 60 * 3,
-                                      :live_stream => $stdout)
-    test_duration = Benchmark.realtime do
-      docker_cmd.run_command
-    end
-    duration_string = ChronicDuration.output(test_duration.round(0), :format => :short)
-    puts "STDOUT: "
-    puts "#{docker_cmd.stdout}"
-    puts "STDERR: "
-    puts "#{docker_cmd.stderr}"
-
-    if docker_cmd.error?
-
-      if docker_cmd.stderr.match(/Cannot start container.+Error mounting '\/dev\/mapper\/docker/) ||
-         docker_cmd.stderr.match(/Cannot start container.+Error getting container .+ from driver.*devicemapper/)
-        docker_name = docker_cmd_string.match(/--name (\S+)/)[1]
-        Mixlib::ShellOut.new("docker rm #{docker_name}").run_command
-        next
-      end
-
-      puts "ERROR running docker command, exit status is #{docker_cmd.exitstatus}, duration was #{duration_string}."
-      exit 1
-    end
-    docker_success = true
-    break
-  end
-
-  unless docker_success
-    puts "Unable to successfully run the docker build command after multiple attempts. Exiting!"
-    exit 1
-  end
-
-  puts "Docker run completed, duration was #{duration_string}."
-end
-
-def build_omnibus_cmd(pkg)
-  omnibus_cmd = [
-    "if [[ -f /opt/rh/ruby193/enable ]]; then source /opt/rh/ruby193/enable; fi",
-    "export PATH=$PATH:/usr/local/go/bin",
-    "cd omnibus-flapjack",
-    "git pull",
-    "cp .rpmmacros ~/.rpmmacros",
-    "bundle update omnibus",
-    "bundle update omnibus-software",
-    "bundle install --binstubs",
-    "bin/omnibus build --log-level=info " +
-      "--override use_s3_caching:false " +
-      "--override use_git_caching:true " +
-      "flapjack",
-    "cd /omnibus-flapjack/pkg"
-  ]
-
-  verify_files = [
-    "/opt/flapjack/bin/flapjack",
-    "/opt/flapjack/embedded/lib",
-    "/opt/flapjack/embedded/bin/redis-server",
-    "/etc/init.d/flapjack",
-    "/etc/init.d/redis-flapjack",
-    "/opt/flapjack/embedded/bin/redis-server",
-    "/opt/flapjack/embedded/bin/redis-server",
-    "/opt/flapjack/embedded/etc/redis/redis-flapjack.conf",
-    ".go$"
-  ]
-
-  case pkg.distro
-  when 'ubuntu', 'debian'
-    # Ubuntu/debian package validation
-    omnibus_cmd << [
-      "EXPERIMENTAL_FILENAME=$(ls flapjack_#{pkg.experimental_package_version}*.deb)",
-      "dpkg -c ${EXPERIMENTAL_FILENAME} > /tmp/flapjack_files"
-    ]
-    omnibus_cmd << verify_files.map { |f| "grep #{f} /tmp/flapjack_files &>/dev/null" }
-
-    unless pkg.main_package_version.nil?
-      omnibus_cmd << [
-        "EXPERIMENTAL_FILENAME=$(ls flapjack_#{pkg.experimental_package_version}*.deb)",
-        "dpkg-deb -R ${EXPERIMENTAL_FILENAME} repackage",
-        "sed -i s@#{pkg.experimental_package_version}-1@#{pkg.main_package_version}@g repackage/DEBIAN/control",
-        "sed -i s@#{pkg.experimental_package_version}@#{pkg.main_package_version}@g repackage/opt/flapjack/version-manifest.txt",
-        "dpkg-deb -b repackage candidate_${EXPERIMENTAL_FILENAME}",
-        "rm -r repackage"
-      ]
-      # Validate the newly created main candidate
-      omnibus_cmd << [
-        "EXPERIMENTAL_FILENAME=$(ls flapjack_#{pkg.experimental_package_version}*.deb)",
-        "dpkg -c candidate_${EXPERIMENTAL_FILENAME} > /tmp/flapjack_files"
-        ]
-      omnibus_cmd << verify_files.map { |f| "grep #{f} /tmp/flapjack_files &>/dev/null" }
-    end
-  when 'centos'
-    # Centos package validation
-    omnibus_cmd << [
-      "EXPERIMENTAL_FILENAME=$(ls flapjack-#{pkg.experimental_package_version}*.rpm)",
-      "rpm -qpl ${EXPERIMENTAL_FILENAME} > /tmp/flapjack_files"
-    ]
-    omnibus_cmd << verify_files.map { |f| "grep #{f} /tmp/flapjack_files &>/dev/null" }
-
-    unless pkg.main_package_version.nil?
-      omnibus_cmd << [
-        "EXPERIMENTAL_FILENAME=$(ls flapjack-#{pkg.experimental_package_version}*.rpm)",
-        "cp -a ${EXPERIMENTAL_FILENAME} candidate_${EXPERIMENTAL_FILENAME}"
-        # "mkdir -p repackage",
-        # "cd repackage",
-        # "rpm2cpio ../${EXPERIMENTAL_FILENAME} | cpio -idmv",
-        # "sed -i s@#{pkg.experimental_package_version}-1@#{pkg.main_package_version}@g opt/flapjack/version-manifest.txt",
-        # "cpio -ovF ../candidate_${EXPERIMENTAL_FILENAME}"
-      ]
-    end
-  end
-  omnibus_cmd.flatten.join(" && ")
 end
 
 desc "Publish a Flapjack package (to experimental)"
@@ -589,7 +472,7 @@ task :test do
     ].join(" ")
     puts "Executing: " + docker_cmd_string
     unless dry_run
-      run_docker(docker_cmd_string)
+      OmnibusFlapjack::Helpers.run_docker(docker_cmd_string)
       puts "Purging the container #{container_name}"
       Mixlib::ShellOut.new("docker rm #{container_name}").run_command
     end
