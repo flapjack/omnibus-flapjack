@@ -39,7 +39,7 @@
       "sudo sh -c \"echo deb https://get.docker.com/ubuntu docker main > /etc/apt/sources.list.d/docker.list\"",
       "echo 'deb http://repo.aptly.info/ squeeze main' | sudo tee /etc/apt/sources.list.d/aptly.list",
       "sudo apt-get update",
-      "sudo apt-get install -y lxc-docker aptly vagrant",
+      "sudo apt-get install -y lxc-docker vagrant aptly=0.8",
       "sudo gem install bundler",
       "sudo gem install rake",
       "sudo usermod -G docker ubuntu",
