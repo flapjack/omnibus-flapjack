@@ -136,17 +136,16 @@ def run_docker(docker_cmd_string)
     # no such file or directory"
     #
     if docker_cmd.error?
-      case
-      when docker_cmd.stderr.match(/Cannot start container.+Error mounting '\/dev\/mapper\/docker/)
+
+      if docker_cmd.stderr.match(/Cannot start container.+Error mounting '\/dev\/mapper\/docker/) ||
+         docker_cmd.stderr.match(/Cannot start container.+Error getting container .+ from driver.*devicemapper/)
+        docker_name = docker_cmd_string.match(/--name (\S+)/)[1]
+        Mixlib::ShellOut.new("docker rm #{docker_name}").run_command.error!
         next
-      when docker_cmd.stderr.match(/Cannot start container.+Error getting container .+ from driver.*devicemapper/)
-        next
-      else
-        puts "ERROR running docker command, exit status is #{docker_cmd.exitstatus}, duration was #{duration_string}."
-        exit 1
       end
-      docker_name = docker_cmd_string.match(/--name (\S+)/)[1]
-      Mixlib::ShellOut.new("docker rm #{docker_name}")
+
+      puts "ERROR running docker command, exit status is #{docker_cmd.exitstatus}, duration was #{duration_string}."
+      exit 1
     end
     docker_success = true
     break
