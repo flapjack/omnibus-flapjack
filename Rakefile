@@ -140,7 +140,7 @@ def run_docker(docker_cmd_string)
       if docker_cmd.stderr.match(/Cannot start container.+Error mounting '\/dev\/mapper\/docker/) ||
          docker_cmd.stderr.match(/Cannot start container.+Error getting container .+ from driver.*devicemapper/)
         docker_name = docker_cmd_string.match(/--name (\S+)/)[1]
-        Mixlib::ShellOut.new("docker rm #{docker_name}").run_command.error!
+        Mixlib::ShellOut.new("docker rm #{docker_name}").run_command
         next
       end
 
