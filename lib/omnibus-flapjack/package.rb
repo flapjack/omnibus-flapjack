@@ -31,7 +31,7 @@ module OmnibusFlapjack
         when 'ubuntu', 'debian'
           experimental_package_version.split(minor_delim).last.split('-').first
         when 'centos'
-          @package_file.split('.')[-3].match(/el(.+)-1/)[1]
+          @package_file.split('.')[-4].match(/el(.+)-1/)[1]
         end
       end
     end
@@ -68,6 +68,7 @@ module OmnibusFlapjack
           a = @package_file.split(major_delim)[1].split('~')
           a.length > 4 ? "#{a[0]}#{a[1]}" : a[0]
         when 'centos'
+          # flapjack-1.4.0_0.20150312130042rc1.el6-1.el6.x86_64.rpm
           simple_version, date_and_crap = @package_file.split(major_delim)[1].split(minor_delim)
           _, addendum = date_and_crap.split('.')[1].split(/\d{14}/)
           "#{simple_version}#{addendum}"
@@ -104,7 +105,7 @@ module OmnibusFlapjack
       when 'ubuntu', 'debian'
         "flapjack_#{experimental_package_version}-1_#{arch}.#{file_suffix}"
       when 'centos'
-        "flapjack-#{experimental_package_version}-1.#{arch}.#{file_suffix}"
+        "flapjack-#{experimental_package_version}-1.el#{distro_release}.#{arch}.#{file_suffix}"
       end
     end
 
