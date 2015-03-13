@@ -76,12 +76,14 @@ task :build do
 
   omnibus_cmd = build_omnibus_cmd(pkg)
 
+  container_name = "flapjack-build-#{pkg.distro_release}"
+
   docker_cmd_string = [
     'docker', 'run', '-t',
     '--attach', 'stdout',
     '--attach', 'stderr',
     '--detach=false',
-    '--name', "flapjack-build-#{pkg.distro_release}",
+    '--name', container_name,
     '-e', "FLAPJACK_BUILD_REF=#{pkg.build_ref}",
     '-e', "FLAPJACK_EXPERIMENTAL_PACKAGE_VERSION=#{pkg.experimental_package_version}",
     '-e', "FLAPJACK_MAIN_PACKAGE_VERSION=#{pkg.main_package_version}",
@@ -98,12 +100,12 @@ task :build do
     sleep 10 # one time I got "Could not find the file /omnibus-flapjack/pkg in container" and a while later it worked fine
 
     puts "Retrieving package from the container"
-    Mixlib::ShellOut.new("docker cp flapjack-build-#{pkg.distro_release}:/omnibus-flapjack/pkg .").run_command.error!
+    Mixlib::ShellOut.new("docker cp #{container_name}:/omnibus-flapjack/pkg .").run_command.error!
 
     Mixlib::ShellOut.new('find pkg -maxdepth 1 -type f -exec md5sum {} \;').run_command.error!
 
-    puts "Purging the container"
-    Mixlib::ShellOut.new("docker rm flapjack-build-#{pkg.distro_release}").run_command.error!
+    puts "Purging the container #{container_name}"
+    Mixlib::ShellOut.new("docker rm #{container_name}").run_command
 
     puts "Uploading #{pkg.package_file} packages to http://packages.flapjack.io/tmp/#{pkg.package_file}"
     Mixlib::ShellOut.new("aws s3 cp pkg/#{pkg.package_file} s3://packages.flapjack.io/tmp/ --acl public-read " +
@@ -122,7 +124,7 @@ def run_docker(docker_cmd_string)
   docker_success = false
   duration_string = nil
   (1..10).each do |docker_attempt|
-    puts "Docker attempt: #{docker_attempt}"
+    puts "Docker attempt: #{docker_attempt} at #{Time.new}"
     docker_cmd = Mixlib::ShellOut.new(docker_cmd_string,
                                       :timeout     => 60 * 60 * 3,
                                       :live_stream => $stdout)
@@ -135,13 +137,6 @@ def run_docker(docker_cmd_string)
     puts "STDERR: "
     puts "#{docker_cmd.stderr}"
 
-    # time="2015-02-17T20:38:19Z" level="fatal" msg="Error response from daemon: Cannot start
-    # container 1661905ff7e94437ebf3a81de59a0a2f716dc32af2fcb14ccace8ff941c4751d: Error getting
-    # container 1661905ff7e94437ebf3a81de59a0a2f716dc32af2fcb14ccace8ff941c4751d from driver
-    # devicemapper: open
-    # /dev/mapper/docker-202:1-31547-1661905ff7e94437ebf3a81de59a0a2f716dc32af2fcb14ccace8ff941c4751d:
-    # no such file or directory"
-    #
     if docker_cmd.error?
 
       if docker_cmd.stderr.match(/Cannot start container.+Error mounting '\/dev\/mapper\/docker/) ||
@@ -581,17 +576,23 @@ task :test do
 
     test_cmd = test_cmd.flatten.join(" && ")
 
+    container_name = "flapjack-test-#{pkg.package_file}"
+
     docker_cmd_string = [
       'docker', 'run', '-t',
       '--attach', 'stdout',
       '--attach', 'stderr',
-      '--name', "flapjack-test-#{pkg.distro_release}",
+      '--name', container_name,
       "-v #{Dir.pwd}:/mnt/omnibus-flapjack",
       "#{image}", 'bash', '-l', '-c',
       "\'#{test_cmd}\'"
     ].join(" ")
     puts "Executing: " + docker_cmd_string
-    run_docker(docker_cmd_string) unless dry_run
+    unless dry_run
+      run_docker(docker_cmd_string)
+      puts "Purging the container #{container_name}"
+      Mixlib::ShellOut.new("docker rm #{container_name}").run_command
+    end
   end
 end
 
