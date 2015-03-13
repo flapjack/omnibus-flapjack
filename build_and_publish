@@ -45,10 +45,10 @@ end
 
 if rake.error?
   log.info "Failure running `bundle exec rake build_and_publish`"
-  log.info "Command: #{rake.inspect}"
 else
   log.info "Success running `bundle exec rake build_and_publish`"
 end
+log.info "Command: #{rake.command}"
 log.info "Output: "
 log.info rake.stdout
 
@@ -57,7 +57,6 @@ success_string = !rake.error? ? 'Successful' : 'Failed'
 
 log.info "#{success_string} build of #{build_ref} on #{distro} " +
   "#{distro_release} at #{Time.now.utc.iso8601}, duration: #{duration_string}"
-
 
 log_dst = "packages.flapjack.io/build_logs/#{log_file}"
 puts "#{success_string}. Uploading log to #{log_dst}"
