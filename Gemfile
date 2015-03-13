@@ -9,6 +9,7 @@ gem 'pry'
 gem 'cinch'
 gem 'chronic_duration'
 gem 'json'
+gem 'packagecloud-ruby'
 
 group :development, :test do
   gem 'rspec'
