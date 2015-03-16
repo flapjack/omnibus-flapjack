@@ -207,14 +207,25 @@ module OmnibusFlapjack
 
           repo_name = case component
           when 'experimental'
-            "flapjack/testing"
+            "v1-testing"
           when 'main'
-            "flapjack/releases"
+            "v1-releases"
           end
-          pc_distro_id = packagecloud.find_distribution_id("#{pkg.distro}/#{pkg.distro_release}")
+
+          pc_distro_string = case pkg.distro
+          when 'centos'
+            "el/#{pkg.distro_release}"
+          else
+            "#{pkg.distro}/#{pkg.distro_release}"
+          end
+          pc_distro_id = packagecloud.find_distribution_id(pc_distro_string)
+          raise "Failed to find distro id" if pc_distro_id.nil?
+
           filename = "pkg/#{pkg.package_file}"
           package = Packagecloud::Package.new(open(filename), pc_distro_id)
-          packagecloud.put_package(repo_name, package)
+          upload = packagecloud.put_package(repo_name, package)
+          raise "Packagecloud upload failed" unless upload.succeeded
+          puts "Upload of #{filename} to Packagecloud in #{repo_name} was successful"
         rescue => e
           puts e.message
           puts e.backtrace
