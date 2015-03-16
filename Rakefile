@@ -29,6 +29,12 @@ require 'chronic_duration'
 dry_run = (ENV["DRY_RUN"].nil? || ENV["DRY_RUN"].empty?) ? false : true
 official_pkg = (ENV["OFFICIAL_FLAPJACK_PACKAGE"].nil? || ENV["OFFICIAL_FLAPJACK_PACKAGE"].empty?) ? false : true
 pkg = nil
+if ENV['packagecloud_user']
+  packagecloud_credentials = {
+    :username => ENV['packagecloud_user'],
+    :token    => ENV['packagecloud_token']
+  }
+end
 
 task :default do
   sh %{rake -T}
@@ -188,7 +194,7 @@ task :publish do
   publish_duration = Benchmark.realtime do
     OmnibusFlapjack::Publish.sync_packages_to_local(local_dir, remote_dir)
 
-    OmnibusFlapjack::Publish.add_to_packagecloud(pkg)
+    OmnibusFlapjack::Publish.add_to_packagecloud(pkg, packagecloud_credentials) if packagecloud_credentials
 
     case pkg.distro
     when 'ubuntu', 'debian'
@@ -336,7 +342,7 @@ task :promote do
 
   OmnibusFlapjack::Publish.sync_packages_to_local(local_dir, remote_dir)
 
-  OmnibusFlapjack::Publish.add_to_packagecloud(pkg, 'main')
+  OmnibusFlapjack::Publish.add_to_packagecloud(pkg, packagecloud_credentials, 'main') if packagecloud_credentials
 
   case pkg.distro
   when 'ubuntu', 'debian'

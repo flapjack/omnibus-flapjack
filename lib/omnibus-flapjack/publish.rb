@@ -200,10 +200,10 @@ module OmnibusFlapjack
         end
       end
 
-      def add_to_packagecloud(pkg, component='experimental')
+      def add_to_packagecloud(pkg, credentials, component='experimental')
         begin
-          credentials = Packagecloud::Credentials.new(ENV['packagecloud_user'], ENV['packagecloud_token'])
-          packagecloud = Packagecloud::Client.new(credentials)
+          auth = Packagecloud::Credentials.new(credentials[:username], credentials[:token])
+          packagecloud = Packagecloud::Client.new(auth)
 
           repo_name = case component
           when 'experimental'
@@ -223,6 +223,7 @@ module OmnibusFlapjack
 
           filename = "pkg/#{pkg.package_file}"
           package = Packagecloud::Package.new(open(filename), pc_distro_id)
+          puts "Uploading #{filename} to Packagecloud in #{repo_name}"
           upload = packagecloud.put_package(repo_name, package)
           raise "Packagecloud upload failed" unless upload.succeeded
           puts "Upload of #{filename} to Packagecloud in #{repo_name} was successful"
