@@ -12,29 +12,29 @@ module OmnibusFlapjack
       live_stream  = opts[:live_stream]  || $stdout
       max_attempts = opts[:max_attempts] || 10
 
-	    docker_success  = false
-	    duration_string = nil
+      docker_success  = false
+      duration_string = nil
 
       puts "Executing command: #{command}"
 
-	    (1..max_attempts).each do |attempt|
-	      puts "Docker attempt: #{attempt} at #{Time.new}"
-	      docker_cmd = Mixlib::ShellOut.new(command,
-	                                        :timeout     => timeout,
-	                                        :live_stream => live_stream)
-	      test_duration = Benchmark.realtime do
-	        docker_cmd.run_command
-	      end
-	      duration_string = ChronicDuration.output(test_duration.round(0), :format => :short)
+      (1..max_attempts).each do |attempt|
+        puts "Docker attempt: #{attempt} at #{Time.new}"
+        docker_cmd = Mixlib::ShellOut.new(command,
+                                          :timeout     => timeout,
+                                          :live_stream => live_stream)
+        test_duration = Benchmark.realtime do
+          docker_cmd.run_command
+        end
+        duration_string = ChronicDuration.output(test_duration.round(0), :format => :short)
         puts "docker command completed with exit code: #{docker_cmd.exitstatus}"
-	      puts "STDOUT: "
-	      puts "#{docker_cmd.stdout}"
-	      puts "STDERR: "
-	      puts "#{docker_cmd.stderr}"
+        puts "STDOUT: "
+        puts "#{docker_cmd.stdout}"
+        puts "STDERR: "
+        puts "#{docker_cmd.stderr}"
 
         if docker_cmd.error?
 
-          if docker_cmd.stderr.match(/Cannot start container.+Error mounting '\/dev\/mapper\/docker/) ||
+          if docker_cmd.stderr.match(%r{Cannot start container.+Error mounting '/dev/mapper/docker}) ||
              docker_cmd.stderr.match(/Cannot start container.+Error getting container .+ from driver.*devicemapper/)
             docker_name = command.match(/--name (\S+)/)[1]
             puts "Deleting container and retrying the docker command"
@@ -47,7 +47,7 @@ module OmnibusFlapjack
         end
         docker_success = true
         break
-	    end
+      end
 
       unless docker_success
         puts "Unable to successfully run the docker build command after #{max_attempts} attempts. Exiting!"
