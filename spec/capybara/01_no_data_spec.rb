@@ -16,8 +16,9 @@ describe "Test Flapjack before data is added", :type => :feature do
   it "Check All Entities" do
     visit '/entities_all'
 
-    content = [ 'Entities', 'failing out of 1' ]
+    content = [ 'Entities', 'failing out of' ]
     content.each { |c| expect(page).to have_content c }
+    expect(page).not_to have_content('failing out of 0')
   end
 
   it "Check Failing Entities" do
@@ -25,6 +26,7 @@ describe "Test Flapjack before data is added", :type => :feature do
 
     content = [ 'Failing Entities', 'failing out of']
     content.each { |c| expect(page).to have_content c }
+    expect(page).not_to have_content('failing out of 0')
   end
 
   it "All Checks" do
@@ -35,6 +37,7 @@ describe "Test Flapjack before data is added", :type => :feature do
       'SSH', 'Current Users'
     ]
     content.each { |c| expect(page).to have_content c }
+    expect(page).not_to have_content('failing out of 0')
   end
 
   it "Check Failing Checks" do
@@ -44,6 +47,7 @@ describe "Test Flapjack before data is added", :type => :feature do
       'Entity', 'Check', 'State', 'Summary', 'Last State Change', 'Last Update', 'Last Notification'
     ]
     content.each { |c| expect(page).to have_content c }
+    expect(page).not_to have_content('failing out of 0')
   end
 
   it "Check Contacts" do
