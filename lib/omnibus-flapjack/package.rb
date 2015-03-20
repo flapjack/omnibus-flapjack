@@ -31,7 +31,7 @@ module OmnibusFlapjack
         when 'ubuntu', 'debian'
           experimental_package_version.split(minor_delim).last.split('-').first
         when 'centos'
-          @package_file.split('.')[-4].match(/el(.+)-1/)[1]
+          @package_file.split('_')[1].split('.')[-2].match(/el(.+)/)[1]
         end
       end
     end
