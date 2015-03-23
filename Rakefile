@@ -42,7 +42,6 @@ end
 
 desc "Build Flapjack packages"
 task :build do
-
   begin
     pkg ||= OmnibusFlapjack::Package.new(
       :build_ref      => ENV['BUILD_REF'],
@@ -160,29 +159,29 @@ task :publish do
 
   case pkg.distro
   when 'ubuntu', 'debian'
-      local_dir   = 'aptly'
-      remote_dir  = 's3://packages.flapjack.io/aptly'
-      lockfile    = 'flapjack_upload_deb.lock'
+    local_dir   = 'aptly'
+    remote_dir  = 's3://packages.flapjack.io/aptly'
+    lockfile    = 'flapjack_upload_deb.lock'
 
-      puts "Creating aptly.conf"
-      # Create aptly config file
-      aptly_config = <<-eos
-        {
-          "rootDir": "#{start_dir}/#{local_dir}",
-          "downloadConcurrency": 4,
-          "downloadSpeedLimit": 0,
-          "architectures": [],
-          "dependencyFollowSuggests": false,
-          "dependencyFollowRecommends": false,
-          "dependencyFollowAllVariants": false,
-          "dependencyFollowSource": false,
-          "gpgDisableSign": false,
-          "gpgDisableVerify": false,
-          "downloadSourcePackages": false,
-          "S3PublishEndpoints": {}
-        }
-      eos
-      File.write('aptly.conf', aptly_config)
+    puts "Creating aptly.conf"
+    # Create aptly config file
+    aptly_config = <<-eos
+      {
+        "rootDir": "#{start_dir}/#{local_dir}",
+        "downloadConcurrency": 4,
+        "downloadSpeedLimit": 0,
+        "architectures": [],
+        "dependencyFollowSuggests": false,
+        "dependencyFollowRecommends": false,
+        "dependencyFollowAllVariants": false,
+        "dependencyFollowSource": false,
+        "gpgDisableSign": false,
+        "gpgDisableVerify": false,
+        "downloadSourcePackages": false,
+        "S3PublishEndpoints": {}
+      }
+    eos
+    File.write('aptly.conf', aptly_config)
   when 'centos'
     local_dir   = 'createrepo'
     remote_dir  = 's3://packages.flapjack.io/rpm'
@@ -294,29 +293,29 @@ task :promote do
 
   case pkg.distro
   when 'ubuntu', 'debian'
-      local_dir   = 'aptly'
-      remote_dir  = 's3://packages.flapjack.io/aptly'
-      lockfile    = 'flapjack_upload_deb.lock'
+    local_dir   = 'aptly'
+    remote_dir  = 's3://packages.flapjack.io/aptly'
+    lockfile    = 'flapjack_upload_deb.lock'
 
-      puts "Creating aptly.conf"
-      # Create aptly config file
-      aptly_config = <<-eos
-        {
-          "rootDir": "#{start_dir}/#{local_dir}",
-          "downloadConcurrency": 4,
-          "downloadSpeedLimit": 0,
-          "architectures": [],
-          "dependencyFollowSuggests": false,
-          "dependencyFollowRecommends": false,
-          "dependencyFollowAllVariants": false,
-          "dependencyFollowSource": false,
-          "gpgDisableSign": false,
-          "gpgDisableVerify": false,
-          "downloadSourcePackages": false,
-          "S3PublishEndpoints": {}
-        }
-      eos
-      File.write('aptly.conf', aptly_config)
+    puts "Creating aptly.conf"
+    # Create aptly config file
+    aptly_config = <<-eos
+      {
+        "rootDir": "#{start_dir}/#{local_dir}",
+        "downloadConcurrency": 4,
+        "downloadSpeedLimit": 0,
+        "architectures": [],
+        "dependencyFollowSuggests": false,
+        "dependencyFollowRecommends": false,
+        "dependencyFollowAllVariants": false,
+        "dependencyFollowSource": false,
+        "gpgDisableSign": false,
+        "gpgDisableVerify": false,
+        "downloadSourcePackages": false,
+        "S3PublishEndpoints": {}
+      }
+    eos
+    File.write('aptly.conf', aptly_config)
   when 'centos'
     local_dir   = 'createrepo'
     remote_dir  = 's3://packages.flapjack.io/rpm'
