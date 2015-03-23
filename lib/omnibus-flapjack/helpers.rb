@@ -136,7 +136,7 @@ module OmnibusFlapjack
 
     def self.run_tests_in_docker(options)
       # The test commands are split into three parts:
-      # Setup command: Sets up the pre-requiste packages for testing, including ruby, phantomjs, and nagios (different for each OS)
+      # Setup command: Sets up the pre-requiste packages for testing, including the correct version of ruby (different for each OS)
       # Install command: Installs Flapjack, either from puppet or from a package on the file system
       # Test command: Runs the tests (identical across OSes)
       case options[:distro]
