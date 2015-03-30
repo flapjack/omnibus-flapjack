@@ -401,10 +401,10 @@ task :test do
     raise "package_version cannot be determined" unless pkg.experimental_package_version
 
     options = {
-      :distro  => pkg.distro,
+      :distro         => pkg.distro,
       :distro_release => pkg.distro_release,
-      :arch    => pkg.arch,
-      :dry_run => dry_run
+      :arch           => pkg.arch,
+      :dry_run        => dry_run
     }
     options[:install_cmd] = case pkg.distro
     when 'ubuntu', 'debian'
@@ -452,7 +452,8 @@ task :post_publish_test do
     if File.exist?('vagrant-flapjack/Vagrantfile')
       Mixlib::ShellOut.new("cd vagrant-flapjack && git checkout test-deps-in-puppet && git pull && cd -", :live_stream => $stdout).run_command.error!
     else
-      # When docker mounts a directory that doesn't exist, it creates an empty directory.  Here, we remove the empty directory, and get the real vagrant-flapjack
+      # When docker mounts a directory that doesn't exist, it creates an empty directory.  
+      # Here, we remove the empty directory, and get the real vagrant-flapjack
       Mixlib::ShellOut.new("rm -rf vagrant-flapjack; git clone https://github.com/flapjack/vagrant-flapjack.git", :live_stream => $stdout).run_command.error!
     end
   end
@@ -466,11 +467,11 @@ task :post_publish_test do
                 "/mnt/vagrant-flapjack/dist/manifests/site.pp"
 
   options = {
-    :distro  => distro,
+    :distro         => distro,
     :distro_release => distro_release,
-    :arch    => arch,
-    :dry_run => dry_run,
-    :install_cmd => install_cmd
+    :arch           => arch,
+    :dry_run        => dry_run,
+    :install_cmd    => install_cmd
   }
   options[:extra_tests] = 'bundle exec rspec spec/capybara' unless distro == 'centos'
   OmnibusFlapjack::Helpers.run_tests_in_docker(options)
