@@ -143,8 +143,6 @@ module OmnibusFlapjack
       when 'ubuntu'
         image = "#{options[:distro]}:#{options[:distro_release]}"
         setup_cmd = [
-          # FIXME: remove me
-          "echo 192.168.7.20 archive.ubuntu.com >> /etc/hosts",
           "sed -i '/deb-src/d' /etc/apt/sources.list",
           "apt-get update",
           # TODO: more of this that is only used for capybara should be moved to the test_mode section of vagrant-flapjack
