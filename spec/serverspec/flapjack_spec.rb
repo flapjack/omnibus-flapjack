@@ -3,7 +3,6 @@ require 'serverspec_spec_helper'
 describe service('redis-flapjack'), :if => os[:family] == 'ubuntu' do
   it { should be_enabled }
 end
-
 describe service('redis-flapjack'), :if => os[:family] == 'redhat' do
   it { should_not be_enabled }
 end
@@ -11,7 +10,6 @@ end
 describe service('flapjack'), :if => os[:family] == 'ubuntu' do
   it { should be_enabled }
 end
-
 describe service('flapjack'), :if => os[:family] == 'redhat' do
   it { should_not be_enabled }
 end
@@ -21,6 +19,7 @@ describe package('flapjack') do
 end
 
 describe service('flapjack') do
+
   it { should be_running }
 end
 
@@ -37,11 +36,9 @@ end
 describe port(3080) do
   it { should be_listening }
 end
-
 describe port(3081) do
   it { should be_listening }
 end
-
 describe port(6380) do
   it { should be_listening }
 end
@@ -80,8 +77,6 @@ end
 describe file('/var/log/flapjack/redis-flapjack.log') do
   it { should be_file }
   it { should be_mode 644 }
-  it { should be_owned_by 'flapjack' }
-  it { should be_grouped_into 'flapjack' }
 end
 
 describe file('/var/log/flapjack/web_access.log') do

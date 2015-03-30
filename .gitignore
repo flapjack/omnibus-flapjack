@@ -3,6 +3,7 @@
 vendor/bundle
 pkg/*
 .vagrant
+vagrant-flapjack
 bin/*
 files/**/cache/
 vendor/cookbooks

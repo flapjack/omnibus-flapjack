@@ -400,49 +400,21 @@ task :test do
     raise "major_version cannot be determined" unless pkg.major_version
     raise "package_version cannot be determined" unless pkg.experimental_package_version
 
-    case pkg.distro
-    when 'ubuntu'
-      test_cmd = [
+    options = {
+      :distro         => pkg.distro,
+      :distro_release => pkg.distro_release,
+      :arch           => pkg.arch,
+      :dry_run        => dry_run
+    }
+    options[:install_cmd] = case pkg.distro
+    when 'ubuntu', 'debian'
+      [
         "dpkg -i /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
-        "apt-get update || true",
-        "DEBIAN_FRONTEND=noninteractive apt-get install -y ruby1.9.1-full git phantomjs net-tools",
-        # Install libraries for nokogiri compilation required during bundle
-        "DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential curl libssl-dev libreadline-dev libxslt1-dev libxml2-dev libcurl4-openssl-dev zlib1g-dev libexpat1-dev libicu-dev",
-        # Install a second time to check that the uninstall procedure works
-        "dpkg -i /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
-      ]
-      image = "#{pkg.distro}:#{pkg.distro_release}"
-    when 'debian'
-      test_cmd = [
-        "dpkg -i /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
-        "apt-get update || true",
-        "DEBIAN_FRONTEND=noninteractive apt-get install -y ruby1.9.1-full git net-tools ca-certificates wget procps",
-        # No phantomjs package in wheezy yet, only in sid
-        "DEBIAN_FRONTEND=noninteractive apt-get install -y libfontconfig1 libexpat1 libfreetype6 libfreetype6 fontconfig-config ucf ttf-dejavu-core ttf-bitstream-vera ttf-freefont fonts-freefont-ttf",
-        "wget https://raw.githubusercontent.com/suan/phantomjs-debian/master/phantomjs_1.9.6-0wheezy_amd64.deb",
-        "dpkg -i phantomjs_1.9.6-0wheezy_amd64.deb",
-        # Install libraries for nokogiri compilation required during bundle
-        "DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential curl libssl-dev libreadline-dev libxslt1-dev libxml2-dev libcurl4-openssl-dev zlib1g-dev libexpat1-dev libicu-dev",
         # Install a second time to check that the uninstall procedure works
         "dpkg -i /mnt/omnibus-flapjack/pkg/#{pkg.package_file}"
       ]
-      image = "#{pkg.distro}:#{pkg.distro_release}"
     when 'centos'
-      epel_url = case pkg.distro_release
-      when '6'
-        "http://download.fedoraproject.org/pub/epel/6/#{pkg.arch}/epel-release-6-8.noarch.rpm"
-      when '7'
-        "rpm -ivh http://download.fedoraproject.org/pub/epel/7/#{pkg.arch}/e/epel-release-7-2.noarch.rpm"
-      end
-
-      test_cmd = [
-        "rpm -ivh #{epel_url}",
-        "yum install -y centos-release-SCL",
-        "yum groupinstall -y \"Development Tools\"",
-        "yum install -y ruby193 ruby193-ruby-devel openssl-devel expat-devel perl-ExtUtils-MakeMaker curl-devel tar",
-        "echo \"export PATH=\\${PATH}:/opt/rh/ruby193/root/usr/local/bin\" | tee -a /opt/rh/ruby193/enable",
-        "cat /opt/rh/ruby193/enable",
-        "source /opt/rh/ruby193/enable",
+      [
         "rpm -ivh /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
         "service redis-flapjack start",
         "service flapjack start",
@@ -452,36 +424,57 @@ task :test do
         "service redis-flapjack start",
         "service flapjack start"
       ]
-      image = "#{pkg.distro}:#{pkg.distro}#{pkg.distro_release}"
     end
+    OmnibusFlapjack::Helpers.run_tests_in_docker(options)
+  end
+end
 
-    test_cmd << [
-      "cd /mnt/omnibus-flapjack",
-      "gem install bundler --no-ri --no-rdoc",
-      "bundle",
-      "bundle exec rspec spec/serverspec"
-    ]
+desc "Test a flapjack package from the repository, using docker"
+task :post_publish_test do
+  # Choose distro & release
+  # Clone vagrant flapjack
+  # Mount vagrant-flapjack in docker container
+  # Start up Docker
+  # Install puppet
+  # Run puppet from vagrant-flapjack
+  # Run serverspec
+  # Run capybara on supported OSes
 
-    test_cmd = test_cmd.flatten.join(" && ")
+  distro         = ENV['DISTRO']
+  distro_release = ENV['DISTRO_RELEASE']
+  component      = ENV['FLAPJACK_COMPONENT']
+  if distro == 'centos'
+    component = component == 'main' ? 'flapjack' : 'flapjack-experimental'
+  end
+  arch = distro == 'centos' ? 'x86_64' : 'amd64'
 
-    container_name = "flapjack-test-#{pkg.distro_release}"
-
-    docker_cmd_string = [
-      'docker', 'run', '-t',
-      '--attach', 'stdout',
-      '--attach', 'stderr',
-      '--name', container_name,
-      "-v #{Dir.pwd}:/mnt/omnibus-flapjack",
-      "#{image}", 'bash', '-l', '-c',
-      "\'#{test_cmd}\'"
-    ].join(" ")
-    puts "Executing: " + docker_cmd_string
-    unless dry_run
-      OmnibusFlapjack::Helpers.run_docker(docker_cmd_string)
-      puts "Purging the container #{container_name}"
-      Mixlib::ShellOut.new("docker rm #{container_name}").run_command
+  unless dry_run
+    if File.exist?('vagrant-flapjack/Vagrantfile')
+      Mixlib::ShellOut.new("cd vagrant-flapjack && git checkout test-deps-in-puppet && git pull && cd -", :live_stream => $stdout).run_command.error!
+    else
+      # When docker mounts a directory that doesn't exist, it creates an empty directory.  
+      # Here, we remove the empty directory, and get the real vagrant-flapjack
+      Mixlib::ShellOut.new("rm -rf vagrant-flapjack; git clone https://github.com/flapjack/vagrant-flapjack.git", :live_stream => $stdout).run_command.error!
     end
   end
+
+  install_cmd = "gem install puppet librarian-puppet && " +
+                "FACTER_flapjack_component='#{component}' " +
+                "FACTER_flapjack_major_version='v1' " +
+                "FACTER_test_mode='true' FACTER_tutorial_mode='false' FACTER_with_sensu='false' " +
+                "puppet apply --modulepath /mnt/vagrant-flapjack/dist/modules:/etc/puppet/modules " +
+                "--manifestdir /mnt/vagrant-flapjack/dist/manifests " +
+                "/mnt/vagrant-flapjack/dist/manifests/site.pp"
+
+  options = {
+    :distro         => distro,
+    :distro_release => distro_release,
+    :arch           => arch,
+    :dry_run        => dry_run,
+    :install_cmd    => install_cmd
+  }
+  options[:extra_tests] = 'bundle exec rspec spec/capybara' unless distro == 'centos'
+  OmnibusFlapjack::Helpers.run_tests_in_docker(options)
 end
 
 desc "Build and test Flapjack packages"

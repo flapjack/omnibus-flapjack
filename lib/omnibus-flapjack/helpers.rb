@@ -134,5 +134,83 @@ module OmnibusFlapjack
       omnibus_cmd.flatten.join(" && ")
     end
 
+    def self.run_tests_in_docker(options)
+      # The test commands are split into three parts:
+      # Setup command: Sets up the pre-requiste packages for testing, including the correct version of ruby (different for each OS)
+      # Install command: Installs Flapjack, either from puppet or from a package on the file system
+      # Test command: Runs the tests (identical across OSes)
+      case options[:distro]
+      when 'ubuntu'
+        image = "#{options[:distro]}:#{options[:distro_release]}"
+        setup_cmd = [
+          "sed -i '/deb-src/d' /etc/apt/sources.list",
+          "apt-get update",
+          # TODO: more of this that is only used for capybara should be moved to the test_mode section of vagrant-flapjack
+          "DEBIAN_FRONTEND=noninteractive apt-get install -y ruby1.9.1-full git net-tools lsb-release",
+          # Install libraries for nokogiri compilation required during bundle
+          "DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential curl libssl-dev libreadline-dev libxslt1-dev libxml2-dev libcurl4-openssl-dev zlib1g-dev libexpat1-dev libicu-dev"
+        ]
+      when 'debian'
+        image = "#{options[:distro]}:#{options[:distro_release]}"
+        setup_cmd = [
+          "apt-get update",
+          # TODO: more of this that is only used for capybara should be moved to the test_mode section of vagrant-flapjack
+          "DEBIAN_FRONTEND=noninteractive apt-get install -y ruby1.9.1-full git net-tools ca-certificates procps lsb-release libfontconfig1 libexpat1 libfreetype6 fontconfig-config ucf ttf-dejavu-core ttf-bitstream-vera ttf-freefont fonts-freefont-ttf",
+          # Install libraries for nokogiri compilation required during bundle
+          "DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential curl libssl-dev libreadline-dev libxslt1-dev libxml2-dev libcurl4-openssl-dev zlib1g-dev libexpat1-dev libicu-dev"
+        ]
+      when 'centos'
+        epel_url = case options[:distro_release]
+        when '6'
+          "http://download.fedoraproject.org/pub/epel/6/#{options[:arch]}/epel-release-6-8.noarch.rpm"
+        when '7'
+          "rpm -ivh http://download.fedoraproject.org/pub/epel/7/#{options[:arch]}/e/epel-release-7-2.noarch.rpm"
+        end
+
+        setup_cmd = [
+          "rpm -ivh #{epel_url}",
+          "yum install -y centos-release-SCL",
+          "yum groupinstall -y \"Development Tools\"",
+          "yum install -y ruby193 ruby193-ruby-devel openssl-devel expat-devel perl-ExtUtils-MakeMaker curl-devel tar which",
+          "echo \"export PATH=\\${PATH}:/opt/rh/ruby193/root/usr/local/bin\" | tee -a /opt/rh/ruby193/enable",
+          "source /opt/rh/ruby193/enable"
+        ]
+
+        image = "#{options[:distro]}:#{options[:distro]}#{options[:distro_release]}"
+      end
+
+      setup_cmd << 'echo gem: --no-rdoc --no-ri >> ~/.gemrc'
+
+      test_cmd = [
+        "cd /mnt/omnibus-flapjack",
+        "gem install bundler",
+        "bundle",
+        "bundle exec rspec spec/serverspec"
+      ]
+
+      test_cmd << options[:extra_tests] if options[:extra_tests]
+
+      docker_cmd = [ setup_cmd, options[:install_cmd], test_cmd].flatten.join(" && ")
+
+      container_name = "flapjack-test-#{options[:distro_release]}"
+
+      docker_cmd_string = [
+        'docker', 'run', '-t',
+        '--attach', 'stdout',
+        '--attach', 'stderr',
+        '--name', container_name,
+        "-v #{Dir.pwd}:/mnt/omnibus-flapjack",
+        "-v #{Dir.pwd}/vagrant-flapjack:/mnt/vagrant-flapjack",
+        "#{image}", 'bash', '-l', '-c',
+        "\'#{docker_cmd}\'"
+      ].join(" ")
+      puts "Executing: " + docker_cmd_string
+      unless options[:dry_run]
+        OmnibusFlapjack::Helpers.run_docker(docker_cmd_string)
+        puts "Purging the container #{container_name}"
+        Mixlib::ShellOut.new("docker rm #{container_name}").run_command
+      end
+    end
+
   end
 end
