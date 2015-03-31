@@ -264,10 +264,10 @@ task :promote do
     :package_file => ENV['PACKAGE_FILE']
   )
 
+  puts "package_file:    #{pkg.package_file}"
   puts "distro:          #{pkg.distro}"
   puts "distro_release:  #{pkg.distro_release}"
   puts "major_version:   #{pkg.major_version}"
-  puts "package_file:    #{pkg.package_file}"
   puts "version:         #{pkg.version}"
   puts "package_version: #{pkg.experimental_package_version}"
   puts "file_suffix:     #{pkg.file_suffix}"
@@ -385,6 +385,7 @@ task :test do
   end
 
   packages.each do |pkg|
+    puts "package_file:    #{pkg.package_file}"
     puts "distro:          #{pkg.distro}"
     puts "distro_release:  #{pkg.distro_release}"
     puts "major_version:   #{pkg.major_version}"
@@ -392,7 +393,6 @@ task :test do
     puts "file_suffix:     #{pkg.file_suffix}"
     puts "major_delim:     #{pkg.major_delim}"
     puts "minor_delim:     #{pkg.minor_delim}"
-    puts "package_file:    #{pkg.package_file}"
     puts
 
     raise "distro cannot be determined" unless pkg.distro
@@ -452,7 +452,7 @@ task :post_publish_test do
     if File.exist?('vagrant-flapjack/Vagrantfile')
       Mixlib::ShellOut.new("cd vagrant-flapjack && git checkout test-deps-in-puppet && git pull && cd -", :live_stream => $stdout).run_command.error!
     else
-      # When docker mounts a directory that doesn't exist, it creates an empty directory.  
+      # When docker mounts a directory that doesn't exist, it creates an empty directory.
       # Here, we remove the empty directory, and get the real vagrant-flapjack
       Mixlib::ShellOut.new("rm -rf vagrant-flapjack; git clone https://github.com/flapjack/vagrant-flapjack.git", :live_stream => $stdout).run_command.error!
     end
