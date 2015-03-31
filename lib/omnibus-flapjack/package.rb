@@ -31,7 +31,7 @@ module OmnibusFlapjack
         when 'ubuntu', 'debian'
           experimental_package_version.split(minor_delim).last.split('-').first
         when 'centos'
-          @package_file.split('_')[1].split('.')[-2].match(/el(.+)/)[1]
+          @package_file.gsub(/^candidate_/, '').split('_')[1].split('.')[-2].match(/el(.+)/)[1]
         end
       end
     end
@@ -65,11 +65,11 @@ module OmnibusFlapjack
         when 'ubuntu', 'debian'
           # flapjack_1.2.0~rc2~20141104062643~v1.2.0rc2~wheezy-1_amd64.deb
           # flapjack_1.2.0~+20141107130330~v1.2.0~wheezy-1_amd64.deb
-          a = @package_file.split(major_delim)[1].split('~')
+          a = @package_file.gsub(/^candidate_/, '').split(major_delim)[1].split('~')
           a.length > 4 ? "#{a[0]}#{a[1]}" : a[0]
         when 'centos'
           # flapjack-1.4.0_0.20150312130042rc1.el6-1.el6.x86_64.rpm
-          simple_version, date_and_crap = @package_file.split(major_delim)[1].split(minor_delim)
+          simple_version, date_and_crap = @package_file.gsub(/^candidate_/, '').split(major_delim)[1].split(minor_delim)
           _, addendum = date_and_crap.split('.')[1].split(/\d{14}/)
           "#{simple_version}#{addendum}"
         end
@@ -142,7 +142,7 @@ module OmnibusFlapjack
 
     def package_version
       @package_version ||= if truth_from_filename
-        package_name, package_version = package_file.gsub(/candidate_/, '').split(major_delim)
+        package_name, package_version = package_file.gsub(/^candidate_/, '').split(major_delim)
         package_version.gsub(/#{minor_delim}1$/, '')
       else
         nil

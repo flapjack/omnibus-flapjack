@@ -61,6 +61,17 @@ describe 'Package' do
         expect(pkg.main_filename).to eq('flapjack_1.2.0~precise_amd64.deb')
       end
 
+      it 'extracts data from the filename of a candidate for main package filename' do
+        filename = 'candidate_flapjack_1.5.0~+20150330223254~v1.5.0~trusty-1_amd64.deb'
+        pkg = OmnibusFlapjack::Package.new(:package_file => filename)
+        expect(pkg.package_file).to eq(filename)
+        expect(pkg.version).to eq('1.5.0')
+        expect(pkg.distro).to eq('ubuntu')
+        expect(pkg.distro_release).to eq('trusty')
+        expect(pkg.file_suffix).to eq('deb')
+        expect(pkg.main_filename).to eq('flapjack_1.5.0~trusty_amd64.deb')
+      end
+
       it 'extracts data from the filename of a final ubuntu package filename' do
         filename = 'flapjack_1.2.0~+20141107124706~v1.2.0~trusty-1_amd64.deb'
         pkg = OmnibusFlapjack::Package.new(:package_file => filename)
@@ -99,6 +110,16 @@ describe 'Package' do
         expect(pkg.distro_release).to eq('wheezy')
         expect(pkg.file_suffix).to eq('deb')
         expect(pkg.main_filename).to eq('flapjack_1.2.0~wheezy_amd64.deb')
+      end
+
+      it 'extracts data from the filename of a candidate for main package filename' do
+        filename = 'candidate_flapjack_1.5.0~+20150330220724~v1.5.0~wheezy-1_amd64.deb'
+        pkg = OmnibusFlapjack::Package.new(:package_file => filename)
+        expect(pkg.version).to eq('1.5.0')
+        expect(pkg.distro).to eq('debian')
+        expect(pkg.distro_release).to eq('wheezy')
+        expect(pkg.file_suffix).to eq('deb')
+        expect(pkg.main_filename).to eq('flapjack_1.5.0~wheezy_amd64.deb')
       end
 
       it 'extracts data from the filename of a release candidate package filename' do
@@ -140,6 +161,15 @@ describe 'Package' do
         expect(pkg.main_filename).to eq(nil)
       end
 
+      it 'extracts data from the filename of a a candidate for main package filename' do
+        filename = 'candidate_flapjack-1.5.0_0.20150330214720.el6-1.el6.x86_64.rpm'
+        pkg = OmnibusFlapjack::Package.new(:package_file => filename)
+        expect(pkg.version).to eq('1.5.0')
+        expect(pkg.distro).to eq('centos')
+        expect(pkg.distro_release).to eq('6')
+        expect(pkg.file_suffix).to eq('rpm')
+        expect(pkg.main_filename).to eq('flapjack-1.5.0_0.el6.x86_64.rpm')
+      end
     end
   end
 end
