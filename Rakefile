@@ -475,8 +475,10 @@ task :post_publish_test do
   # We then spin up a docker instance and run this puppet configuration, as well as the capybara and serverspec tests from this repository.
   unless dry_run
     if File.exist?('vagrant-flapjack/Vagrantfile')
+      puts "Updating vagrant-flapjack branch test-deps-in-puppet"
       Mixlib::ShellOut.new("cd vagrant-flapjack && git checkout test-deps-in-puppet && git pull && cd -", :live_stream => $stdout).run_command.error!
     else
+      puts "Purging vagrant-flapjack and cloning afresh, branch test-deps-in-puppet"
       # When docker mounts a directory that doesn't exist, it creates an empty directory.
       # Here, we remove the empty directory, and get the real vagrant-flapjack
       Mixlib::ShellOut.new("rm -rf vagrant-flapjack; git clone https://github.com/flapjack/vagrant-flapjack.git", :live_stream => $stdout).run_command.error!
