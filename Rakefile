@@ -7,13 +7,14 @@
 # DISTRO_RELEASE            - the release name, eg "precise" (Optional, Default: "trusy")
 # DRY_RUN                   - if set, just shows what would be gone (Optiona, Default: nil)
 # OFFICIAL_FLAPJACK_PACKAGE - if true, assuming that the Flapjack Signing Key is on the system, and sign the rpm package
+# FLAPJACK_COMPONENT        - the component of the Flapjack repository to use for the post-package-testing used in build_and_publish and promote_and_verify (options: experimental or main)
 
 # eg:
 #   bundle
-#   BUILD_REF=v1.0.0 DISTRO=ubuntu DISTRO_RELEASE=trusty bundle exec rake build_and_publish
-#   BUILD_REF=v1.0.0 DISTRO=centos DISTRO_RELEASE=6 bundle exec rake build_and_publish
-#   PACKAGE_FILE=flapjack-1.2.0_0.rc220141024003313-1.el6.x86_64.rpm bundle exec rake publish
-#   PACKAGE_FILE=flapjack-1.2.0_0.rc220141024003313-1.el6.x86_64.rpm bundle exec rake promote
+#   BUILD_REF=v1.0.0 DISTRO=ubuntu DISTRO_RELEASE=trusty bundle exec rake build
+#   BUILD_REF=v1.0.0 DISTRO=centos DISTRO_RELEASE=6 FLAPJACK_COMPONENT=experimental bundle exec rake build_and_publish
+#   FLAPJACK_COMPONENT=experimental PACKAGE_FILE=flapjack-1.2.0_0.rc220141024003313-1.el6.x86_64.rpm bundle exec rake publish
+#   PACKAGE_FILE=flapjack-1.2.0_0.rc220141024003313-1.el6.x86_64.rpm FLAPJACK_COMPONENT=main bundle exec rake promote_and_verify
 #
 # pkg/flapjack_1.1.0~+20141003112645-master-trusty-1_amd64.deb
 # pkg/flapjack_1.1.0~+20141003112645-master-centos-6-1_amd64.rpm
@@ -429,25 +430,47 @@ task :test do
   end
 end
 
-desc "Test a flapjack package from the repository, using docker"
+desc "Test a flapjack package from the Flapjack repository, using Docker"
 task :post_publish_test do
-  # Choose distro & release
-  # Clone vagrant flapjack
-  # Mount vagrant-flapjack in docker container
-  # Start up Docker
-  # Install puppet
-  # Run puppet from vagrant-flapjack
-  # Run serverspec
-  # Run capybara on supported OSes
+  pkg ||= OmnibusFlapjack::Package.new(
+    :package_file => ENV['PACKAGE_FILE']
+  )
 
-  distro         = ENV['DISTRO']
-  distro_release = ENV['DISTRO_RELEASE']
-  component      = ENV['FLAPJACK_COMPONENT']
-  if distro == 'centos'
-    component = component == 'main' ? 'flapjack' : 'flapjack-experimental'
+  puts "distro:          #{pkg.distro}"
+  puts "distro_release:  #{pkg.distro_release}"
+  puts "major_version:   #{pkg.major_version}"
+  puts "package_version: #{pkg.experimental_package_version}"
+  puts "file_suffix:     #{pkg.file_suffix}"
+  puts "major_delim:     #{pkg.major_delim}"
+  puts "minor_delim:     #{pkg.minor_delim}"
+
+  raise "distro cannot be determined" unless pkg.distro
+  raise "distro_release cannot be determined" unless pkg.distro_release
+  raise "major_version cannot be determined" unless pkg.major_version
+  raise "package_version cannot be determined" unless pkg.experimental_package_version
+
+  # The components are named differently between centos and deb-based distros.
+  component = case ENV['FLAPJACK_COMPONENT']
+  when 'main'
+    case pkg.distro
+    when 'centos'
+      'flapjack'
+    else
+      'main'
+    end
+  when 'experimental'
+    case pkg.distro
+    when 'centos'
+      'flapjack-experimental'
+    else
+      'experimental'
+    end
+  else
+    raise "Unknown component: #{ENV['FLAPJACK_COMPONENT']}"
   end
-  arch = distro == 'centos' ? 'x86_64' : 'amd64'
 
+  # We clone vagrant-flapjack, which contains the puppet configuration to install Flapjack from the Flapjack repository, and the underlying stack (nagios, icinga, etc).
+  # We then spin up a docker instance and run this puppet configuration, as well as the capybara and serverspec tests from this repository.
   unless dry_run
     if File.exist?('vagrant-flapjack/Vagrantfile')
       Mixlib::ShellOut.new("cd vagrant-flapjack && git checkout test-deps-in-puppet && git pull && cd -", :live_stream => $stdout).run_command.error!
@@ -467,13 +490,13 @@ task :post_publish_test do
                 "/mnt/vagrant-flapjack/dist/manifests/site.pp"
 
   options = {
-    :distro         => distro,
-    :distro_release => distro_release,
-    :arch           => arch,
+    :distro         => pkg.distro,
+    :distro_release => pkg.distro_release,
+    :arch           => pkg.arch,
     :dry_run        => dry_run,
     :install_cmd    => install_cmd
   }
-  options[:extra_tests] = 'bundle exec rspec spec/capybara' unless distro == 'centos'
+  options[:extra_tests] = 'bundle exec rspec spec/capybara' unless pkg.distro == 'centos'
   OmnibusFlapjack::Helpers.run_tests_in_docker(options)
 end
 
@@ -481,4 +504,7 @@ desc "Build and test Flapjack packages"
 task :build_and_test => [ :build, :test ]
 
 desc "Build, test and publish Flapjack packages"
-task :build_and_publish => [ :build, :test, :publish ]
+task :build_and_publish => [ :build, :test, :publish, :post_publish_test ]
+
+desc "Promote and test Flapjack packages"
+task :promote_and_verify => [ :promote, :post_publish_test ]
