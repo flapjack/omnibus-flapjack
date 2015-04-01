@@ -430,6 +430,8 @@ task :test do
   end
 end
 
+# If this is a final release (no alphas in the last part of the semantic version) then
+# we also look for a file "candidate_..." in pkg/ and test that one too.
 desc "Test a flapjack package from the Flapjack repository, using Docker"
 task :post_publish_test do
   pkg ||= OmnibusFlapjack::Package.new(
