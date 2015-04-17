@@ -56,6 +56,7 @@ build do
     "cd ${installed_gem} && " +
     "if [ ! -d hiredis ] ; then git clone https://github.com/redis/hiredis.git hiredis ; fi && " +
     "cd hiredis && " +
+    "git checkout v0.12.1 && " +
     "make hiredis-example && " +
     "cd .. && " +
     "if [ ! -d flapjackfeeder ] ; then git clone https://github.com/flapjack/flapjackfeeder.git flapjackfeeder ; fi && " +
