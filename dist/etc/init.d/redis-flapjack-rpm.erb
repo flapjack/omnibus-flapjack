@@ -45,7 +45,7 @@ start() {
 
 stop() {
     echo -n $"Stopping $NAME: "
-    if [ -n "`pgrep $NAME`" ] ; then
+    if [ -n "\`pgrep $NAME\`" ] ; then
         killproc $NAME
     RETVAL=3
     else
