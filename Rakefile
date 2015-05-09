@@ -114,15 +114,17 @@ task :build do
     puts "Purging the container #{container_name}"
     Mixlib::ShellOut.new("docker rm #{container_name}").run_command
 
-    puts "Uploading #{pkg.package_file} packages to http://packages.flapjack.io/tmp/#{pkg.package_file}"
-    Mixlib::ShellOut.new("aws s3 cp pkg/#{pkg.package_file} s3://packages.flapjack.io/tmp/ --acl public-read " +
-                         "--region us-east-1 2>&1", :live_stream => $stdout).run_command.error!
+    if official_pkg
+      puts "Uploading #{pkg.package_file} packages to http://packages.flapjack.io/tmp/#{pkg.package_file}"
+      Mixlib::ShellOut.new("aws s3 cp pkg/#{pkg.package_file} s3://packages.flapjack.io/tmp/ --acl public-read " +
+                           "--region us-east-1 2>&1", :live_stream => $stdout).run_command.error!
 
-    unless Dir.glob("pkg/candidate_flapjack#{pkg.major_delim}#{pkg.experimental_package_version}*").empty?
-      puts "Copying candidate package for main to s3"
-      Mixlib::ShellOut.new("aws s3 cp pkg/candidate_flapjack#{pkg.major_delim}#{pkg.experimental_package_version}*.#{pkg.file_suffix} " +
-                           's3://packages.flapjack.io/candidates/ --acl public-read ' +
-                           '--region us-east-1').run_command.error!
+      unless Dir.glob("pkg/candidate_flapjack#{pkg.major_delim}#{pkg.experimental_package_version}*").empty?
+        puts "Copying candidate package for main to s3"
+        Mixlib::ShellOut.new("aws s3 cp pkg/candidate_flapjack#{pkg.major_delim}#{pkg.experimental_package_version}*.#{pkg.file_suffix} " +
+                             's3://packages.flapjack.io/candidates/ --acl public-read ' +
+                             '--region us-east-1').run_command.error!
+      end
     end
   end
 end
