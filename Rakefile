@@ -487,12 +487,11 @@ task :post_publish_test do
     end
   end
 
-  install_cmd = "gem install puppet librarian-puppet && " +
+  install_cmd = "gem install puppet -v 3.7.5 && gem install librarian-puppet -v 2.1.0 && " +
                 "FACTER_flapjack_component='#{component}' " +
                 "FACTER_flapjack_major_version='v1' " +
                 "FACTER_test_mode='true' FACTER_tutorial_mode='false' FACTER_with_sensu='false' " +
                 "puppet apply --modulepath /mnt/vagrant-flapjack/dist/modules:/etc/puppet/modules " +
-                "--manifestdir /mnt/vagrant-flapjack/dist/manifests " +
                 "/mnt/vagrant-flapjack/dist/manifests/site.pp"
 
   options = {
