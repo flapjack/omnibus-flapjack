@@ -164,18 +164,28 @@ module OmnibusFlapjack
         when '6'
           "http://download.fedoraproject.org/pub/epel/6/#{options[:arch]}/epel-release-6-8.noarch.rpm"
         when '7'
-          "rpm -ivh http://download.fedoraproject.org/pub/epel/7/#{options[:arch]}/e/epel-release-7-2.noarch.rpm"
+          "http://download.fedoraproject.org/pub/epel/7/#{options[:arch]}/e/epel-release-7-5.noarch.rpm"
         end
 
         setup_cmd = [
           "rpm -ivh #{epel_url}",
-          "yum install -y centos-release-SCL",
           "yum groupinstall -y \"Development Tools\"",
-          "yum install -y ruby193 ruby193-ruby-devel openssl-devel expat-devel perl-ExtUtils-MakeMaker curl-devel tar which",
-          "echo \"export PATH=\\${PATH}:/opt/rh/ruby193/root/usr/local/bin\" | tee -a /opt/rh/ruby193/enable",
-          "source /opt/rh/ruby193/enable"
+          "yum install -y openssl-devel expat-devel perl-ExtUtils-MakeMaker curl-devel tar which"
         ]
-
+        # Centos 6 has a default ruby version of 1.8.7, so we install 1.9.3 instead.
+        case options[:distro_release]
+        when '6'
+          setup_cmd << [
+            "yum install -y centos-release-SCL",
+            "yum install -y ruby193 ruby193-ruby-devel",
+            "echo \"export PATH=\\${PATH}:/opt/rh/ruby193/root/usr/local/bin\" | tee -a /opt/rh/ruby193/enable",
+            "source /opt/rh/ruby193/enable"
+          ]
+        else
+          setup_cmd << [
+            "yum install -y ruby ruby-devel"
+          ]
+        end
         image = "#{options[:distro]}:#{options[:distro]}#{options[:distro_release]}"
       end
 
