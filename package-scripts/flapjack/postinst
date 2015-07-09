@@ -34,9 +34,16 @@ if [ ! -e /etc/flapjack/flapjack_config.yaml ] ; then
   cp ${FLAPJACK_GEM_DIR}/etc/flapjack_config.yaml.example ${CONFIG_DIR}/flapjack_config.yaml
 fi
 
+for version in 3 4 ; do
+  if [ ! -e /usr/local/lib/flapjackfeeder${version}.o ] ; then
+    echo "Creating /usr/local/lib/flapjackfeeder${version}.o for Nagios ${version}"
+    cp ${FLAPJACK_GEM_DIR}/flapjackfeeder${version}.o /usr/local/lib/flapjackfeeder${version}.o
+  fi
+done
+
 if [ ! -e /usr/local/lib/flapjackfeeder.o ] ; then
-  echo "Creating /usr/local/lib/flapjackfeeder.o"
-  cp ${FLAPJACK_GEM_DIR}/flapjackfeeder.o /usr/local/lib/flapjackfeeder.o
+  echo "Symlinking the Nagios version 3 flapjackfeeder to /usr/local/lib/flapjackfeeder.o for backwards compatibility"
+  ln -s /usr/local/lib/flapjackfeeder3.o /usr/local/lib/flapjackfeeder.o
 fi
 
 if [ ! -e ${INITDDIR}/redis-flapjack ] ; then

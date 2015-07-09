@@ -54,17 +54,13 @@ build do
     "echo \"gem_home: ${gem_home}\" ; " +
     "export installed_gem=`ls -dtr ${gem_home}/gems/flapjack* | tail -1` ; " +
     "cd ${installed_gem} && " +
-    "if [ ! -d hiredis ] ; then git clone https://github.com/redis/hiredis.git hiredis ; fi && " +
-    "cd hiredis && " +
-    "git checkout v0.12.1 && " +
-    "make hiredis-example && " +
-    "cd .. && " +
     "if [ ! -d flapjackfeeder ] ; then git clone https://github.com/flapjack/flapjackfeeder.git flapjackfeeder ; fi && " +
     "cd flapjackfeeder && " +
-    "(cd src ; gcc -fPIC -g -O2 -DHAVE_CONFIG_H -DNSCORE -o flapjackfeeder.o flapjackfeeder.c -shared -fPIC ../../hiredis/libhiredis.a ;strip flapjackfeeder.o) && " +
+    "make && " +
     "cd .. && " +
-    "cp flapjackfeeder/src/flapjackfeeder.o . && " +
-    "rm -r flapjackfeeder hiredis"
+    "cp flapjackfeeder/flapjackfeeder3-*.o flapjackfeeder3.o && " +
+    "cp flapjackfeeder/flapjackfeeder4-*.o flapjackfeeder4.o && " +
+    "rm -r flapjackfeeder"
 
     command "cp #{omnibus_flapjack_path}/dist/etc/init.d/flapjack* #{etc_path}/init.d/"
     command "cp #{omnibus_flapjack_path}/dist/etc/init.d/flapper* #{etc_path}/init.d/"
