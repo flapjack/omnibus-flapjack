@@ -78,11 +78,11 @@ module OmnibusFlapjack
                       "#{build_ref}/lib/flapjack/version.rb"
         open(version_url) {|f|
           f.each_line {|line|
-            next unless line =~ /VERSION.*=.*"(.*)"/
+            next unless line =~ /VERSION.*=.*'(.+)'/
             @version = $1
           }
         }
-        unless version.length > 0
+        if @version.nil? || @version.empty?
           raise "Incorrect build_ref.  Tags should be specified as 'v1.0.0rc3'"
         end
         @version
@@ -153,7 +153,7 @@ module OmnibusFlapjack
       @experimental_package_version ||= if truth_from_filename
         package_version
       else
-        first, second = version.match(/^([0-9.]*)([a-z0-9.]*)$/).captures
+        first, second = version.match(/^([0-9.]*)-?([a-z0-9.]*)$/).captures
         case @distro
         when 'ubuntu', 'debian'
           build_ref_clean = build_ref.sub(/\//, '.')

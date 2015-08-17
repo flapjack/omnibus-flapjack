@@ -21,13 +21,13 @@ dependency "version-manifest"
 exclude "\.git*"
 exclude "bundler\/git"
 
-override :ruby, version: '2.1.2'
+override :ruby, version: '2.2.2'
 
 dependency "ruby"
 dependency "rubygems"
 dependency "bundler"
 dependency "redis"
-dependency "yajl"
-dependency "zlib"
-dependency "nokogiri"
+# dependency "yajl"
+# dependency "zlib"
+# dependency "nokogiri"
 

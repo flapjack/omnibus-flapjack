@@ -30,8 +30,8 @@ The following environment variables affect what `build` does:
 
 - `BUILD_REF`                 - the branch, tag, or commit (on master) to build (Required). If a tag, it'll start with a v if it's a release tag, eg `v1.0.0rc5`
 - `DISTRO`                    - only "ubuntu" is currently supported (Optional, Default: "ubuntu")
-- `DISTRO_RELEASE`            - the release name, eg "precise" (Optional, Default: "trusy")
-- `DRY_RUN`                   - if set, just shows what would be gone (Optional, Default: nil)
+- `DISTRO_RELEASE`            - the release name, eg "precise" (Optional, Default: "trusty")
+- `DRY_RUN`                   - if set, just shows what would be done (Optional, Default: nil)
 - `OFFICIAL_FLAPJACK_PACKAGE` - if true, signs built packages, assuming that the Flapjack Signing Key is on the system
 
 
