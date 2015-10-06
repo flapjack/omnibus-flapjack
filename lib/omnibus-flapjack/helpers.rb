@@ -63,6 +63,7 @@ module OmnibusFlapjack
         "export PATH=$PATH:/usr/local/go/bin",
         "cd omnibus-flapjack",
         "git pull",
+        "git checkout v2_package_wip",
         "cp .rpmmacros ~/.rpmmacros",
         "bundle update omnibus",
         "bundle update omnibus-software",
