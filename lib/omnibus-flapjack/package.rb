@@ -153,7 +153,7 @@ module OmnibusFlapjack
       @experimental_package_version ||= if truth_from_filename
         package_version
       else
-        first, second = version.match(/^([0-9.]*)-?([a-z0-9.]*)$/).captures
+        first, second = version.match(/^([0-9.]*)([a-z0-9.]*)$/).captures
         case @distro
         when 'ubuntu', 'debian'
           build_ref_clean = build_ref.sub(/\//, '.')
