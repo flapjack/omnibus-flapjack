@@ -35,6 +35,7 @@ exclude "\.git*"
 exclude "bundler\/git"
 
 override :ruby, version: '2.2.3'
+override :rubygems, version: '2.4.8'
 
 dependency "ruby"
 dependency "rubygems"

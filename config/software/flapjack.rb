@@ -13,7 +13,7 @@ compile_go_components = package_version =~ /^0\.9\./ ? false : true
 dependency "ruby"
 dependency "rubygems"
 dependency "bundler"
-dependency "nokogiri"
+# dependency "nokogiri"
 
 relative_path "flapjack"
 
