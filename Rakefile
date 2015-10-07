@@ -81,7 +81,12 @@ task :build do
     end
   end
 
-  omnibus_cmd = "locale-gen en_US.UTF-8 && " + OmnibusFlapjack::Helpers.build_omnibus_cmd(pkg)
+  # can't set locale before it's generated :(
+  omnibus_cmd = "locale-gen en_US.UTF-8 && "  \
+                "export LANG=en_US.UTF-8 && " \
+                "export LC_ALL=en_US.UTF-8 && " \
+                "export LANGUAGE=en_US:en && " +
+                OmnibusFlapjack::Helpers.build_omnibus_cmd(pkg)
 
   container_name = "flapjack-build-#{pkg.distro_release}"
 
@@ -91,9 +96,6 @@ task :build do
     '--attach', 'stderr',
     '--detach=false',
     '--name', container_name,
-    '-e', 'LANG=en_US.UTF-8',
-    '-e', 'LANGUAGE=en_US:en',
-    '-e', 'LC_ALL=en_US.UTF-8',
     '-e', "FLAPJACK_BUILD_REF=#{pkg.build_ref}",
     '-e', "FLAPJACK_EXPERIMENTAL_PACKAGE_VERSION=#{pkg.experimental_package_version}",
     '-e', "FLAPJACK_MAIN_PACKAGE_VERSION=#{pkg.main_package_version}",
