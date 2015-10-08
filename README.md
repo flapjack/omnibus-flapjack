@@ -93,7 +93,7 @@ bundle exec rake build_and_publish
 
 ### Promote from Experimental to Main
 
-When testing of the package candidiate is completed, use the `promote` task to repackage the deb for the **main** component in the case of debs, or copy the package to `flapjack` from `flapjack-experimental` in the case of rpms.
+When testing of the package candidate is completed, use the `promote` task to repackage the deb for the **main** component in the case of debs, or copy the package to `flapjack` from `flapjack-experimental` in the case of rpms.
 
 You'll need the name of the candidate package, which will be in the output of `build`, or look in S3 to find it. Eg:
 
