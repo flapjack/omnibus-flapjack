@@ -61,8 +61,34 @@ module OmnibusFlapjack
       # ensure current branch is used, whether or not that's master
       current_commit = `git log --pretty=format:'%H' -n 1`.strip
 
-      omnibus_cmd = [
-        "if [[ -f /opt/rh/ruby193/enable ]]; then source /opt/rh/ruby193/enable; fi",
+      # FIXME debian only for the ruby 2.2 PPAs
+
+      omnibus_cmd = []
+
+      case pkg.distro
+      when 'ubuntu'
+        omnibus_cmd << "apt-get update"
+
+        # precise and earlier
+        omnibus_cmd << "apt-get install --assume-yes python-software-properties"
+        # FIXME if trusty or later
+        #              "apt-get install --assume-yes software-properties-common"
+        # instead
+
+        omnibus_cmd += [
+          "apt-add-repository --yes ppa:brightbox/ruby-ng",
+          "apt-get update",
+          "apt-get install --assume-yes ruby2.2 ruby2.2-dev ruby-switch",
+          "ruby-switch --set ruby2.2"
+        ]
+      when 'debian'
+        # FIXME Ruby 2.2
+      when 'centos'
+        # FIXME Ruby 2.2
+        omnibus_cmd << "if [[ -f /opt/rh/ruby193/enable ]]; then source /opt/rh/ruby193/enable; fi"
+      end
+
+      omnibus_cmd += [
         "export PATH=$PATH:/usr/local/go/bin",
         "cd omnibus-flapjack",
         "git pull",
@@ -93,14 +119,14 @@ module OmnibusFlapjack
       case pkg.distro
       when 'ubuntu', 'debian'
         # Ubuntu/debian package validation
-        omnibus_cmd << [
+        omnibus_cmd += [
           "EXPERIMENTAL_FILENAME=$(ls flapjack_#{pkg.experimental_package_version}*.deb)",
           "dpkg -c ${EXPERIMENTAL_FILENAME} > /tmp/flapjack_files"
         ]
-        omnibus_cmd << verify_files.map { |f| "grep #{f} /tmp/flapjack_files &>/dev/null" }
+        omnibus_cmd += verify_files.map { |f| "grep #{f} /tmp/flapjack_files &>/dev/null" }
 
         unless pkg.main_package_version.nil?
-          omnibus_cmd << [
+          omnibus_cmd += [
             "EXPERIMENTAL_FILENAME=$(ls flapjack_#{pkg.experimental_package_version}*.deb)",
             "dpkg-deb -R ${EXPERIMENTAL_FILENAME} repackage",
             "sed -i s@#{pkg.experimental_package_version}-1@#{pkg.main_package_version}@g repackage/DEBIAN/control",
@@ -109,22 +135,22 @@ module OmnibusFlapjack
             "rm -r repackage"
           ]
           # Validate the newly created main candidate
-          omnibus_cmd << [
+          omnibus_cmd += [
             "EXPERIMENTAL_FILENAME=$(ls flapjack_#{pkg.experimental_package_version}*.deb)",
             "dpkg -c candidate_${EXPERIMENTAL_FILENAME} > /tmp/flapjack_files"
             ]
-          omnibus_cmd << verify_files.map { |f| "grep #{f} /tmp/flapjack_files &>/dev/null" }
+          omnibus_cmd += verify_files.map { |f| "grep #{f} /tmp/flapjack_files &>/dev/null" }
         end
       when 'centos'
         # Centos package validation
-        omnibus_cmd << [
+        omnibus_cmd += [
           "EXPERIMENTAL_FILENAME=$(ls flapjack-#{pkg.experimental_package_version}*.rpm)",
           "rpm -qpl ${EXPERIMENTAL_FILENAME} > /tmp/flapjack_files"
         ]
-        omnibus_cmd << verify_files.map { |f| "grep #{f} /tmp/flapjack_files &>/dev/null" }
+        omnibus_cmd += verify_files.map { |f| "grep #{f} /tmp/flapjack_files &>/dev/null" }
 
         unless pkg.main_package_version.nil?
-          omnibus_cmd << [
+          omnibus_cmd += [
             "EXPERIMENTAL_FILENAME=$(ls flapjack-#{pkg.experimental_package_version}*.rpm)",
             "cp -a ${EXPERIMENTAL_FILENAME} candidate_${EXPERIMENTAL_FILENAME}"
             # "mkdir -p repackage",
@@ -135,7 +161,7 @@ module OmnibusFlapjack
           ]
         end
       end
-      omnibus_cmd.flatten.join(" && ")
+      omnibus_cmd.join(" && ")
     end
 
     def self.run_tests_in_docker(options)
