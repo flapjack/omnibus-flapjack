@@ -79,7 +79,8 @@ module OmnibusFlapjack
           "apt-add-repository --yes ppa:brightbox/ruby-ng",
           "apt-get update",
           "apt-get install --assume-yes ruby2.2 ruby2.2-dev ruby-switch",
-          "ruby-switch --set ruby2.2"
+          "ruby-switch --set ruby2.2",
+          "gem install bundler"
         ]
       when 'debian'
         # FIXME Ruby 2.2
