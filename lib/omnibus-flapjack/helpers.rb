@@ -58,11 +58,15 @@ module OmnibusFlapjack
     end
 
     def self.build_omnibus_cmd(pkg)
+      # ensure current branch is used, whether or not that's master
+      current_commit = `git log --pretty=format:'%H' -n 1`.strip
+
       omnibus_cmd = [
         "if [[ -f /opt/rh/ruby193/enable ]]; then source /opt/rh/ruby193/enable; fi",
         "export PATH=$PATH:/usr/local/go/bin",
         "cd omnibus-flapjack",
         "git pull",
+        "git checkout #{current_commit}",
         "cp .rpmmacros ~/.rpmmacros",
         "bundle update omnibus",
         "bundle update omnibus-software",
@@ -136,7 +140,7 @@ module OmnibusFlapjack
 
     def self.run_tests_in_docker(options)
       # The test commands are split into three parts:
-      # Setup command: Sets up the pre-requiste packages for testing, including the correct version of ruby (different for each OS)
+      # Setup command: Sets up the pre-requisite packages for testing, including the correct version of ruby (different for each OS)
       # Install command: Installs Flapjack, either from puppet or from a package on the file system
       # Test command: Runs the tests (identical across OSes)
       case options[:distro]

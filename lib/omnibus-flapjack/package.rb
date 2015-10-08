@@ -74,15 +74,16 @@ module OmnibusFlapjack
           "#{simple_version}#{addendum}"
         end
       else
-        version_url = "https://raw.githubusercontent.com/flapjack/flapjack/" +
+        version_url = "https://raw.githubusercontent.com/flapjack/flapjack/" \
                       "#{build_ref}/lib/flapjack/version.rb"
         open(version_url) {|f|
           f.each_line {|line|
-            next unless line =~ /VERSION.*=.*"(.*)"/
-            @version = $1
+            # allow either single or double quotes, handle escaped quotes
+            next unless line =~ /VERSION.*=.*(?:"([^"\\]*(?:\\.[^"\\]*)*)"|\'([^\'\\]*(?:\\.[^\'\\]*)*)\')/
+            @version = $1 || $2
           }
         }
-        unless version.length > 0
+        if @version.nil? || @version.empty?
           raise "Incorrect build_ref.  Tags should be specified as 'v1.0.0rc3'"
         end
         @version
