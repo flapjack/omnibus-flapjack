@@ -8,12 +8,15 @@ raise "FLAPJACK_EXPERIMENTAL_PACKAGE_VERSION must be set" unless package_version
 
 default_version package_version
 
-compile_go_components = package_version =~ /^0\.9\./ ? false : true
+compile_go_components = /^0\.9\./.match(package_version).nil?
+depend_nokogiri = !(/^(?:0\.9\.|1\.)/.match(package_version).nil?)
 
 dependency "ruby"
 dependency "rubygems"
 dependency "bundler"
-# dependency "nokogiri"
+if depend_nokogiri
+  dependency "nokogiri"
+end
 
 relative_path "flapjack"
 
