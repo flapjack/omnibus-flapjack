@@ -40,7 +40,7 @@ describe process("flapjack") do
     if ['0', '1'].include?(flapjack_major_version)
       should match /\/opt\/flapjack\/bin\/flapjack server start/
     else
-      should match /\/opt\/flapjack\/bin\/flapjack start/
+      should match /\/opt\/flapjack\/bin\/flapjack server/
     end
   end
 end

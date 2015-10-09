@@ -66,19 +66,31 @@ fi
 
 if [ ! -e ${INITDDIR}/flapjack ] ; then
   echo "Creating ${INITDDIR}/flapjack"
-  cp ${DEST_DIR}/embedded/etc/init.d/flapjack ${INITDDIR}/flapjack
+  if [ -f /etc/redhat-release ]; then
+    cp ${DEST_DIR}/embedded/etc/init.d/flapjack-rpm ${INITDDIR}/flapjack
+  else
+    cp ${DEST_DIR}/embedded/etc/init.d/flapjack-deb ${INITDDIR}/flapjack
+  fi
   chmod u+x ${INITDDIR}/flapjack
 fi
 
 if [ ! -e ${INITDDIR}/flapjack-nagios-receiver ] ; then
   echo "Creating ${INITDDIR}/flapjack-nagios-receiver"
-  cp ${DEST_DIR}/embedded/etc/init.d/flapjack-nagios-receiver ${INITDDIR}/flapjack-nagios-receiver
+  if [ -f /etc/redhat-release ]; then
+    cp ${DEST_DIR}/embedded/etc/init.d/flapjack-nagios-receiver-rpm ${INITDDIR}/flapjack-nagios-receiver
+  else
+    cp ${DEST_DIR}/embedded/etc/init.d/flapjack-nagios-receiver-deb ${INITDDIR}/flapjack-nagios-receiver
+  fi
   chmod u+x ${INITDDIR}/flapjack-nagios-receiver
 fi
 
 if [ ! -e ${INITDDIR}/flapper ] ; then
   echo "Creating ${INITDDIR}/flapper"
-  cp ${DEST_DIR}/embedded/etc/init.d/flapper ${INITDDIR}/flapper
+  if [ -f /etc/redhat-release ]; then
+    cp ${DEST_DIR}/embedded/etc/init.d/flapper-rpm ${INITDDIR}/flapper
+  else
+    cp ${DEST_DIR}/embedded/etc/init.d/flapper-deb ${INITDDIR}/flapper
+  fi
   chmod u+x ${INITDDIR}/flapper
 fi
 
@@ -107,7 +119,6 @@ else
   echo "Starting flapjack"
   ${INITDDIR}/flapjack start || exit $?
 fi
-
 
 echo "Thank you for installing flapjack!"
 echo
