@@ -510,6 +510,7 @@ task :post_publish_test do
     :distro         => pkg.distro,
     :distro_release => pkg.distro_release,
     :arch           => pkg.arch,
+    :major_version  => pkg.major_version.sub(/^v/, ''),
     :dry_run        => dry_run,
     :install_cmd    => install_cmd
   }

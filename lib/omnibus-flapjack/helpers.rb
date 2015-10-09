@@ -199,7 +199,7 @@ module OmnibusFlapjack
         "cd /mnt/omnibus-flapjack",
         "gem install bundler",
         "bundle",
-        "bundle exec rspec spec/serverspec"
+        "FLAPJACK_MAJOR_VERSION=#{options[:major_version]} bundle exec rspec spec/serverspec"
       ]
 
       test_cmd << options[:extra_tests] if options[:extra_tests]
