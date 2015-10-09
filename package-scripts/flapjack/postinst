@@ -6,7 +6,7 @@
 INSTALLER_DIR=`dirname $0`
 DEST_DIR=/opt/flapjack
 CONFIG_DIR=/etc/flapjack
-FLAPJACK_GEM_DIR=`ls -dr ${DEST_DIR}/embedded/lib/ruby/gems/*/gems/flapjack-* | head -1`
+FLAPJACK_GEM_DIR=`ls -dr ${DEST_DIR}/embedded/lib/ruby/gems/*/gems/flapjack-* | tail -1`
 PROGNAME=$(basename $0)
 
 groupadd flapjack
