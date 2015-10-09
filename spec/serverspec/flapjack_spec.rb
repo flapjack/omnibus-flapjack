@@ -50,10 +50,11 @@ describe command('/opt/flapjack/bin/flapjack receiver httpbroker --help') do
   its(:stdout) { should match /interval/ }
 end
 
-describe file('/etc/flapjack/flapjack_config.yaml') do
-  it { should be_file }
-  its(:content) { should match /pagerduty/ }
-end
+# # FIXME toml for v2, need to be able to distinguish
+# describe file('/etc/flapjack/flapjack_config.yaml') do
+#   it { should be_file }
+#   its(:content) { should match /pagerduty/ }
+# end
 
 describe file('/usr/local/lib/flapjackfeeder.o') do
   it { should be_file }

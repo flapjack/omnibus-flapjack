@@ -1,7 +1,6 @@
 #!/bin/bash
 #
-# Perform necessary flapjack setup steps
-# after package is installed.
+# Perform necessary flapjack setup steps after package is installed.
 #
 
 INSTALLER_DIR=`dirname $0`
@@ -30,8 +29,17 @@ chown -R flapjack:flapjack /var/log/flapjack /var/run/flapjack /var/lib/flapjack
 
 # Copy in default configuration if none exists already
 if [ ! -e /etc/flapjack/flapjack_config.yaml ] ; then
-  echo "Creating /etc/flapjack/flapjack_config.yaml"
-  cp ${FLAPJACK_GEM_DIR}/etc/flapjack_config.yaml.example ${CONFIG_DIR}/flapjack_config.yaml
+  if [ -e ${FLAPJACK_GEM_DIR}/etc/flapjack_config.yaml.example ]; then
+    echo "Creating /etc/flapjack/flapjack_config.yaml"
+    cp ${FLAPJACK_GEM_DIR}/etc/flapjack_config.yaml.example ${CONFIG_DIR}/flapjack_config.yaml
+  fi
+fi
+
+if [ ! -e /etc/flapjack/flapjack_config.toml ] ; then
+  if [ -e ${FLAPJACK_GEM_DIR}/etc/flapjack_config.toml.example ]; then
+    echo "Creating /etc/flapjack/flapjack_config.toml"
+    cp ${FLAPJACK_GEM_DIR}/etc/flapjack_config.toml.example ${CONFIG_DIR}/flapjack_config.toml
+  fi
 fi
 
 for version in 3 4 ; do
