@@ -82,9 +82,8 @@ module OmnibusFlapjack
         "/opt/flapjack/bin/flapjack",
         "/opt/flapjack/embedded/lib",
         "/opt/flapjack/embedded/bin/redis-server",
-        "/etc/init.d/flapjack",
+        "/etc/init.d/v2/deb/flapjack",
         "/etc/init.d/redis-flapjack",
-        "/opt/flapjack/embedded/bin/redis-server",
         "/opt/flapjack/embedded/bin/redis-server",
         "/opt/flapjack/embedded/etc/redis/redis-flapjack.conf",
         ".go$"
