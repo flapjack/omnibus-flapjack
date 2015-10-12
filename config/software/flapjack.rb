@@ -59,6 +59,6 @@ build do
           "cp flapjackfeeder/flapjackfeeder4-*.o flapjackfeeder4.o && " \
           "rm -r flapjackfeeder"
 
-    command "cp #{omnibus_flapjack_path}/dist/etc/init.d/flapjack* #{etc_path}/init.d/"
-    command "cp #{omnibus_flapjack_path}/dist/etc/init.d/flapper* #{etc_path}/init.d/"
+    command "cp -R #{omnibus_flapjack_path}/dist/etc/init.d/v1 #{etc_path}/init.d/v1"
+    command "cp -R #{omnibus_flapjack_path}/dist/etc/init.d/v2 #{etc_path}/init.d/v2"
 end
