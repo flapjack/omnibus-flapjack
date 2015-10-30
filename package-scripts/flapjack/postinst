@@ -83,15 +83,11 @@ if [ ! -e ${INITDDIR}/flapjack ] ; then
 fi
 
 if [ ! -e ${INITDDIR}/flapjack-nagios-receiver ] ; then
-  echo "Creating ${INITDDIR}/flapjack-nagios-receiver"
   if [ "${FLAPJACK_CONFIG_VERSION}" == "1" ]; then
+    echo "Creating ${INITDDIR}/flapjack-nagios-receiver"
     cp ${DEST_DIR}/embedded/etc/init.d/v1/flapjack-nagios-receiver ${INITDDIR}/flapjack-nagios-receiver
-  elif [ -f /etc/redhat-release ]; then
-    cp ${DEST_DIR}/embedded/etc/init.d/v2/rpm/flapjack-nagios-receiver ${INITDDIR}/flapjack-nagios-receiver
-  else
-    cp ${DEST_DIR}/embedded/etc/init.d/v2/deb/flapjack-nagios-receiver ${INITDDIR}/flapjack-nagios-receiver
+    chmod u+x ${INITDDIR}/flapjack-nagios-receiver
   fi
-  chmod u+x ${INITDDIR}/flapjack-nagios-receiver
 fi
 
 if [ ! -e ${INITDDIR}/flapper ] ; then

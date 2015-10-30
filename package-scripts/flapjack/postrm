@@ -10,14 +10,24 @@ else
   INITDDIR="/etc/init.d"
 fi
 
+if [ -e ${FLAPJACK_GEM_DIR}/etc/flapjack_config.yaml.example ]; then
+  FLAPJACK_CONFIG_VERSION="1"
+elif [ -e ${FLAPJACK_GEM_DIR}/etc/flapjack_config.toml.example ]; then
+  FLAPJACK_CONFIG_VERSION="2"
+fi
+
 if [ -f /etc/redhat-release ]; then
   chkconfig --del redis-flapjack
   chkconfig --del flapjack
-  chkconfig --del flapjack-nagios-receiver
+  if [ "${FLAPJACK_CONFIG_VERSION}" == "1" ]; then
+    chkconfig --del flapjack-nagios-receiver
+  fi
   chkconfig --del flapper
 else
   update-rc.d flapjack remove
-  update-rc.d flapjack-nagios-receiver remove
+  if [ "${FLAPJACK_CONFIG_VERSION}" == "1" ]; then
+    update-rc.d flapjack-nagios-receiver remove
+  fi
   update-rc.d flapper remove
   update-rc.d redis-flapjack remove
 fi
