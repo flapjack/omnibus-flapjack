@@ -23,7 +23,7 @@ case "$1" in
     touch $PIDFILE
     chown flapjack:flapjack $RUNDIR $PIDFILE
     chmod 755 $RUNDIR
-    if start-stop-daemon --start --background --quiet --umask 022 --pidfile $PIDFILE --chuid flapjack:flapjack --exec $DAEMON -- $DAEMON_ARGS
+    if start-stop-daemon --start --background --quiet --umask 022 --make-pidfile --pidfile $PIDFILE --chuid flapjack:flapjack --exec $DAEMON -- $DAEMON_ARGS
     then
       echo "$NAME."
     else
@@ -33,7 +33,7 @@ case "$1" in
 
   stop)
     echo -n "Stopping $DESC: "
-    if start-stop-daemon --stop --retry forever/QUIT/1 --quiet --oknodo --pidfile $PIDFILE --exec $DAEMON
+    if start-stop-daemon --stop --retry TERM/15/KILL/10 --quiet --oknodo --pidfile $PIDFILE --exec $DAEMON
     then
       echo "$NAME."
     else
