@@ -27,9 +27,12 @@ require 'fileutils'
 require 'benchmark'
 require 'chronic_duration'
 
-dry_run = (ENV["DRY_RUN"].nil? || ENV["DRY_RUN"].empty?) ? false : true
-official_pkg = (ENV["OFFICIAL_FLAPJACK_PACKAGE"].nil? || ENV["OFFICIAL_FLAPJACK_PACKAGE"].empty?) ? false : true
+dry_run            = !(ENV["DRY_RUN"].nil? || ENV["DRY_RUN"].empty?)
+preserve_container = !(ENV["PRESERVE_CONTAINER"].nil? || ENV["PRESERVE_CONTAINER"].empty?)
+official_pkg       = !(ENV["OFFICIAL_FLAPJACK_PACKAGE"].nil? || ENV["OFFICIAL_FLAPJACK_PACKAGE"].empty?)
+
 pkg = nil
+
 if ENV['packagecloud_user']
   packagecloud_credentials = {
     :username => ENV['packagecloud_user'],
@@ -116,8 +119,12 @@ task :build do
 
     Mixlib::ShellOut.new('find pkg -maxdepth 1 -type f -exec md5sum {} \;').run_command.error!
 
-    puts "Purging the container #{container_name}"
-    Mixlib::ShellOut.new("docker rm #{container_name}").run_command
+    if preserve_container
+      puts "Leaving the container #{container_name} in place"
+    else
+      puts "Purging the container #{container_name}"
+      Mixlib::ShellOut.new("docker rm #{container_name}").run_command
+    end
 
     if official_pkg
       puts "Uploading #{pkg.package_file} packages to http://packages.flapjack.io/tmp/#{pkg.package_file}"
