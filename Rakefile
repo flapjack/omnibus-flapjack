@@ -85,11 +85,15 @@ task :build do
   end
 
   # can't set locale before it's generated :(
-  omnibus_cmd = "locale-gen en_US.UTF-8 && "  \
-                "export LANG=en_US.UTF-8 && " \
-                "export LC_ALL=en_US.UTF-8 && " \
-                "export LANGUAGE=en_US:en && " +
-                OmnibusFlapjack::Helpers.build_omnibus_cmd(pkg)
+  omnibus_cmd = if 'ubuntu'.eql?(pkg.distro) && 'precise'.eql?(pkg.distro_release)
+    "locale-gen en_US.UTF-8 && "  \
+    "export LANG=en_US.UTF-8 && " \
+    "export LC_ALL=en_US.UTF-8 && " \
+    "export LANGUAGE=en_US:en && " +
+    OmnibusFlapjack::Helpers.build_omnibus_cmd(pkg)
+  else
+    OmnibusFlapjack::Helpers.build_omnibus_cmd(pkg)
+  end
 
   container_name = "flapjack-build-#{pkg.distro_release}"
 
