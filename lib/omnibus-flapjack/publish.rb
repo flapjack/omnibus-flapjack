@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+require 'json' # packagecloud references this without a require
 require 'packagecloud'
 
 module OmnibusFlapjack
