@@ -85,7 +85,11 @@ task :build do
   end
 
   # can't set locale before it's generated :(
-  omnibus_cmd = if 'ubuntu'.eql?(pkg.distro) && 'precise'.eql?(pkg.distro_release)
+  omnibus_cmd = if ('ubuntu'.eql?(pkg.distro) &&
+    ['precise', 'trusty'].include?(pkg.distro_release)) ||
+    ('debian'.eql?(pkg.distro) &&
+     ['wheezy'].include?(pkg.distro_release))
+
     "locale-gen en_US.UTF-8 && "  \
     "export LANG=en_US.UTF-8 && " \
     "export LC_ALL=en_US.UTF-8 && " \
@@ -512,7 +516,7 @@ task :post_publish_test do
 
   install_cmd = "gem install puppet -v 3.7.5 && gem install librarian-puppet -v 2.1.0 && " +
                 "FACTER_flapjack_component='#{component}' " +
-                "FACTER_flapjack_major_version='v1' " +
+                "FACTER_flapjack_major_version='#{pkg.major_version}' " +
                 "FACTER_test_mode='true' FACTER_tutorial_mode='false' FACTER_with_sensu='false' " +
                 "puppet apply --modulepath /mnt/vagrant-flapjack/dist/modules:/etc/puppet/modules " +
                 "/mnt/vagrant-flapjack/dist/manifests/site.pp"
