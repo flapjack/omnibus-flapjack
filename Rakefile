@@ -85,15 +85,22 @@ task :build do
   end
 
   # can't set locale before it's generated :(
-  omnibus_cmd = if ('ubuntu'.eql?(pkg.distro) &&
-    ['precise', 'trusty'].include?(pkg.distro_release)) ||
-    ('debian'.eql?(pkg.distro) &&
-     ['wheezy'].include?(pkg.distro_release))
+  omnibus_cmd = if 'ubuntu'.eql?(pkg.distro) &&
+    ['precise', 'trusty'].include?(pkg.distro_release)
 
-    "locale-gen en_US.UTF-8 && "  \
-    "export LANG=en_US.UTF-8 && " \
-    "export LC_ALL=en_US.UTF-8 && " \
-    "export LANGUAGE=en_US:en && " +
+    'locale-gen en_US.UTF-8 && '  \
+    'export LANG=en_US.UTF-8 && ' \
+    'export LC_ALL=en_US.UTF-8 && ' \
+    'export LANGUAGE=en_US:en && ' +
+    OmnibusFlapjack::Helpers.build_omnibus_cmd(pkg)
+  elsif 'debian'.eql?(pkg.distro) && 'wheezy'.eql?(pkg.distro_release)
+    'echo "en_US.UTF-8 UTF-8" >/etc/locale.gen && ' \
+    'apt-get update && ' \
+    'apt-get install -y locales && ' \
+    'locale-gen en_US.UTF-8 && '  \
+    'export LANG=en_US.UTF-8 && ' \
+    'export LC_ALL=en_US.UTF-8 && ' \
+    'export LANGUAGE=en_US:en && ' +
     OmnibusFlapjack::Helpers.build_omnibus_cmd(pkg)
   else
     OmnibusFlapjack::Helpers.build_omnibus_cmd(pkg)
