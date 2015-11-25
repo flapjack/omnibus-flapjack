@@ -447,13 +447,13 @@ task :test do
       [
         "yum install -y initscripts",
         "rpm -ivh /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
-        "service redis-flapjack start",
-        "service flapjack start",
+        "/etc/rc.d/init.d/redis-flapjack start",
+        "/etc/rc.d/init.d/flapjack start",
         "export PATH=\${PATH}:/opt/flapjack/bin",
         "rpm -ev flapjack",
         "rpm -ivh /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
-        "service redis-flapjack start",
-        "service flapjack start"
+        "/etc/rc.d/init.d/redis-flapjack start",
+        "/etc/rc.d/init.d/flapjack start"
       ]
     end
     OmnibusFlapjack::Helpers.run_tests_in_docker(options)

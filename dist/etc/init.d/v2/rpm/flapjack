@@ -31,7 +31,6 @@ PIDFILE=$RUNDIR/$NAME.pid
 
 start() {
     [ -x $DAEMON ] || exit 5
-    [ -f $DAEMON_ARGS ] || exit 6
     echo -n "Starting $NAME: "
     daemon --user flapjack --pidfile $PIDFILE $DAEMON $DAEMON_ARGS &
     retval=$?
