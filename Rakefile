@@ -445,6 +445,7 @@ task :test do
       ]
     when 'centos'
       [
+        "yum install -y initscripts",
         "rpm -ivh /mnt/omnibus-flapjack/pkg/#{pkg.package_file}",
         "service redis-flapjack start",
         "service flapjack start",
