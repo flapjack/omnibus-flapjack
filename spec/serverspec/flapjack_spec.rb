@@ -53,12 +53,11 @@ describe port(6380) do
   it { should be_listening }
 end
 
-describe command('/opt/flapjack/bin/flapjack receiver httpbroker --help') do
-  channel = ['0', '1'].include?(flapjack_major_version) ? :stdout : :stderr
-  its(channel) { should match /port/ }
-  its(channel) { should match /server/ }
-  its(channel) { should match /database/ }
-  its(channel) { should match /interval/ }
+describe command('/opt/flapjack/bin/flapjack receiver httpbroker --help'), :unless => '0'.eql?(flapjack_major_version) do
+  its(:stdout) { should match /port/ }
+  its(:stdout) { should match /server/ }
+  its(:stdout) { should match /database/ }
+  its(:stdout) { should match /interval/ }
 end
 
 describe file("/etc/flapjack/flapjack_config.#{['0', '1'].include?(flapjack_major_version) ? 'yaml' : 'toml'}") do
