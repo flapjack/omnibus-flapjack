@@ -6,17 +6,17 @@ def flapjack_major_version
   @flapjack_major_version
 end
 
-describe service('redis-flapjack'), :if => os[:family] == 'ubuntu' do
+describe service('redis-flapjack'), :if => ['debian', 'ubuntu'].include?(os[:family]) do
   it { should be_enabled }
 end
-describe service('redis-flapjack'), :if => os[:family] == 'redhat' do
+describe service('redis-flapjack'), :if => 'redhat'.eql?(os[:family]) do
   it { should_not be_enabled }
 end
 
-describe service('flapjack'), :if => os[:family] == 'ubuntu' do
+describe service('flapjack'), :if => ['debian', 'ubuntu'].include?(os[:family]) do
   it { should be_enabled }
 end
-describe service('flapjack'), :if => os[:family] == 'redhat' do
+describe service('flapjack'), :if => 'redhat'.eql?(os[:family]) do
   it { should_not be_enabled }
 end
 
@@ -25,7 +25,6 @@ describe package('flapjack') do
 end
 
 describe service('flapjack') do
-
   it { should be_running }
 end
 
@@ -34,15 +33,14 @@ describe process("redis-server") do
   its(:args) { should match /0.0.0.0:6380/ }
 end
 
-describe process("flapjack") do
+describe process("flapjack"), :if => ['0', '1'].include?(flapjack_major_version) do
   it { should be_running }
-  its(:args) do
-    if ['0', '1'].include?(flapjack_major_version)
-      should match /\/opt\/flapjack\/bin\/flapjack server start/
-    else
-      should match /\/opt\/flapjack\/bin\/flapjack server/
-    end
-  end
+  its(:args) { should match %r{/opt/flapjack/bin/flapjack server start} }
+end
+
+describe process("flapjack"), :if => '2'.eql?(flapjack_major_version) do
+  it { should be_running }
+  its(:args) { should match %r{/opt/flapjack/bin/flapjack server} }
 end
 
 describe port(3080) do

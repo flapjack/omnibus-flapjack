@@ -6,7 +6,6 @@
 # Source function library.
 . /etc/rc.d/init.d/functions
 
-RETVAL=0
 PATH=/opt/flapjack/bin:$PATH
 DAEMON=/opt/flapjack/bin/flapjack
 DAEMON_ARGS=flapper
@@ -19,17 +18,20 @@ PIDFILE=$RUNDIR/$NAME.pid
 start() {
     [ -x $DAEMON ] || exit 5
     echo -n "Starting $NAME: "
-    daemon --user flapjack --pidfile $PIDFILE $DAEMON $DAEMON_ARGS &
-    retval=$?
-    echo
-    [ $retval -eq 0 ] && touch $PIDFILE
+    runuser -s "/bin/bash" -c "$DAEMON $DAEMON_ARGS" flapjack &
+    pid=$!
+    if [ -n "$pid" ]; then
+        echo $pid >"$PIDFILE"
+        echo "ok."
+    else
+        echo "failed."
+    fi
 }
 
 stop() {
     echo -n $"Stopping $NAME: "
     if [ -n "\`pgrep $NAME\`" ] ; then
         killproc $NAME
-    RETVAL=3
     else
         failure $"Stopping $DAEMON"
     fi
@@ -52,8 +54,8 @@ force_reload() {
 }
 
 rh_status() {
-    # run checks to determine if the service is running or use generic status
-    status $DAEMON
+    # run checks to determine if the service is running
+    status -p $PIDFILE
 }
 
 rh_status_q() {
