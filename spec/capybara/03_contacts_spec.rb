@@ -1,6 +1,12 @@
 require 'capybara_spec_helper'
 
-describe  "Contact Management", :type => :feature do
+def flapjack_major_version
+  return @flapjack_major_version unless @flapjack_major_version.nil?
+  @flapjack_major_version = ENV['FLAPJACK_MAJOR_VERSION'] || '-1'
+  @flapjack_major_version
+end
+
+describe  "Contact Management", :type => :feature, :if => ['0', '1'].include?(flapjack_major_version) do
   before :all do
     Bundler.clean_system('PATH=/opt/flapjack/bin:$PATH; flapjack simulate fail --check bacon -i 1 -t 0.1')
   end

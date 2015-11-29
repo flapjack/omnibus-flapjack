@@ -1,6 +1,12 @@
 require 'capybara_spec_helper'
 
-describe "Test Flapjack before data is added", :type => :feature do
+def flapjack_major_version
+  return @flapjack_major_version unless @flapjack_major_version.nil?
+  @flapjack_major_version = ENV['FLAPJACK_MAJOR_VERSION'] || '-1'
+  @flapjack_major_version
+end
+
+describe "Test Flapjack before data is added", :type => :feature, :if => ['0', '1'].include?(flapjack_major_version) do
   after :each do
     links = [ 'Summary', 'Entities', 'Failing Entities', 'Checks', 'Failing Checks', 'Contacts', 'Internal Statistics' ]
     links.each { |l| expect(page).to have_content l }
