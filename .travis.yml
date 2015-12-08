@@ -1,6 +1,6 @@
 language: ruby
 rvm:
-- '1.9.3'
+- 1.9.3
 - '2.2'
 before_script:
 - mkdir -p ./log
@@ -8,17 +8,12 @@ before_install:
 - gem install bundler
 install:
 - bundle install
-script: "bundle exec rspec spec/lib"
+script: bundle exec rspec spec/lib
 notifications:
   irc:
     channels:
-      - 'irc.freenode.net#flapjack'
+    - irc.freenode.net#flapjack
     template:
-      - '%{message} %{repository}#%{build_number} (%{branch} - %{commit} : %{author})'
-  hipchat:
-    template:
-      - '%{repository}#%{build_number} (%{branch} - %{commit} : %{author}): %{message}
-        (<a href="%{build_url}">Details</a>/<a href="%{compare_url}">Change view</a>)'
-    format: html
-    rooms:
-      secure: ajMolTKDuprYJ9Fadcjb3evh80MyJSgjW4hl4OWnEHyrjQLnsO0hbAvSrKRFUzorMoi58L8XZXd01gMgRqRxMvwqfoHLv4njw8px4X9+F/hySPZj3aMAFM1HuoTmHqeP+Rl+1Ssg+Kss6N4JkgNS81s+tkRnnoHG1n/EhfH6PkE=
+    - "%{message} %{repository}#%{build_number} (%{branch} - %{commit} : %{author})"
+  slack:
+    secure: OofLeRwdslYINtupe/KtLN63zzBh2rGOV9KqRg4LUOk2W83msGDoPzeWUIC3BkUA1lttpciBmJJhIozMWt6oFcJZEUL+AhNZjbmUZIyFf3mdk8OQ0GGTrqDGNylZ0KbdJPNGM/0CqESTO9nE4INUZ6mrpYUqD2dCw5ASQuidwhA=
