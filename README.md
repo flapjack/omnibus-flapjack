@@ -38,7 +38,7 @@ The following environment variables affect what `build` does:
 Eg:
 
 ```
-export BUILD_REF="1.1.0"
+export BUILD_REF="v1.1.0"
 export DISTRO="ubuntu"
 export DISTRO_RELEASE="precise"
 export OFFICIAL_FLAPJACK_PACKAGE="true"
