@@ -3,7 +3,7 @@
 This project creates full-stack platform-specific packages for
 [Flapjack](http://flapjack.io) using [omnibus](https://github.com/opscode/omnibus) and maintains appropriate package repositories at [packages.flapjack.io](http://packages.flapjack.io/)
 
-We highly recommend you build this with the included Rakefile, which uses Docker.  If you prefer to build this manually, please see (Building Manually)[BuildManually.md]
+We highly recommend you build this with the included Rakefile, which uses Docker.  If you prefer to build this manually, please see [Building Manually](BuildManually.md)
 
 You'll need a docker server and a local docker command that can talk to it.
 An easy way to get a docker server going is using [boot2docker](http://boot2docker.io/).
@@ -38,7 +38,7 @@ The following environment variables affect what `build` does:
 Eg:
 
 ```
-export BUILD_REF="1.1.0"
+export BUILD_REF="v1.1.0"
 export DISTRO="ubuntu"
 export DISTRO_RELEASE="precise"
 export OFFICIAL_FLAPJACK_PACKAGE="true"
