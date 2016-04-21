@@ -10,6 +10,7 @@ gem 'cinch'
 gem 'chronic_duration'
 gem 'json'
 gem 'packagecloud-ruby'
+gem 'net-ssh', '<3.0.0'
 
 group :development, :test do
   gem 'rspec'
