@@ -86,7 +86,7 @@ task :build do
 
   # can't set locale before it's generated :(
   omnibus_cmd = if 'ubuntu'.eql?(pkg.distro) &&
-    ['precise', 'trusty'].include?(pkg.distro_release)
+    ['precise', 'trusty', 'xenial'].include?(pkg.distro_release)
 
     'locale-gen en_US.UTF-8 && '  \
     'export LANG=en_US.UTF-8 && ' \
