@@ -30,7 +30,7 @@ build do
           "git pull && " \
           "git checkout #{build_ref} && " \
           "/opt/flapjack/embedded/bin/gem build flapjack.gemspec"
-  gem [ "install /var/cache/omnibus/src/flapjack/flapjack_source/flapjack*gem",
+  gem [ "install --local `ls -dtr flapjack*gem | tail -1`",
         "--bindir #{install_dir}/bin",
         "--no-rdoc --no-ri" ].join(" ")
 
