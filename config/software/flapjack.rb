@@ -28,11 +28,9 @@ build do
   command "cd flapjack_source && " \
           "git checkout master && " \
           "git pull && " \
-          "git checkout #{build_ref} && " \
-          "/opt/flapjack/embedded/bin/gem build flapjack.gemspec"
-  gem [ "install --local `ls -dtr flapjack*gem | tail -1`",
-        "--bindir #{install_dir}/bin",
-        "--no-rdoc --no-ri" ].join(" ")
+          "git checkout #{build_ref}"
+  gem "build flapjack.gemspec"
+  gem "install flapjack*gem --bindir #{install_dir}/bin --no-rdoc --no-ri"
 
   command "export gem_home=\"`/opt/flapjack/embedded/bin/gem environment gemdir`\" ; " \
           "echo \"gem_home: ${gem_home}\" ; " \
