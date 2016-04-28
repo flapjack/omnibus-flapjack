@@ -32,14 +32,10 @@ build do
   gem "build flapjack_source/flapjack.gemspec"
   gem "install flapjack*gem --bindir #{install_dir}/bin --no-rdoc --no-ri"
 
-  command "export gem_home=\"`/opt/flapjack/embedded/bin/gem environment gemdir`\" ; " \
-          "echo \"gem_home: ${gem_home}\" ; " \
-          "export installed_gem=\"`ls -dtr ${gem_home}/gems/flapjack* | tail -1`\" ; " \
-          "cd ${installed_gem}"
   if compile_go_components
     command "export gem_home=\"`/opt/flapjack/embedded/bin/gem environment gemdir`\" ; " \
             "echo \"gem_home: ${gem_home}\" ; " \
-            "export installed_gem=\"`ls -dtr ${gem_home}/gems/flapjack* | tail -1`\" ; " \
+            'export installed_gem="`ls -dtr ${gem_home}/gems/flapjack* | grep -Fv -- -diner | tail -1`" ; ' \
             "cd ${installed_gem} && " \
             "./build.sh"
   end
@@ -47,7 +43,7 @@ build do
   # Build flapjackfeeder, as per https://github.com/flapjack/flapjackfeeder
   command "export gem_home=\"`/opt/flapjack/embedded/bin/gem environment gemdir`\" ; " \
           "echo \"gem_home: ${gem_home}\" ; " \
-          "export installed_gem=\"`ls -dtr ${gem_home}/gems/flapjack* | tail -1`\" ; " \
+          'export installed_gem="`ls -dtr ${gem_home}/gems/flapjack* | grep -Fv -- -diner | tail -1`" ; ' \
           "cd ${installed_gem} && " \
           "if [ ! -d flapjackfeeder ] ; then git clone https://github.com/flapjack/flapjackfeeder.git flapjackfeeder ; fi && " \
           "cd flapjackfeeder && " \
