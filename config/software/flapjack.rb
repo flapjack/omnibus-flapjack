@@ -29,7 +29,7 @@ build do
           "git checkout master && " \
           "git pull && " \
           "git checkout #{build_ref}"
-  gem "build flapjack.gemspec"
+  gem "build flapjack_source/flapjack.gemspec"
   gem "install flapjack*gem --bindir #{install_dir}/bin --no-rdoc --no-ri"
 
   command "export gem_home=\"`/opt/flapjack/embedded/bin/gem environment gemdir`\" ; " \
